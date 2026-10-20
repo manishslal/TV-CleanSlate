@@ -47,6 +47,10 @@ TCL 手机 App 有一个「把手机里的 APK 推到电视」的功能。电视
 5. **versionCode 必须比已装的大**，否则当贝会把它从列表里隐藏。
 6. 每一步都先截图确认焦点再按 OK。当贝左侧有「批量删除」和「一键清空」，列表还没加载出来时焦点会停在那里。
 
+## 打开 ADB
+
+设置 → 关于 → 本机信息，在这个页面依次按「上、下、左、右」（`DeviceInfoItemModel.HIDE_KEY_LIST = {19, 20, 21, 22}`，两次按键间隔要小于 1 秒），页面会刷新出隐藏的「商场」和「更多」分组，「更多」里有「ADB」开关。2026-10-20 在这台电视上实测有效。注意刷新后焦点会落在「商场模式」开关上，不要直接按确认。
+
 ## 开机自启：TCL 的自启动管理
 
 - 冷启动后，第三方 App 的服务绑定、广播接收和进程启动，都要经过 `TclAppBootManagerImpl`（在 `/apex/com.tcl.tcore/javalib/tcl-service.jar` 里，由 `ActiveServices` 调用 `getTclAppBootManagerInjector().canBindServiceGo`）。默认会拒绝，日志里是 `ActivityManager: forbid bind service app.orchard.tv/...HomeGuardService`，所以开机后停在 TCL 桌面。
