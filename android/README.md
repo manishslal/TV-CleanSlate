@@ -17,9 +17,10 @@
 
 ### 首页
 
-| | |
-|---|---|
-| ![聚焦](site/img/focus.jpg) | ![应用网格](site/img/grid.jpg) |
+<p align="center">
+  <img src="site/img/focus.jpg" width="49%" alt="聚焦在 Netflix 上">
+  <img src="site/img/grid.jpg" width="49%" alt="往下滚动后的应用网格">
+</p>
 
 - **大号细体时钟**：显示在壁纸上，壁纸的底部和左侧会自动压暗，保证文字和 App 都看得清。往下滚动时，时钟淡出，状态栏出现小时钟。
 - **应用网格**：每行 5 个。聚焦时磁贴浮起、出现柔光，名字从下方浮现；按到边缘会轻轻倾斜回弹。
@@ -44,9 +45,10 @@
 
 ### 航拍屏保
 
-| | |
-|---|---|
-| ![航拍屏保](site/img/screensaver-aerial.jpg) | ![航拍屏保](site/img/screensaver-aerial-2.jpg) |
+<p align="center">
+  <img src="site/img/screensaver-aerial.jpg" width="49%" alt="航拍屏保：俯瞰优胜美地">
+  <img src="site/img/screensaver-clock.jpg" width="49%" alt="时钟屏保">
+</p>
 
 - **航拍**：播放 Apple TV 的 114 段航拍影片，涵盖风景、城市、太空和水下。影片从 Apple 服务器实时播放，镜头移动时会显示中文地名。左右键可以切换上一段 / 下一段，其他按键退出。
 - **照片**：每日精选和你的照片缓慢推移，显示拍摄地点。
@@ -54,13 +56,12 @@
 
 使用 Android 标准屏保的电视（比如 TCL），Aerial 会成为系统屏保，在任何 App 里空闲都会启动。小米用的是自家的屏保机制，所以 Aerial 在桌面空闲 5 分钟时启动自己的屏保，早于小米的广告屏保。
 
-![时钟屏保](site/img/screensaver-clock.jpg)
-
 ### 壁纸与手机设置
 
-| | |
-|---|---|
-| ![壁纸与屏保](site/img/wallpaper.jpg) | <img src="site/img/phone.jpg" width="300" alt="手机设置页"> |
+<p align="center">
+  <img src="site/img/wallpaper.jpg" width="74%" alt="壁纸与屏保面板">
+  <img src="site/img/phone.jpg" width="20%" alt="手机上的设置页">
+</p>
 
 - **每日精选**：必应每日图片（国内直连），保留最近 8 张，也可以选「每日自动更新」。
 - **内置**：8 组在电视上实时生成的柔光渐变，不含任何素材文件。
