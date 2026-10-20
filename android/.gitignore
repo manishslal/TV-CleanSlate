@@ -1,0 +1,10 @@
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+.kotlin/
+
+# Machine- and household-specific: TV addresses, signing key. Hand over privately.
+local/
+.DS_Store
