@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.ConnectivityManager
 import android.os.Build
+import android.util.Log
 import androidx.core.content.getSystemService
 import app.orchard.tv.apps.AppCatalog
 import app.orchard.tv.apps.CustomIcons
@@ -89,7 +90,10 @@ class PhoneServer private constructor(private val context: Context, private val 
                 }
                 else -> text(Response.Status.NOT_FOUND, "Not found")
             }
-        }.getOrElse { text(Response.Status.INTERNAL_ERROR, it.message ?: "error") }
+        }.getOrElse {
+            Log.w(TAG, "request failed", it)
+            text(Response.Status.INTERNAL_ERROR, "error")
+        }
     }
 
     private fun page(): String = context.assets.open("web/index.html").bufferedReader().use { it.readText() }
@@ -135,6 +139,7 @@ class PhoneServer private constructor(private val context: Context, private val 
     }
 
     private fun icon(session: IHTTPSession): Response {
+        if (tooLarge(session)) return text(Response.Status.BAD_REQUEST, "too large")
         val files = HashMap<String, String>()
         session.parseBody(files)
         val pkg = session.parameters["app"]?.firstOrNull().orEmpty()
@@ -157,6 +162,7 @@ class PhoneServer private constructor(private val context: Context, private val 
     }
 
     private fun upload(session: IHTTPSession): Response {
+        if (tooLarge(session)) return text(Response.Status.BAD_REQUEST, "too large")
         val files = HashMap<String, String>()
         session.parseBody(files)
         var added = 0
@@ -171,6 +177,11 @@ class PhoneServer private constructor(private val context: Context, private val 
         return json(state().put("added", added))
     }
 
+    // NanoHTTPD writes the whole body to the cache before we see it; keep a stray or hostile
+    // upload from filling the TV's storage (#57).
+    private fun tooLarge(session: IHTTPSession): Boolean =
+        (session.headers["content-length"]?.toLongOrNull() ?: 0L) > MAX_UPLOAD
+
     private fun form(session: IHTTPSession): Map<String, String> {
         session.parseBody(HashMap())
         return session.parameters.mapValues { it.value.firstOrNull().orEmpty() }
@@ -184,6 +195,9 @@ class PhoneServer private constructor(private val context: Context, private val 
 
     companion object {
         const val PORT = 8790
+        private const val TAG = "AerialPhone"
+        /** Enough for a batch of phone photos at full size. */
+        private const val MAX_UPLOAD = 200L * 1024 * 1024
 
         @Volatile
         private var running: PhoneServer? = null

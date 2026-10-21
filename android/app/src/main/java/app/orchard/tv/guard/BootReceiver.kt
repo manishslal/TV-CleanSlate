@@ -12,6 +12,8 @@ import app.orchard.tv.MainActivity
  */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        // Exported for the boot broadcasts only; anything else could use it to pull Aerial forward.
+        if (intent.action != Intent.ACTION_BOOT_COMPLETED && intent.action != Intent.ACTION_LOCKED_BOOT_COMPLETED) return
         GuardSetup.ensureEnabled(context)
         if (intent.action == Intent.ACTION_LOCKED_BOOT_COMPLETED) return
         // Also when Aerial is the default Home: some firmwares start their own launcher at boot

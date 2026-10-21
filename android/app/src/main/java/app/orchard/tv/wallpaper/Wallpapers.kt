@@ -269,8 +269,10 @@ object Wallpapers {
     }
 
     fun deletePhoto(id: String) {
-        if (!id.startsWith("photo:")) return
-        File(photoDir, id.removePrefix("photo:") + ".jpg").delete()
+        // Only photos that are listed: the id comes from the phone page, and "photo:../daily/..."
+        // would otherwise reach other files (#57).
+        val photo = items.firstOrNull { it.id == id && it.kind == WallpaperKind.Photo } ?: return
+        fileFor(photo)?.delete()
         synchronized(thumbs) { thumbs.remove(id) }
         rebuildList()
         if (selectedId == id) select(LATEST_DAILY)
