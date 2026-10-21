@@ -97,44 +97,53 @@ The first time your computer connects, the TV asks whether to allow USB debuggin
 
 ### Install with an agent (recommended)
 
-Paste this into an agent that can run commands on your computer, like Claude Code, Codex or Cursor. Replace `<TV-IP>` with your TV's IP address:
+Paste this into an **agent that can run commands on your computer**, such as Claude Code, Codex, Cursor, or in China WorkBuddy, Doubao desktop (豆包电脑版) or Trae. Replace `<TV-IP>` with your TV's IP address. Phone apps and web chats can't run commands on your computer; they only tell you the steps. Allow the agent to run commands and use the network when it first asks.
 
 ```text
-Please install Aerial, an open-source home screen for Android TV (https://github.com/pengchujin/aerial-tv), on my TV, and make it the home screen the TV starts into.
-My TV's IP address is <TV-IP>.
+Please install Aerial, an open-source home screen for Android TV, on my TV, and make it the home screen the TV starts into.
+TV IP address: <TV-IP>
+Keep ADB debugging on: yes
 
-Steps:
-1. Read the Install section of the README and the notes in docs/devices/.
-2. Check that adb, curl and python3 are available. adb is optional: the installer downloads Google's platform-tools if it's missing.
-3. Run adb connect <TV-IP>:5555. If it can't connect, tell me to turn on ADB debugging on the TV as the README describes. If it says unauthorized, tell me to choose Allow on the TV.
-4. Run the installer:
-   curl -fsSL https://raw.githubusercontent.com/pengchujin/aerial-tv/main/tools/get.sh | KEEP_ADB=1 TV=<TV-IP> bash
-   On a TCL TV, a 多屏互动 (screen sharing) prompt appears in the top-right corner. Tell me to accept it on the TV.
-5. Confirm that app.orchard.tv is in front with adb shell dumpsys window | grep mCurrentFocus. Then, once I agree, run adb reboot and confirm the TV starts into Aerial.
-6. Don't uninstall or disable any system app, and don't delete anything on the TV that this install didn't create. If something fails, show me the exact output and check docs/devices/.
+The install guide is here: https://aerial.qust.me/en/agent.md
+(If you can't open it, use https://raw.githubusercontent.com/pengchujin/aerial-tv/main/site/en/agent.md)
+
+Read the whole guide before you start. Then run the commands yourself on my computer; don't just tell me the steps. Tell me when I need to do something on the TV.
+At the end, paste the raw output of the commands under "Check" in the guide.
+```
+
+The [install guide](site/en/agent.md) is written for agents. It has steps for Windows, macOS and Linux, and covers TCL and other quirks, how to check the result, and how to undo it.
+
+**Is it really installed?** Some agents report success without running anything. Ask for the raw output of the check commands: it's installed only when the last one (`mCurrentFocus`) includes `app.orchard.tv`.
+
+To go back to the stock home screen, give the agent this:
+
+```text
+Please follow the "Undo" section of https://aerial.qust.me/en/agent.md to give my TV (IP address: <TV-IP>) its original home screen back, without uninstalling Aerial. Run the commands yourself on my computer, and at the end paste the raw output of adb shell "dumpsys window | grep mCurrentFocus".
 ```
 
 ### One command (macOS / Linux)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/pengchujin/aerial-tv/main/tools/get.sh | KEEP_ADB=1 TV=192.168.1.20 bash
+curl -fsSL https://aerial.qust.me/install.sh | KEEP_ADB=1 TV=192.168.1.20 bash
 ```
 
-The script installs the latest APK, grants the permissions only ADB can grant (see below), precompiles the app so it runs smoothly, takes over Home and the screensaver, and lets Aerial start at boot.
+The script installs the latest APK, grants the permissions only ADB can grant (see below), precompiles the app so it runs smoothly, takes over Home and the screensaver, and lets Aerial start at boot. It downloads the scripts and the APK from aerial.qust.me (fast in China too), and from GitHub if that fails.
 
 - `KEEP_ADB=1`: if the TV turns ADB debugging off (Xiaomi does on wake), Aerial turns it straight back on. Leave it out if you don't need it.
 - **Firmware that won't install home-screen apps**: add `-s guard` to the end to install the build that doesn't declare itself a home screen.
-- **TCL**: TCL blocks every ADB install, so the script pushes the APK through the TV's own 多屏互动 (screen sharing) service instead. Accept the prompt on the TV once. Without it, the script falls back to the Dangbei app store.
+- **TCL**: TCL blocks every ADB install, so the script pushes the APK through the TV's own 多屏互动 (screen sharing) service instead. When the prompt appears in the top-right corner of the TV, press Right, then OK, to choose 同意 (Agree). Without it, the script falls back to the Dangbei app store.
 
 To go back to the stock home screen:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/pengchujin/aerial-tv/main/tools/get.sh | TV=192.168.1.20 bash -s restore
+curl -fsSL https://aerial.qust.me/install.sh | TV=192.168.1.20 bash -s restore
 ```
+
+Windows has no bash: use an agent, or run the Windows steps in the [install guide](site/en/agent.md) one by one.
 
 ### Manual install
 
-Download `aerial-standard.apk` from [Releases](https://github.com/pengchujin/aerial-tv/releases/latest) (or `aerial-guard.apk` if your firmware won't install home-screen apps), then:
+Download [aerial-standard.apk](https://aerial.qust.me/download/aerial-standard.apk) (or [aerial-guard.apk](https://aerial.qust.me/download/aerial-guard.apk) if your firmware won't install home-screen apps; both are also on [GitHub Releases](https://github.com/pengchujin/aerial-tv/releases/latest)), then:
 
 ```bash
 adb connect 192.168.1.20:5555
@@ -145,7 +154,13 @@ adb shell appops set app.orchard.tv SYSTEM_ALERT_WINDOW allow
 adb shell am start -n app.orchard.tv/.MainActivity
 ```
 
-Aerial turns on Home Guard by itself. For the full setup (screensaver, brightness, TCL autostart), see [tools/install.sh](tools/install.sh).
+Aerial turns on Home Guard by itself. For the full setup (screensaver, brightness, TCL autostart), see the [install guide](site/en/agent.md) or [tools/install.sh](tools/install.sh).
+
+### Install FAQ
+
+- **Do my apps, subscriptions and old home screen stay?** Yes. Aerial only replaces the home screen; apps, accounts and subscriptions are unchanged, and the old home screen stays in the app list. A boot ad, if your TV has one, is played by the firmware before Aerial starts, so it stays too.
+- **Not supported**: LG webOS, Samsung Tizen, Huawei Vision (HarmonyOS), and Android 4.4 or older.
+- **How do I update later?** Run the install command again, or ask the agent to install it again.
 
 ## How it stays your home screen
 

@@ -5,7 +5,8 @@
 #   TV=<tv-ip> tools/install.sh guard         # for firmwares that refuse to install a launcher
 #   KEEP_ADB=1 TV=<tv-ip> tools/install.sh    # also switch ADB back on whenever the TV turns it off
 #
-# The APK comes from the latest GitHub release, so only adb is needed (and python3 on TCL TVs).
+# The APK comes from the latest release (aerial.qust.me's copy, else GitHub), so only adb is needed
+# (and python3 on TCL TVs).
 #   BUILD=1        build it from this checkout instead (JDK 17 + Android SDK)
 #   APK_FILE=<apk> install this file instead
 #
@@ -57,10 +58,14 @@ build() {
     ./gradlew -q --console=plain "$task"
     echo "app/build/outputs/apk/$flavor/release/app-$flavor-release.apk"
   else
-    local out="${TMPDIR:-/tmp}/aerial-$flavor.apk"
-    echo "Downloading aerial-$flavor.apk from the latest release" >&2
-    curl -fL --progress-bar -o "$out" "https://github.com/$REPO/releases/latest/download/aerial-$flavor.apk"
-    echo "$out"
+    local out="${TMPDIR:-/tmp}/aerial-$flavor.apk" url
+    for url in "https://aerial.qust.me/download/aerial-$flavor.apk" \
+               "https://github.com/$REPO/releases/latest/download/aerial-$flavor.apk"; do
+      echo "Downloading $url" >&2
+      if curl -fL --progress-bar --connect-timeout 10 -o "$out" "$url"; then echo "$out"; return; fi
+    done
+    echo "Could not download aerial-$flavor.apk" >&2
+    return 1
   fi
 }
 

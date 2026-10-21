@@ -196,19 +196,22 @@
       </div>
 
       <div class="panel on" data-panel="agent">
-        <p>Paste this into an agent that can run commands on your computer, like Claude Code, Codex or Cursor. It'll tell you when you need to do something on the TV.</p>
+        <p>Paste this into an agent that can run commands on your computer, like Claude Code, Codex, Cursor or WorkBuddy. Allow it to run commands when it first asks; it'll tell you when you need to do something on the TV.</p>
         <div class="code"><button class="copy" data-copy="prompt">Copy</button><pre id="prompt"></pre></div>
+        <p class="note">Phone apps and web chats can't run commands on your computer; they only tell you the steps. When the agent says it's done, check that the last output it pasted includes <code>app.orchard.tv</code>.</p>
+        <p class="note">To go back to the stock home screen, give the agent this:</p>
+        <div class="code"><button class="copy" data-copy="restoreprompt">Copy</button><pre id="restoreprompt"></pre></div>
       </div>
 
       <div class="panel" data-panel="cli">
-        <p>Run it in a macOS or Linux terminal. If you don't have adb, the script downloads it.</p>
+        <p>Run it in a macOS or Linux terminal. If you don't have adb, the script downloads it. On Windows, use an agent, or run the Windows steps in the <a href="agent.md">install guide</a> one by one.</p>
         <div class="code"><button class="copy" data-copy="cmd">Copy</button><pre id="cmd"></pre></div>
         <p class="note">On TCL, the TV shows a 多屏互动 (screen sharing) prompt; accept it on the TV. If your firmware won't install home-screen apps, add <code>-s guard</code> to the end. To undo everything, replace the final <code>bash</code> with <code>bash -s restore</code>.</p>
       </div>
 
       <div class="panel" data-panel="manual">
         <ol class="steps">
-          <li>Download <b>aerial-standard.apk</b> from <a href="https://github.com/pengchujin/aerial-tv/releases/latest">GitHub Releases</a> (or <b>aerial-guard.apk</b> if your firmware won't install home-screen apps).</li>
+          <li>Download <a href="../download/aerial-standard.apk"><b>aerial-standard.apk</b></a> (or <a href="../download/aerial-guard.apk"><b>aerial-guard.apk</b></a> if your firmware won't install home-screen apps; both are also on <a href="https://github.com/pengchujin/aerial-tv/releases/latest">GitHub</a>).</li>
           <li>Install it and grant permissions with the commands below. Aerial turns on Home Guard by itself.</li>
         </ol>
         <div class="code"><button class="copy" data-copy="manualcmd">Copy</button><pre id="manualcmd"></pre></div>
@@ -237,7 +240,15 @@
       </details>
       <details>
         <summary>Can it break my TV? How do I undo it?</summary>
-        <p>Aerial never uninstalls, disables or changes system apps. It grants itself a few permissions and changes the home screen and screensaver settings. Replace the final <code>bash</code> in the one-line command with <code>bash -s restore</code> to revert everything; add <code>--uninstall</code> to remove Aerial as well.</p>
+        <p>Aerial never uninstalls, disables or changes system apps. It grants itself a few permissions and changes the home screen and screensaver settings. To undo it with an agent, see "Use an agent" above. With the one-line command, replace the final <code>bash</code> with <code>bash -s restore</code>; add <code>--uninstall</code> to remove Aerial as well.</p>
+      </details>
+      <details>
+        <summary>Do my apps, subscriptions and old home screen stay?</summary>
+        <p>Yes. Aerial only replaces the home screen; apps, accounts and subscriptions are unchanged. The old home screen stays in the app list and opens as before. The boot ad, if your TV has one, is played by the firmware before Aerial starts, so it stays too.</p>
+      </details>
+      <details>
+        <summary>The agent says it's installed, but nothing changed on the TV?</summary>
+        <p>Some agents report success without running anything. Ask it to paste the raw output of the commands under "Check" in the <a href="agent.md">install guide</a>: it's installed only when the last one includes <code>app.orchard.tv</code>.</p>
       </details>
       <details>
         <summary>What permissions does it use?</summary>
@@ -249,7 +260,7 @@
       </details>
       <details>
         <summary>My TV isn't listed. Will it work?</summary>
-        <p>Probably. Stock Android TV and Google TV are the easiest. If something goes wrong, <a href="https://github.com/pengchujin/aerial-tv/issues">open an issue on GitHub</a> with your TV model and the installer's output.</p>
+        <p>Probably. Stock Android TV and Google TV are the easiest. LG webOS, Samsung Tizen, Huawei Vision (HarmonyOS) and Android 4.4 or older aren't supported. If something goes wrong, <a href="https://github.com/pengchujin/aerial-tv/issues">open an issue on GitHub</a> with your TV model and the install output.</p>
       </details>
     </div>
   </div>
@@ -261,7 +272,7 @@
       Aerial is an independent open-source project (MIT), not affiliated with Apple, Xiaomi, TCL or Sony.<br>
       Aerial films © Apple. Daily photos from Bing, © their respective owners.
     </div>
-    <div><a href="https://github.com/pengchujin/aerial-tv">GitHub</a> · <a href="https://github.com/pengchujin/aerial-tv/releases/latest">Download</a> · <a href="https://github.com/pengchujin/aerial-tv/issues">Feedback</a> · <a href="../" data-lang="zh" lang="zh-CN">中文</a></div>
+    <div><a href="https://github.com/pengchujin/aerial-tv">GitHub</a> · <a href="../download/aerial-standard.apk">Download</a> · <a href="https://github.com/pengchujin/aerial-tv/issues">Feedback</a> · <a href="../" data-lang="zh" lang="zh-CN">中文</a></div>
   </div>
 </footer>
 
@@ -271,21 +282,21 @@
     copy: 'Copy',
     copied: 'Copied',
     tclOnly: 'TCL only: allow starting at boot',
-    prompt: (ip, cmd, repo) =>
-`Please install Aerial, an open-source home screen for Android TV (${repo}), on my TV, and make it the home screen the TV starts into.
-My TV's IP address is ${ip}.
+    guide: '/en/agent.md',
+    prompt: (ip, keep, guide) =>
+`Please install Aerial, an open-source home screen for Android TV, on my TV, and make it the home screen the TV starts into.
+TV IP address: ${ip}
+Keep ADB debugging on: ${keep ? 'yes' : 'no'}
 
-Steps:
-1. Read the Install section of the README and the notes in docs/devices/.
-2. Check that adb, curl and python3 are available. adb is optional: the installer downloads Google's platform-tools if it's missing.
-3. Run adb connect ${ip}:5555. If it can't connect, tell me to turn on ADB debugging on the TV as the README describes. If it says unauthorized, tell me to choose Allow on the TV.
-4. Run the installer:
-   ${cmd}
-   On a TCL TV, a 多屏互动 (screen sharing) prompt appears in the top-right corner. Tell me to accept it on the TV.
-5. Confirm that app.orchard.tv is in front with adb shell dumpsys window | grep mCurrentFocus. Then, once I agree, run adb reboot and confirm the TV starts into Aerial.
-6. Don't uninstall or disable any system app, and don't delete anything on the TV that this install didn't create. If something fails, show me the exact output and check docs/devices/.`,
+The install guide is here: ${guide}
+(If you can't open it, use https://raw.githubusercontent.com/pengchujin/aerial-tv/main/site/en/agent.md)
+
+Read the whole guide before you start. Then run the commands yourself on my computer; don't just tell me the steps. Tell me when I need to do something on the TV.
+At the end, paste the raw output of the commands under "Check" in the guide.`,
+    restore: (ip, guide) =>
+`Please follow the "Undo" section of ${guide} to give my TV (IP address: ${ip}) its original home screen back, without uninstalling Aerial. Run the commands yourself on my computer, and at the end paste the raw output of adb shell "dumpsys window | grep mCurrentFocus".`,
   };
 </script>
-<script src="../app.js?v=1"></script>
+<script src="../app.js?v=2"></script>
 </body>
 </html>

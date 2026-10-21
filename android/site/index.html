@@ -196,19 +196,22 @@
       </div>
 
       <div class="panel on" data-panel="agent">
-        <p>复制这段话，交给 Claude Code、Codex、Cursor 这类能在电脑上运行命令的 Agent。需要你在电视上操作时，它会提醒你。</p>
+        <p>复制这段话，交给能在电脑上运行命令的 Agent，比如 <b>WorkBuddy</b>、<b>豆包电脑版</b>、<b>千问电脑版</b>、<b>Trae</b>、Claude Code、Codex。它第一次运行命令时会征求你同意，选允许；需要你在电视上操作时，它会提醒你。</p>
         <div class="code"><button class="copy" data-copy="prompt">复制</button><pre id="prompt"></pre></div>
+        <p class="note">手机 App 和网页版聊天不能在电脑上运行命令，只会把步骤告诉你。Agent 说装好了，看它贴出的最后一条结果里有没有 <code>app.orchard.tv</code>。</p>
+        <p class="note">要还原成原来的桌面，把这段交给 Agent：</p>
+        <div class="code"><button class="copy" data-copy="restoreprompt">复制</button><pre id="restoreprompt"></pre></div>
       </div>
 
       <div class="panel" data-panel="cli">
-        <p>在 macOS 或 Linux 终端里运行。没有 adb 会自动下载。</p>
+        <p>在 macOS 或 Linux 终端里运行。没有 adb 会自动下载。Windows 请用 Agent 安装，或照 <a href="agent.md">安装说明</a> 里的 Windows 步骤逐条运行。</p>
         <div class="code"><button class="copy" data-copy="cmd">复制</button><pre id="cmd"></pre></div>
         <p class="note">TCL 会弹出「多屏互动：正在发起应用推送」，在电视上选「同意」。固件拒绝安装桌面类 App 时，在命令最后加 <code>-s guard</code>。要还原，把最后的 <code>bash</code> 换成 <code>bash -s restore</code>。</p>
       </div>
 
       <div class="panel" data-panel="manual">
         <ol class="steps">
-          <li>到 <a href="https://github.com/pengchujin/aerial-tv/releases/latest">GitHub Releases</a> 下载 <b>aerial-standard.apk</b>（固件拒绝安装桌面类 App 时用 <b>aerial-guard.apk</b>）。</li>
+          <li>下载 <a href="download/aerial-standard.apk"><b>aerial-standard.apk</b></a>（固件拒绝安装桌面类 App 时用 <a href="download/aerial-guard.apk"><b>aerial-guard.apk</b></a>；也可以从 <a href="https://github.com/pengchujin/aerial-tv/releases/latest">GitHub</a> 下载）。</li>
           <li>用下面的命令安装并授权。Aerial 启动后会自己打开桌面守护。</li>
         </ol>
         <div class="code"><button class="copy" data-copy="manualcmd">复制</button><pre id="manualcmd"></pre></div>
@@ -221,6 +224,7 @@
       <table class="adb">
         <tr><th>小米 / Redmi</th><td>设置 → 关于 → <b>产品型号</b>，连续按确认键，直到提示已进入开发者模式。再到 设置 → 账号与安全，打开 <b>ADB 调试</b> 和 <b>安装未知来源的应用</b>。</td></tr>
         <tr><th>TCL / 雷鸟</th><td>设置 → 关于 → <b>本机信息</b>，依次按遥控器的 <b>上、下、左、右</b>（间隔不超过 1 秒），底部会出现「更多」，在里面打开 <b>ADB</b>。</td></tr>
+        <tr><th>OPPO</th><td>设置 → 系统 → 关于本机 → <b>设备型号</b>，依次按 <b>上、上、右、右</b>，再按确认（用户反馈）。</td></tr>
         <tr><th>Android TV / Google TV、海信等</th><td>设置 → 设备偏好设置 → 关于 → 连续按 <b>版本号</b> 7 次；再到 开发者选项 打开 <b>USB 调试</b>（也可能叫「网络调试」或「ADB 调试」）。</td></tr>
       </table>
     </div>
@@ -237,7 +241,19 @@
       </details>
       <details>
         <summary>会不会把电视弄坏？怎么还原？</summary>
-        <p>不会卸载、停用或修改任何系统应用，只授予了几项权限，改了桌面和屏保设置。把一行命令最后的 <code>bash</code> 换成 <code>bash -s restore</code>，就会全部还原；再加 <code>--uninstall</code> 会顺便卸载 Aerial。</p>
+        <p>不会卸载、停用或修改任何系统应用，只授予了几项权限，改了桌面和屏保设置。用 Agent 还原见上面「让 Agent 安装」；用命令就把一行命令最后的 <code>bash</code> 换成 <code>bash -s restore</code>，再加 <code>--uninstall</code> 会顺便卸载 Aerial。</p>
+      </details>
+      <details>
+        <summary>会员、App 和原来的桌面还在吗？</summary>
+        <p>都在。Aerial 只换桌面，App、账号和会员都不变。原来的桌面也留在 App 列表里，打开就是原来的界面和推荐内容。开机广告是固件在 Aerial 启动前播的，去不掉。</p>
+      </details>
+      <details>
+        <summary>Agent 说装好了，电视上却没变？</summary>
+        <p>有的 Agent 会没运行命令就说成功。让它按 <a href="agent.md">安装说明</a> 的「验收」把命令的原始输出贴出来：最后一条里有 <code>app.orchard.tv</code> 才算装好。</p>
+      </details>
+      <details>
+        <summary>没有电脑，只用手机能装吗？</summary>
+        <p>有用户用手机上的 ADB 工具（比如甲壳虫 ADB 助手）装成功过，我们没有测试。要运行的命令和 <a href="agent.md">安装说明</a> 里 Windows 的逐条步骤一样。</p>
       </details>
       <details>
         <summary>需要哪些权限？</summary>
@@ -249,7 +265,7 @@
       </details>
       <details>
         <summary>我的电视不在列表里，能用吗？</summary>
-        <p>大概率可以，原生 Android TV / Google TV 最省事。遇到问题请到 <a href="https://github.com/pengchujin/aerial-tv/issues">GitHub 提 Issue</a>，附上型号和安装脚本的输出。</p>
+        <p>大概率可以，原生 Android TV / Google TV 最省事。LG webOS、三星 Tizen、华为智慧屏（鸿蒙）和 Android 4.4 及更老的电视不支持。遇到问题请到 <a href="https://github.com/pengchujin/aerial-tv/issues">GitHub 提 Issue</a>，附上型号和安装输出。</p>
       </details>
     </div>
   </div>
@@ -261,7 +277,7 @@
       Aerial 是独立的开源项目（MIT 许可），与 Apple、小米、TCL、索尼均无关联。<br>
       航拍影片版权归 Apple 所有；每日精选图片来自必应，版权归原作者所有。
     </div>
-    <div><a href="https://github.com/pengchujin/aerial-tv">GitHub</a> · <a href="https://github.com/pengchujin/aerial-tv/releases/latest">下载</a> · <a href="https://github.com/pengchujin/aerial-tv/issues">反馈</a> · <a href="en/" data-lang="en" lang="en">English</a></div>
+    <div><a href="https://github.com/pengchujin/aerial-tv">GitHub</a> · <a href="download/aerial-standard.apk">下载</a> · <a href="https://github.com/pengchujin/aerial-tv/issues">反馈</a> · <a href="en/" data-lang="en" lang="en">English</a></div>
   </div>
 </footer>
 
@@ -271,21 +287,21 @@
     copy: '复制',
     copied: '已复制',
     tclOnly: '仅 TCL：允许开机自启',
-    prompt: (ip, cmd, repo) =>
-`请帮我把开源电视桌面 Aerial（${repo}）安装到我的电视上，并让它成为开机自动启动的桌面。
-我的电视 IP 是：${ip}
+    guide: '/agent.md',
+    prompt: (ip, keep, guide) =>
+`请帮我把开源电视桌面 Aerial 装到我的电视上，并设为开机进入的桌面。
+电视 IP：${ip}
+保持 ADB 常开：${keep ? '要' : '不要'}
 
-请按这个顺序做：
-1. 读一下仓库 README 的「安装」部分和 docs/devices/ 下的机型笔记。
-2. 确认电脑上有 adb、curl、python3（没有 adb 也可以，安装脚本会自动下载 Google 的 platform-tools）。
-3. 运行 adb connect ${ip}:5555。连不上就提醒我按 README 在电视上打开 ADB 调试；显示 unauthorized 就提醒我在电视上点「允许」。
-4. 运行一键安装：
-   ${cmd}
-   如果是 TCL，电视右上角会弹出「多屏互动：正在发起应用推送」，提醒我在电视上选「同意」。
-5. 装完后用 adb shell dumpsys window | grep mCurrentFocus 确认前台是 app.orchard.tv；征得我同意后再 adb reboot 一次，确认开机直接进入 Aerial。
-6. 不要卸载或停用任何系统应用，不要删除电视上不是这次安装创建的文件。失败时把命令输出原样给我看，再参考 docs/devices/ 排查。`,
+安装说明在这里：${guide}
+（打不开时用 https://raw.githubusercontent.com/pengchujin/aerial-tv/main/site/agent.md ）
+
+请先完整读完安装说明再动手，然后在我的电脑上亲自运行命令，不要只把步骤告诉我。需要我在电视上操作时提醒我。
+最后按说明里的「验收」，把那几条命令的原始输出贴给我。`,
+    restore: (ip, guide) =>
+`请按 ${guide} 里「还原」部分的步骤，把我电视（IP：${ip}）的桌面还原成原来的，Aerial 先不卸载。请在我的电脑上亲自运行命令，最后把 adb shell "dumpsys window | grep mCurrentFocus" 的原始输出贴给我。`,
   };
 </script>
-<script src="app.js?v=1"></script>
+<script src="app.js?v=2"></script>
 </body>
 </html>

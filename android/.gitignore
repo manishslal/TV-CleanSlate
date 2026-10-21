@@ -8,3 +8,8 @@ local.properties
 # Machine- and household-specific: TV addresses, signing key. Hand over privately.
 local/
 .DS_Store
+
+# Copied into the website by tools/deploy-site.sh: the latest release's APKs and the install scripts.
+site/download/
+site/tools/
+site/install.sh

@@ -1,11 +1,12 @@
 // Shared by the Chinese (/) and English (/en/) pages. Each page sets window.T with its own words.
 (() => {
   const T = window.T;
-  const REPO = 'pengchujin/aerial-tv';
-  const RAW = `https://raw.githubusercontent.com/${REPO}/main/tools/get.sh`;
-  // Served from our own domain, /install.sh redirects to the script on GitHub.
+  // The site serves the install script, the agent guide and the APKs itself (tools/deploy-site.sh),
+  // since GitHub is slow or blocked in China. Previews elsewhere point at the live site.
   const onSite = location.protocol.startsWith('http') && !/github|localhost|127\.0\.0\.1/.test(location.hostname);
-  const SCRIPT = onSite ? `${location.origin}/install.sh` : RAW;
+  const SITE = onSite ? location.origin : 'https://aerial.qust.me';
+  const SCRIPT = `${SITE}/install.sh`;
+  const GUIDE = SITE + T.guide;
 
   const $ = s => document.querySelector(s);
   const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -19,7 +20,8 @@
     const env = ($('#keep').checked ? 'KEEP_ADB=1 ' : '') + `TV=${ip}`;
     const cmd = `curl -fsSL ${SCRIPT} | ${env} bash`;
     $('#cmd').textContent = cmd;
-    $('#prompt').textContent = T.prompt(ip, cmd, `https://github.com/${REPO}`);
+    $('#prompt').textContent = T.prompt(ip, $('#keep').checked, GUIDE);
+    $('#restoreprompt').textContent = T.restore(ip, GUIDE);
     $('#manualcmd').textContent =
 `adb connect ${ip}:5555
 adb install -r aerial-standard.apk

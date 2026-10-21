@@ -91,50 +91,65 @@
 |---|---|
 | **小米 / Redmi** | 设置 → 关于 → **产品型号**，连续按确认键，直到提示已进入开发者模式。再到 设置 → 账号与安全，打开 **ADB 调试** 和 **安装未知来源的应用** |
 | **TCL / 雷鸟** | 设置 → 关于 → **本机信息**，依次按遥控器的 **上、下、左、右**（间隔不超过 1 秒），底部会出现「更多」，在里面打开 **ADB** |
+| **OPPO** | 设置 → 系统 → 关于本机 → **设备型号**，依次按 **上、上、右、右**，再按确认（用户反馈） |
 | **原生 Android TV / Google TV**、海信等 | 设置 → 设备偏好设置 → 关于 → 连续按 **版本号** 7 次；再到 开发者选项 打开 **USB 调试**（也可能叫「网络调试」或「ADB 调试」） |
 
 电脑第一次连接时，电视会问「允许 USB 调试吗？」，选 **允许** 并勾上「始终允许」。
 
 ### 用 Agent 安装（推荐）
 
-把下面这段交给 Claude Code、Codex、Cursor 这类能在你电脑上运行命令的 Agent，把 `<电视IP>` 换成你的电视 IP：
+把下面这段交给**能在电脑上运行命令的 Agent**，把 `<电视IP>` 换成你的电视 IP：
+
+- 国内：**WorkBuddy**、**豆包电脑版**、**Trae** 等，微博上不少用户用它们装成功了；**千问电脑版**这类能运行命令的也可以。
+- 国外：Claude Code、Codex、Cursor 等。
+- 手机 App 和网页版聊天不能在你的电脑上运行命令，只会把步骤告诉你，装不了。
+- Agent 第一次运行命令、联网时会征求你同意，选允许。
 
 ```text
-请帮我把开源电视桌面 Aerial（https://github.com/pengchujin/aerial-tv）安装到我的电视上，并让它成为开机自动启动的桌面。
-我的电视 IP 是：<电视IP>
+请帮我把开源电视桌面 Aerial 装到我的电视上，并设为开机进入的桌面。
+电视 IP：<电视IP>
+保持 ADB 常开：要
 
-请按这个顺序做：
-1. 读一下仓库 README 的「安装」部分和 docs/devices/ 下的机型笔记。
-2. 确认电脑上有 adb、curl、python3（没有 adb 也可以，安装脚本会自动下载 Google 的 platform-tools）。
-3. 运行 adb connect <电视IP>:5555。连不上就提醒我按 README 在电视上打开 ADB 调试；显示 unauthorized 就提醒我在电视上点「允许」。
-4. 运行一键安装：
-   curl -fsSL https://raw.githubusercontent.com/pengchujin/aerial-tv/main/tools/get.sh | KEEP_ADB=1 TV=<电视IP> bash
-   如果是 TCL，电视右上角会弹出「多屏互动：正在发起应用推送」，提醒我在电视上选「同意」。
-5. 装完后用 adb shell dumpsys window | grep mCurrentFocus 确认前台是 app.orchard.tv；征得我同意后再 adb reboot 一次，确认开机直接进入 Aerial。
-6. 不要卸载或停用任何系统应用，不要删除电视上不是这次安装创建的文件。失败时把命令输出原样给我看，再参考 docs/devices/ 排查。
+安装说明在这里：https://aerial.qust.me/agent.md
+（打不开时用 https://raw.githubusercontent.com/pengchujin/aerial-tv/main/site/agent.md ）
+
+请先完整读完安装说明再动手，然后在我的电脑上亲自运行命令，不要只把步骤告诉我。需要我在电视上操作时提醒我。
+最后按说明里的「验收」，把那几条命令的原始输出贴给我。
+```
+
+[安装说明](site/agent.md)是写给 Agent 看的，Windows、macOS、Linux 都有对应步骤，也写了 TCL 等机型怎么处理、怎么验收、怎么还原。
+
+**怎么判断真的装好了**：有的 Agent 会没运行命令就说成功。让它贴出验收命令的原始输出，最后一条 `mCurrentFocus` 里有 `app.orchard.tv` 才算装好。
+
+还原成原来的桌面，交给 Agent 这段：
+
+```text
+请按 https://aerial.qust.me/agent.md 里「还原」部分的步骤，把我电视（IP：<电视IP>）的桌面还原成原来的，Aerial 先不卸载。请在我的电脑上亲自运行命令，最后把 adb shell "dumpsys window | grep mCurrentFocus" 的原始输出贴给我。
 ```
 
 ### 一行命令（macOS / Linux）
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/pengchujin/aerial-tv/main/tools/get.sh | KEEP_ADB=1 TV=192.168.1.20 bash
+curl -fsSL https://aerial.qust.me/install.sh | KEEP_ADB=1 TV=192.168.1.20 bash
 ```
 
-脚本会下载最新版 APK 安装，授予只有 ADB 能给的权限（见下表），预编译让它更流畅，然后接管桌面和屏保、放行开机自启。
+脚本会下载最新版 APK 安装，授予只有 ADB 能给的权限（见下表），预编译让它更流畅，然后接管桌面和屏保、放行开机自启。脚本和 APK 都从官网 aerial.qust.me 下载（国内也快），失败时改从 GitHub 下载。
 
 - `KEEP_ADB=1`：电视关掉 ADB 调试后（小米待机唤醒时会关），Aerial 立刻重新打开。不需要可以去掉。
 - **固件拒绝安装桌面类 App**：在命令最后加 `-s guard`，改装不声明 HOME 的版本。
-- **TCL**：TCL 拒绝一切 ADB 安装，脚本会改用电视自带的「多屏互动」推送，你在电视上选一次「同意」即可；没有多屏互动时退回用当贝市场。
+- **TCL**：TCL 拒绝一切 ADB 安装，脚本会改用电视自带的「多屏互动」推送。电视右上角弹出提示时，先按遥控器「右」再按确认，选「同意」。没有多屏互动时退回用当贝市场。
 
 还原成原来的桌面：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/pengchujin/aerial-tv/main/tools/get.sh | TV=192.168.1.20 bash -s restore
+curl -fsSL https://aerial.qust.me/install.sh | TV=192.168.1.20 bash -s restore
 ```
+
+Windows 没有 bash，请用 Agent 安装，或照[安装说明](site/agent.md)里的 Windows 步骤逐条运行。
 
 ### 手动安装
 
-到 [Releases](https://github.com/pengchujin/aerial-tv/releases/latest) 下载 `aerial-standard.apk`（固件拒绝安装桌面类 App 时用 `aerial-guard.apk`），然后：
+下载 [aerial-standard.apk](https://aerial.qust.me/download/aerial-standard.apk)（固件拒绝安装桌面类 App 时用 [aerial-guard.apk](https://aerial.qust.me/download/aerial-guard.apk)；[GitHub Releases](https://github.com/pengchujin/aerial-tv/releases/latest) 上也有），然后：
 
 ```bash
 adb connect 192.168.1.20:5555
@@ -145,7 +160,14 @@ adb shell appops set app.orchard.tv SYSTEM_ALERT_WINDOW allow
 adb shell am start -n app.orchard.tv/.MainActivity
 ```
 
-Aerial 启动后会自己打开桌面守护。屏保、亮度、TCL 自启等完整步骤见 [tools/install.sh](tools/install.sh)。
+Aerial 启动后会自己打开桌面守护。屏保、亮度、TCL 自启等完整步骤见[安装说明](site/agent.md)或 [tools/install.sh](tools/install.sh)。
+
+### 安装常见问题
+
+- **会员、App 和原来的桌面还在吗？** 都在。Aerial 只换桌面，App、账号、会员不变；原来的桌面留在 App 列表里，打开就是原来的界面。开机广告是固件在 Aerial 启动前播的，去不掉。
+- **只有手机能装吗？** 有用户用手机上的 ADB 工具（比如甲壳虫 ADB 助手）装成功过，我们没有测试；要运行的命令和安装说明里 Windows 的逐条步骤一样。
+- **不支持的电视**：LG webOS、三星 Tizen、华为智慧屏（鸿蒙），以及 Android 4.4 及更老的系统。
+- **以后怎么升级？** 再运行一次安装命令，或让 Agent 再装一次。
 
 ## 它怎么接管桌面，又怎么不被杀掉
 
