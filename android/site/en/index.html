@@ -22,7 +22,7 @@
 <link rel="alternate" hreflang="en" href="https://aerial.qust.me/en/">
 <link rel="alternate" hreflang="x-default" href="https://aerial.qust.me/en/">
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../style.css?v=1">
+<link rel="stylesheet" href="../style.css?v=2">
 </head>
 <body>
 
@@ -179,53 +179,51 @@
   <div class="wrap">
     <div class="head reveal">
       <h2>Up and running<br>in three minutes.</h2>
-      <p>Put your computer and TV on the same network and turn on ADB debugging on the TV. An agent or one command does the rest.</p>
+      <p>No root, no changes to system apps, and you can undo it any time.</p>
     </div>
 
     <div class="install reveal">
+      <h3 class="step"><span>1</span>Turn on ADB debugging on the TV</h3>
+      <div class="tabs" role="tablist" data-tabs="brand">
+        <button role="tab" aria-selected="true" data-tab="xiaomi">Xiaomi</button>
+        <button role="tab" aria-selected="false" data-tab="tcl">TCL</button>
+        <button role="tab" aria-selected="false" data-tab="other">Others</button>
+      </div>
+      <div class="panel on" data-panel="xiaomi"><p>Settings (设置) → About (关于) → press OK on <b>Model</b> (产品型号) until developer mode is on. Then Settings → Account &amp; Security (账号与安全): turn on <b>ADB debugging</b> (ADB 调试) and <b>Install unknown apps</b> (安装未知来源的应用).</p></div>
+      <div class="panel" data-panel="tcl"><p>Settings (设置) → About (关于) → <b>Device info</b> (本机信息), then quickly press <b>Up, Down, Left, Right</b>. Turn on <b>ADB</b> in the <b>More</b> (更多) group that appears.</p></div>
+      <div class="panel" data-panel="other"><p>Settings → Device Preferences → About → press <b>Build</b> 7 times, then turn on <b>USB debugging</b> in Developer options.</p></div>
+
+      <h3 class="step"><span>2</span>Enter the TV's IP address</h3>
+      <p class="hint">It's under Settings → Network. Your computer must be on the same network.</p>
       <div class="field">
         <label for="ip">TV IP address</label>
         <input id="ip" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="e.g. 192.168.1.20">
         <label class="opt"><input type="checkbox" id="keep" checked> Keep ADB on</label>
       </div>
 
-      <div class="tabs" role="tablist">
-        <button role="tab" aria-selected="true" data-tab="agent">Use an agent</button>
+      <h3 class="step"><span>3</span>Pick a way to install</h3>
+      <div class="tabs" role="tablist" data-tabs="method">
+        <button role="tab" aria-selected="true" data-tab="agent">Agent</button>
         <button role="tab" aria-selected="false" data-tab="cli">One command</button>
         <button role="tab" aria-selected="false" data-tab="manual">Manual</button>
       </div>
 
       <div class="panel on" data-panel="agent">
-        <p>Paste this into an agent that can run commands on your computer, like Claude Code, Codex, Cursor or WorkBuddy. Allow it to run commands when it first asks; it'll tell you when you need to do something on the TV.</p>
+        <p>Paste this into an agent that can run commands on your computer, like Claude Code, Codex, Cursor or WorkBuddy. Phone apps and web chats can't do it.</p>
         <div class="code"><button class="copy" data-copy="prompt">Copy</button><pre id="prompt"></pre></div>
-        <p class="note">Phone apps and web chats can't run commands on your computer; they only tell you the steps. When the agent says it's done, check that the last output it pasted includes <code>app.orchard.tv</code>.</p>
-        <p class="note">To go back to the stock home screen, give the agent this:</p>
-        <div class="code"><button class="copy" data-copy="restoreprompt">Copy</button><pre id="restoreprompt"></pre></div>
       </div>
 
       <div class="panel" data-panel="cli">
-        <p>Run it in a macOS or Linux terminal. If you don't have adb, the script downloads it. On Windows, use an agent, or run the Windows steps in the <a href="agent.md">install guide</a> one by one.</p>
+        <p>Run it in a macOS or Linux terminal; it downloads adb if you don't have it. On Windows, use an agent.</p>
         <div class="code"><button class="copy" data-copy="cmd">Copy</button><pre id="cmd"></pre></div>
-        <p class="note">On TCL, the TV shows a 多屏互动 (screen sharing) prompt; accept it on the TV. If your firmware won't install home-screen apps, add <code>-s guard</code> to the end. To undo everything, replace the final <code>bash</code> with <code>bash -s restore</code>.</p>
       </div>
 
       <div class="panel" data-panel="manual">
-        <ol class="steps">
-          <li>Download <a href="../download/aerial-standard.apk"><b>aerial-standard.apk</b></a> (or <a href="../download/aerial-guard.apk"><b>aerial-guard.apk</b></a> if your firmware won't install home-screen apps; both are also on <a href="https://github.com/pengchujin/aerial-tv/releases/latest">GitHub</a>).</li>
-          <li>Install it and grant permissions with the commands below. Aerial turns on Home Guard by itself.</li>
-        </ol>
+        <p>Download <a href="../download/aerial-standard.apk"><b>aerial-standard.apk</b></a>, then run:</p>
         <div class="code"><button class="copy" data-copy="manualcmd">Copy</button><pre id="manualcmd"></pre></div>
       </div>
-    </div>
 
-    <div class="install reveal" style="margin-top:80px">
-      <h3 class="sub">Turn on ADB debugging</h3>
-      <p class="muted">The first time your computer connects, the TV asks whether to allow USB debugging. Choose Allow and check Always allow. Chinese menu names are in brackets.</p>
-      <table class="adb">
-        <tr><th>Xiaomi / Redmi</th><td>Settings (设置) → About (关于) → press OK on <b>Model</b> (产品型号) until it says developer mode is on. Then Settings → Account &amp; Security (账号与安全): turn on <b>ADB debugging</b> (ADB 调试) and <b>Install unknown apps</b> (安装未知来源的应用).</td></tr>
-        <tr><th>TCL / FFALCON</th><td>Settings (设置) → About (关于) → <b>Device info</b> (本机信息), then press <b>Up, Down, Left, Right</b> on the remote, less than a second apart. A <b>More</b> (更多) group appears at the bottom; turn on <b>ADB</b> there.</td></tr>
-        <tr><th>Android TV, Google TV, Hisense and others</th><td>Settings → Device Preferences → About → press <b>Build</b> 7 times. Then turn on <b>USB debugging</b> in Developer options (sometimes called Network debugging or ADB debugging).</td></tr>
-      </table>
+      <p class="note">When the TV asks to allow debugging, choose Always allow. On TCL, accept the 多屏互动 (screen sharing) prompt with 同意 (Agree).</p>
     </div>
   </div>
 </section>
@@ -240,7 +238,12 @@
       </details>
       <details>
         <summary>Can it break my TV? How do I undo it?</summary>
-        <p>Aerial never uninstalls, disables or changes system apps. It grants itself a few permissions and changes the home screen and screensaver settings. To undo it with an agent, see "Use an agent" above. With the one-line command, replace the final <code>bash</code> with <code>bash -s restore</code>; add <code>--uninstall</code> to remove Aerial as well.</p>
+        <p>Aerial never uninstalls, disables or changes system apps. It grants itself a few permissions and changes the home screen and screensaver settings. To undo it, replace the final <code>bash</code> in the one-line command with <code>bash -s restore</code>; add <code>--uninstall</code> to remove Aerial as well. With an agent, give it this:</p>
+        <div class="code"><button class="copy" data-copy="restoreprompt">Copy</button><pre id="restoreprompt"></pre></div>
+      </details>
+      <details>
+        <summary>My firmware won't install home-screen apps?</summary>
+        <p>Install the build that doesn't declare itself a home screen: add <code>-s guard</code> to the end of the one-line command, or download <a href="../download/aerial-guard.apk">aerial-guard.apk</a> for a manual install.</p>
       </details>
       <details>
         <summary>Do my apps, subscriptions and old home screen stay?</summary>
@@ -297,6 +300,6 @@ At the end, paste the raw output of the commands under "Check" in the guide.`,
 `Please follow the "Undo" section of ${guide} to give my TV (IP address: ${ip}) its original home screen back, without uninstalling Aerial. Run the commands yourself on my computer, and at the end paste the raw output of adb shell "dumpsys window | grep mCurrentFocus".`,
   };
 </script>
-<script src="../app.js?v=2"></script>
+<script src="../app.js?v=3"></script>
 </body>
 </html>

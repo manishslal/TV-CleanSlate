@@ -81,23 +81,23 @@ On TVs that use Android's standard screensaver (TCL, for one), Aerial becomes th
 
 ## Install
 
-No root needed. Aerial **never uninstalls or disables system apps**, and one command undoes everything.
+No root, no changes to system apps, and you can undo it any time. Put your computer and TV on the same network; it takes two steps.
 
-### Step 1: Turn on ADB debugging
+### 1. Turn on ADB debugging
 
-Put your computer and TV on the same network. Find the TV's IP address (usually under Settings → Network or About), then turn on ADB. Menus on Chinese firmware are in Chinese, so their names are in brackets.
+Chinese firmware shows its menu names in Chinese; they're in brackets.
 
 | TV | How |
 |---|---|
-| **Xiaomi / Redmi** | Settings (设置) → About (关于) → press OK on **Model** (产品型号) until it says developer mode is on. Then Settings → Account & Security (账号与安全): turn on **ADB debugging** (ADB 调试) and **Install unknown apps** (安装未知来源的应用) |
-| **TCL / FFALCON** | Settings (设置) → About (关于) → **Device info** (本机信息), then press **Up, Down, Left, Right** on the remote, less than a second apart. A **More** (更多) group appears at the bottom; turn on **ADB** there |
-| **Android TV / Google TV**, Hisense and others | Settings → Device Preferences → About → press **Build** 7 times. Then turn on **USB debugging** in Developer options (sometimes called Network debugging or ADB debugging) |
+| **Xiaomi / Redmi** | Settings (设置) → About (关于) → press OK on **Model** (产品型号) until developer mode is on. Then Settings → Account & Security (账号与安全): turn on **ADB debugging** (ADB 调试) and **Install unknown apps** (安装未知来源的应用) |
+| **TCL / FFALCON** | Settings (设置) → About (关于) → **Device info** (本机信息), then quickly press **Up, Down, Left, Right**. Turn on **ADB** in the **More** (更多) group that appears |
+| **Other Android TVs** | Settings → Device Preferences → About → press **Build** 7 times, then turn on **USB debugging** in Developer options |
 
-The first time your computer connects, the TV asks whether to allow USB debugging. Choose **Allow** and check **Always allow**.
+The TV's IP address is under Settings → Network. The first time your computer connects, the TV asks to allow debugging: choose **Always allow**.
 
-### Install with an agent (recommended)
+### 2. Install (pick one)
 
-Paste this into an **agent that can run commands on your computer**, such as Claude Code, Codex, Cursor, or in China WorkBuddy, Doubao desktop (豆包电脑版) or Trae. Replace `<TV-IP>` with your TV's IP address. Phone apps and web chats can't run commands on your computer; they only tell you the steps. Allow the agent to run commands and use the network when it first asks.
+**With an agent (recommended)**: paste this into an agent that can run commands on your computer, like Claude Code, Codex, Cursor or WorkBuddy. Phone apps and web chats can't do it.
 
 ```text
 Please install Aerial, an open-source home screen for Android TV, on my TV, and make it the home screen the TV starts into.
@@ -111,39 +111,15 @@ Read the whole guide before you start. Then run the commands yourself on my comp
 At the end, paste the raw output of the commands under "Check" in the guide.
 ```
 
-The [install guide](site/en/agent.md) is written for agents. It has steps for Windows, macOS and Linux, and covers TCL and other quirks, how to check the result, and how to undo it.
+When the agent says it's done, check that the last output it pasted includes `app.orchard.tv`. If it doesn't, it isn't installed.
 
-**Is it really installed?** Some agents report success without running anything. Ask for the raw output of the check commands: it's installed only when the last one (`mCurrentFocus`) includes `app.orchard.tv`.
-
-To go back to the stock home screen, give the agent this:
-
-```text
-Please follow the "Undo" section of https://aerial.qust.me/en/agent.md to give my TV (IP address: <TV-IP>) its original home screen back, without uninstalling Aerial. Run the commands yourself on my computer, and at the end paste the raw output of adb shell "dumpsys window | grep mCurrentFocus".
-```
-
-### One command (macOS / Linux)
+**One command (macOS / Linux)**:
 
 ```bash
 curl -fsSL https://aerial.qust.me/install.sh | KEEP_ADB=1 TV=192.168.1.20 bash
 ```
 
-The script installs the latest APK, grants the permissions only ADB can grant (see below), precompiles the app so it runs smoothly, takes over Home and the screensaver, and lets Aerial start at boot. It downloads the scripts and the APK from aerial.qust.me (fast in China too), and from GitHub if that fails.
-
-- `KEEP_ADB=1`: if the TV turns ADB debugging off (Xiaomi does on wake), Aerial turns it straight back on. Leave it out if you don't need it.
-- **Firmware that won't install home-screen apps**: add `-s guard` to the end to install the build that doesn't declare itself a home screen.
-- **TCL**: TCL blocks every ADB install, so the script pushes the APK through the TV's own 多屏互动 (screen sharing) service instead. When the prompt appears in the top-right corner of the TV, press Right, then OK, to choose 同意 (Agree). Without it, the script falls back to the Dangbei app store.
-
-To go back to the stock home screen:
-
-```bash
-curl -fsSL https://aerial.qust.me/install.sh | TV=192.168.1.20 bash -s restore
-```
-
-Windows has no bash: use an agent, or run the Windows steps in the [install guide](site/en/agent.md) one by one.
-
-### Manual install
-
-Download [aerial-standard.apk](https://aerial.qust.me/download/aerial-standard.apk) (or [aerial-guard.apk](https://aerial.qust.me/download/aerial-guard.apk) if your firmware won't install home-screen apps; both are also on [GitHub Releases](https://github.com/pengchujin/aerial-tv/releases/latest)), then:
+**Manual**: download [aerial-standard.apk](https://aerial.qust.me/download/aerial-standard.apk) (also on [GitHub](https://github.com/pengchujin/aerial-tv/releases/latest)), then:
 
 ```bash
 adb connect 192.168.1.20:5555
@@ -154,13 +130,28 @@ adb shell appops set app.orchard.tv SYSTEM_ALERT_WINDOW allow
 adb shell am start -n app.orchard.tv/.MainActivity
 ```
 
-Aerial turns on Home Guard by itself. For the full setup (screensaver, brightness, TCL autostart), see the [install guide](site/en/agent.md) or [tools/install.sh](tools/install.sh).
+On Windows, use an agent, or run the Windows steps in the [install guide](site/en/agent.md) one by one.
 
-### Install FAQ
+### Undo
 
-- **Do my apps, subscriptions and old home screen stay?** Yes. Aerial only replaces the home screen; apps, accounts and subscriptions are unchanged, and the old home screen stays in the app list. A boot ad, if your TV has one, is played by the firmware before Aerial starts, so it stays too.
-- **Not supported**: LG webOS, Samsung Tizen, Huawei Vision (HarmonyOS), and Android 4.4 or older.
-- **How do I update later?** Run the install command again, or ask the agent to install it again.
+```bash
+curl -fsSL https://aerial.qust.me/install.sh | TV=192.168.1.20 bash -s restore
+```
+
+If an agent installed it, tell the agent:
+
+```text
+Please follow the "Undo" section of https://aerial.qust.me/en/agent.md to give my TV (IP address: <TV-IP>) its original home screen back, without uninstalling Aerial. Run the commands yourself on my computer, and at the end paste the raw output of adb shell "dumpsys window | grep mCurrentFocus".
+```
+
+### Troubleshooting
+
+- **TCL shows a 多屏互动 (screen sharing) prompt**: TCL blocks ADB installs, so the script pushes the APK through that service. Press Right, then OK, to choose 同意 (Agree).
+- **Firmware won't install home-screen apps**: add `-s guard` to the end of the command, or install [aerial-guard.apk](https://aerial.qust.me/download/aerial-guard.apk) by hand.
+- **What `KEEP_ADB=1` does**: Xiaomi turns ADB off when it wakes; with this, Aerial turns it straight back on. Leave it out if you don't need it.
+- **Do my apps, subscriptions and old home screen stay?** Yes. The old home screen stays in the app list. A boot ad is played by the firmware, so it stays too.
+- **Updating**: run the install command again, or ask the agent to install it again.
+- **Not supported**: LG webOS, Samsung Tizen, Huawei Vision (HarmonyOS), Android 4.4 or older.
 
 ## How it stays your home screen
 

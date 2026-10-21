@@ -37,10 +37,15 @@ adb shell am start -n app.orchard.tv/.MainActivity`;
   $('#keep').addEventListener('change', render);
   render();
 
-  document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
-    document.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-selected', x === b ? 'true' : 'false'));
-    document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.dataset.panel === b.dataset.tab));
-  }));
+  // Each tab row switches only the panels that follow it, up to the next heading.
+  document.querySelectorAll('.tabs').forEach(tabs => {
+    const panels = [];
+    for (let el = tabs.nextElementSibling; el && el.classList.contains('panel'); el = el.nextElementSibling) panels.push(el);
+    tabs.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      tabs.querySelectorAll('button').forEach(x => x.setAttribute('aria-selected', x === b ? 'true' : 'false'));
+      panels.forEach(p => p.classList.toggle('on', p.dataset.panel === b.dataset.tab));
+    }));
+  });
 
   document.querySelectorAll('.copy').forEach(b => b.addEventListener('click', async () => {
     const text = document.getElementById(b.dataset.copy).textContent;
