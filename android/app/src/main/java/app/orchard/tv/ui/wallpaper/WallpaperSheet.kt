@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -38,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
@@ -55,6 +57,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import app.orchard.tv.R
+import app.orchard.tv.settings.AerialSettings
+import app.orchard.tv.settings.FocusStyle
 import app.orchard.tv.ui.components.Pressable
 import app.orchard.tv.ui.theme.Glyph
 import app.orchard.tv.ui.theme.GlyphIcon
@@ -66,8 +70,11 @@ import app.orchard.tv.wallpaper.ScreensaverMode
 import app.orchard.tv.wallpaper.Wallpaper
 import app.orchard.tv.wallpaper.WallpaperKind
 import app.orchard.tv.wallpaper.Wallpapers
+import app.orchard.tv.weather.Weather
+import app.orchard.tv.weather.WeatherKind
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
@@ -118,17 +125,36 @@ fun WallpaperSheet(visible: Boolean, onDismiss: () -> Unit, onStartScreensaver: 
                     .border(1.dp, Palette.Hairline, RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
                     .padding(start = 40.dp, end = 32.dp, top = 24.dp),
             ) {
-                Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())) {
+                val scroll = rememberScrollState()
+                val scope = rememberCoroutineScope()
+                // How Home looks, in the order you see it: the picture behind everything, what
+                // replaces it when idle, how the focused app stands out, and the weather.
+                Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(scroll)) {
                     BasicText(stringResource(R.string.wp_title), style = Type.LargeTitle)
-                    Spacer(Modifier.height(14.dp))
-                    BasicText(stringResource(R.string.wp_screensaver), style = Type.Callout)
+                    Spacer(Modifier.height(16.dp))
+                    SectionTitle(R.string.wp_wallpaper)
+                    WallpaperRows()
+
                     Spacer(Modifier.height(10.dp))
+                    SectionTitle(R.string.wp_screensaver)
                     ScreensaverChoice(onStartScreensaver)
                     Spacer(Modifier.height(8.dp))
                     BasicText(stringResource(R.string.ss_back_hint), style = Type.Caption.copy(color = Palette.TertiaryLabel))
-                    Spacer(Modifier.height(18.dp))
-                    WallpaperRows()
-                    Spacer(Modifier.height(28.dp))
+
+                    Spacer(Modifier.height(24.dp))
+                    SectionTitle(R.string.st_focus_style)
+                    // The last row that takes focus: bring the weather below it into view too.
+                    FocusChoice(onFocused = { scope.launch { scroll.animateScrollTo(scroll.maxValue) } })
+                    Spacer(Modifier.height(8.dp))
+                    BasicText(
+                        stringResource(if (AerialSettings.focusStyle == FocusStyle.HighContrast) R.string.st_focus_high_hint else R.string.st_focus_standard_hint),
+                        style = Type.Caption.copy(color = Palette.TertiaryLabel),
+                    )
+
+                    Spacer(Modifier.height(24.dp))
+                    SectionTitle(R.string.wp_weather)
+                    WeatherLine()
+                    Spacer(Modifier.height(32.dp))
                 }
                 Spacer(Modifier.width(28.dp))
                 PhoneCard(phoneUrl, qr)
@@ -156,9 +182,12 @@ private fun WallpaperRows() {
     rows.forEachIndexed { r, (title, list) ->
         BasicText(stringResource(title), style = Type.Callout)
         Spacer(Modifier.height(8.dp))
+        // A row clips to its bounds, and the focused card grows by 8%: room on the left for that,
+        // with the row moved back by as much so the cards still line up with the titles.
         LazyRow(
+            modifier = Modifier.offset(x = (-10).dp),
             horizontalArrangement = Arrangement.spacedBy(18.dp),
-            contentPadding = PaddingValues(start = 4.dp, end = 24.dp, top = 6.dp, bottom = 4.dp),
+            contentPadding = PaddingValues(start = 14.dp, end = 24.dp, top = 6.dp, bottom = 4.dp),
         ) {
             items(list, key = { it.id }) { wp ->
                 WallpaperCard(wp, if (r == 0 && wp === list.first()) first else null)
@@ -213,8 +242,89 @@ private fun WallpaperCard(wp: Wallpaper, focusRequester: FocusRequester?) {
 }
 
 @Composable
-private fun ScreensaverChoice(onStart: () -> Unit) {
+private fun SectionTitle(title: Int) {
+    BasicText(stringResource(title), style = Type.Headline)
+    Spacer(Modifier.height(10.dp))
+}
+
+@Composable
+private fun FocusChoice(onFocused: () -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        listOf(
+            FocusStyle.HighContrast to R.string.st_focus_high,
+            FocusStyle.Standard to R.string.st_focus_standard,
+        ).forEach { (style, label) ->
+            Chip(stringResource(label), on = AerialSettings.focusStyle == style, onFocused = onFocused) { AerialSettings.chooseFocusStyle(style) }
+        }
+    }
+}
+
+/** Where the weather is for and what it is now. The city is set on the phone page. */
+@Composable
+private fun WeatherLine() {
+    val w = Weather.now
+    val place = Weather.place
+    val kind = w?.let {
+        stringResource(
+            when (it.kind) {
+                WeatherKind.Clear -> R.string.wx_clear
+                WeatherKind.PartlyCloudy -> R.string.wx_partly_cloudy
+                WeatherKind.Cloudy -> R.string.wx_cloudy
+                WeatherKind.Fog -> R.string.wx_fog
+                WeatherKind.Rain -> R.string.wx_rain
+                WeatherKind.Snow -> R.string.wx_snow
+                WeatherKind.Thunder -> R.string.wx_thunder
+            },
+        )
+    }
+    BasicText(
+        if (w != null) listOfNotNull(place, "${w.celsius}° $kind").joinToString(" · ") else stringResource(R.string.wp_weather_none),
+        style = Type.Body,
+    )
+    Spacer(Modifier.height(4.dp))
+    BasicText(
+        stringResource(if (Weather.chosen) R.string.wp_weather_chosen else R.string.wp_weather_guessed),
+        style = Type.Caption.copy(color = Palette.TertiaryLabel),
+    )
+}
+
+/** A pill to pick one of a few options: a check on the chosen one, white when focused. */
+@Composable
+private fun Chip(label: String, on: Boolean, onFocused: (() -> Unit)? = null, onClick: () -> Unit) {
+    Pressable(onClick = onClick, focusedScale = 1.06f) { state ->
+        if (onFocused != null) LaunchedEffect(state.focused) { if (state.focused) onFocused() }
+        val bg by animateColorAsState(
+            when {
+                state.focused -> Palette.Focus
+                on -> Palette.FillStrong
+                else -> Palette.Fill
+            },
+            tween(140, easing = Motion.EaseOut), label = "chip-bg",
+        )
+        val fg = if (state.focused) Palette.OnFocus else Palette.Label
+        Row(
+            Modifier.clip(RoundedCornerShape(50)).background(bg).height(40.dp).padding(horizontal = 20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (on) GlyphIcon(Glyph.Check, fg, 14.dp)
+            BasicText(label, style = Type.Body.copy(color = fg))
+        }
+    }
+}
+
+@Composable
+private fun ScreensaverChoice(onStart: () -> Unit) {
+    // The choice first, then the action that tries it.
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        listOf(
+            ScreensaverMode.Aerial to R.string.ss_aerial,
+            ScreensaverMode.Photos to R.string.ss_photos,
+            ScreensaverMode.Clock to R.string.ss_clock,
+        ).forEach { (mode, label) ->
+            Chip(stringResource(label), on = Wallpapers.screensaver == mode) { Wallpapers.chooseScreensaver(mode) }
+        }
+        Spacer(Modifier.width(8.dp))
         Pressable(onClick = onStart, focusedScale = 1.06f) { state ->
             val bg by animateColorAsState(if (state.focused) Palette.Focus else Palette.FillStrong, tween(140, easing = Motion.EaseOut), label = "ss-start")
             val fg = if (state.focused) Palette.OnFocus else Palette.Label
@@ -225,33 +335,6 @@ private fun ScreensaverChoice(onStart: () -> Unit) {
             ) {
                 GlyphIcon(Glyph.Play, fg, 14.dp)
                 BasicText(stringResource(R.string.ss_start), style = Type.Body.copy(color = fg))
-            }
-        }
-        Spacer(Modifier.width(8.dp))
-        listOf(
-            ScreensaverMode.Aerial to R.string.ss_aerial,
-            ScreensaverMode.Photos to R.string.ss_photos,
-            ScreensaverMode.Clock to R.string.ss_clock,
-        ).forEach { (mode, label) ->
-            val on = Wallpapers.screensaver == mode
-            Pressable(onClick = { Wallpapers.chooseScreensaver(mode) }, focusedScale = 1.06f) { state ->
-                val bg by animateColorAsState(
-                    when {
-                        state.focused -> Palette.Focus
-                        on -> Palette.FillStrong
-                        else -> Palette.Fill
-                    },
-                    tween(140, easing = Motion.EaseOut), label = "ss-bg",
-                )
-                val fg = if (state.focused) Palette.OnFocus else Palette.Label
-                Row(
-                    Modifier.clip(RoundedCornerShape(50)).background(bg).height(40.dp).padding(horizontal = 20.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    if (on) GlyphIcon(Glyph.Check, fg, 14.dp)
-                    BasicText(stringResource(label), style = Type.Body.copy(color = fg))
-                }
             }
         }
     }

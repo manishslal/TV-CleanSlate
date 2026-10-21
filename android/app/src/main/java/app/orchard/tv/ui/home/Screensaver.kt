@@ -64,7 +64,7 @@ import kotlin.random.Random
 
 /**
  * Aerial's screensaver, shown on Home after a few idle minutes, before the firmware's
- * (ad-carrying) one would start. Three kinds, chosen in Wallpaper & Screensaver:
+ * (ad-carrying) one would start. Three kinds, chosen in Personalize:
  *
  * - Aerial: Apple TV's aerial films, streamed from Apple, with the place named as the camera moves.
  * - Photos: daily photos and the owner's own, slowly drifting, each with where it was taken.

@@ -22,8 +22,8 @@ app/src/main/java/app/orchard/tv/
 │   ├── home/HomeChrome.kt   背景（AmbientBackground）、大时钟、右上角状态胶囊、时间格式
 │   ├── home/Overlays.kt     长按菜单、隐藏的 App 面板、MenuRow、MiniTile
 │   ├── home/Screensaver.kt  屏保 UI：航拍（VideoView）/ 照片（Ken Burns）/ 时钟
-│   ├── control/ControlCenter.kt  控制中心：按钮、音量/亮度滑块、信号源子页
-│   └── wallpaper/WallpaperSheet.kt  壁纸与屏保面板 + 手机扫码卡片
+│   ├── control/ControlCenter.kt  控制中心：按钮、音量/亮度滑块、「个性化」「隐藏的 App」两个入口；信号源页（只负责切换）和信号源设置页（显示在主屏幕、开机时打开）
+│   └── wallpaper/WallpaperSheet.kt  个性化面板（壁纸、屏保、焦点样式、天气）+ 手机扫码卡片
 ├── wallpaper/
 │   ├── Wallpapers.kt        壁纸单例：来源（每日/内置/照片/跟随App）、选择、首页背景烘焙、缩略图、上传
 │   ├── Gradients.kt         8 组内置渐变的参数与渲染
@@ -95,7 +95,9 @@ Logo 的大小统一：先在 256×256 的采样里找出 Logo 的范围，再�
 
 前景层会裁到只剩可见像素，记下它在磁贴里的位置（`TileArt.foreAt`）：磁贴每帧都要画，电视 GPU 的填充率很紧。同时算出主色和 64×36 的环境光背景。所有位图都在 `Dispatchers.Default` 上生成，按包名、`lastUpdateTime` 和磁贴像素宽度缓存。
 
-## 壁纸与屏保
+## 个性化：壁纸、屏保、焦点样式、天气
+
+控制中心的「个性化」打开 `WallpaperSheet`，按「看得到的效果」从上到下分四段：壁纸、屏幕保护程序、焦点样式、天气（城市在手机页设置）。右边是手机扫码卡片。焦点移到最后一段可聚焦的「焦点样式」时，面板滚到底，让下面的天气也露出来。
 
 - `Wallpapers` 是 Compose 状态单例，只在主线程写。来源：
   - `daily:<date>`：必应 HPImageArchive，`cn.bing.com`，最近 8 张，存在 `files/daily/`；
@@ -103,7 +105,7 @@ Logo 的大小统一：先在 256×256 的采样里找出 Logo 的范围，再�
   - `grad:<key>`：内置渐变；
   - `photo:<id>`：手机上传的照片，存在 `files/photos/`，id 是毫秒时间戳的 36 进制；
   - `auto`：跟随 App。
-- 首页背景是 1280×720 的图，压暗层已经烘焙进去（`Images.shadeForHome`）。
+- 首页背景按屏幕实际像素解码，压暗层已经烘焙进去（`Images.shadeForHome`）；网格用的模糊版见「首页」一节。
 - 屏保有两条路径：
   1. **桌面内**：`MainActivity` 空闲计时 5 分钟，或在第一行按返回、点「立即开始」→ `vm.screensaverVisible`，同时加 `FLAG_KEEP_SCREEN_ON`，用来压住厂商屏保（小米靠这条）。
   2. **系统级**：`AerialDream`，由 `install.sh` 在使用标准屏保（`screensaver_enabled=1`）的电视上写入 `screensaver_components`（TCL 靠这条）。
@@ -118,7 +120,7 @@ NanoHTTPD 监听 8790 端口，路径前缀是 8 位随机令牌（每次打开�
 
 ## 开机信号源
 
-控制中心 → 信号源 →「开机时打开」（`AerialSettings.bootSource`，issue #25）。国内电视的「开机」大多是从待机唤醒，所以三条路径都会触发 `MainActivity.openBootSource`：真重启后第一次启动（按 `Settings.Global.BOOT_COUNT` 每次开机只开一次）；守护在亮屏、复活或开机后把 Aerial 拉回前台时带上 `EXTRA_WOKE`（Aerial 被杀掉的小米）；Aerial 本来就在前台时自己收到的亮屏广播（TCL）。15 秒内重复触发只开一次。如果唤醒时 CEC 已经切到了某个信号源，守护不会拉回 Aerial，这一次也就不再打开设定的信号源。
+控制中心 → 信号源 → 信号源设置 →「开机时打开」（`AerialSettings.bootSource`，issue #25）。国内电视的「开机」大多是从待机唤醒，所以三条路径都会触发 `MainActivity.openBootSource`：真重启后第一次启动（按 `Settings.Global.BOOT_COUNT` 每次开机只开一次）；守护在亮屏、复活或开机后把 Aerial 拉回前台时带上 `EXTRA_WOKE`（Aerial 被杀掉的小米）；Aerial 本来就在前台时自己收到的亮屏广播（TCL）。15 秒内重复触发只开一次。如果唤醒时 CEC 已经切到了某个信号源，守护不会拉回 Aerial，这一次也就不再打开设定的信号源。
 
 ## 遥控器按键
 

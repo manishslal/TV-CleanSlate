@@ -61,7 +61,6 @@ import app.orchard.tv.HomeViewModel
 import app.orchard.tv.Overlay
 import app.orchard.tv.R
 import app.orchard.tv.settings.AerialSettings
-import app.orchard.tv.settings.FocusStyle
 import app.orchard.tv.system.HomeStatus
 import app.orchard.tv.system.NetKind
 import app.orchard.tv.system.SourceKind
@@ -91,7 +90,11 @@ fun ControlCenter(
     onClose: () -> Unit,
 ) {
     BackHandler(enabled = visible) {
-        if (page != CcPage.Main) vm.overlay = Overlay.ControlCenter(CcPage.Main) else onClose()
+        when (page) {
+            CcPage.Main -> onClose()
+            CcPage.Inputs -> vm.overlay = Overlay.ControlCenter(CcPage.Main)
+            CcPage.InputSettings -> vm.overlay = Overlay.ControlCenter(CcPage.Inputs)
+        }
     }
 
     AnimatedVisibility(
@@ -130,7 +133,7 @@ fun ControlCenter(
                     when (p) {
                         CcPage.Main -> MainPage(vm, now, onOpen)
                         CcPage.Inputs -> InputsPage(vm, onOpen)
-                        CcPage.Settings -> SettingsPage(vm)
+                        CcPage.InputSettings -> InputSettingsPage(vm)
                     }
                 }
             }
@@ -191,9 +194,10 @@ private fun MainPage(vm: HomeViewModel, now: LocalDateTime, onOpen: (android.con
         BrightnessRow(vm)
 
         Spacer(Modifier.height(8.dp))
+        // How Home looks (wallpaper, screensaver, focus style, weather) lives in one place.
         MenuRow(
             Glyph.Photo,
-            stringResource(R.string.cc_wallpaper),
+            stringResource(R.string.cc_personalize),
             onClick = { vm.overlay = Overlay.Wallpaper },
         )
         MenuRow(
@@ -201,11 +205,6 @@ private fun MainPage(vm: HomeViewModel, now: LocalDateTime, onOpen: (android.con
             stringResource(R.string.cc_hidden_apps),
             onClick = { vm.overlay = Overlay.HiddenApps },
             trailing = vm.hiddenApps.size.toString(),
-        )
-        MenuRow(
-            Glyph.Switches,
-            stringResource(R.string.cc_aerial_settings),
-            onClick = { vm.overlay = Overlay.ControlCenter(CcPage.Settings) },
         )
 
         Spacer(Modifier.height(12.dp))
@@ -347,75 +346,64 @@ private fun InputsPage(vm: HomeViewModel, onOpen: (android.content.Intent) -> Un
                 onClick = { onOpen(source.intent) },
             )
         }
+        // Switching is this page's one job; what Aerial does with the inputs is a page further in.
         if (vm.sources.isNotEmpty()) {
-            Spacer(Modifier.height(14.dp))
-            BasicText(stringResource(R.string.cc_inputs_pin), style = Type.Callout, modifier = Modifier.padding(start = 14.dp, bottom = 6.dp))
-            vm.sources.forEach { source ->
-                val pinned = source.id in AerialSettings.pinnedSources
-                ChoiceRow(
-                    text = source.deviceName?.let { "${source.label} · $it" } ?: source.label,
-                    selected = pinned,
-                    focusRequester = null,
-                    onClick = { vm.setSourcePinned(source, !pinned) },
-                )
-            }
-            BasicText(
-                stringResource(R.string.cc_inputs_pin_hint),
-                style = Type.Caption,
-                modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp),
-            )
-
-            Spacer(Modifier.height(14.dp))
-            BasicText(stringResource(R.string.cc_inputs_boot), style = Type.Callout, modifier = Modifier.padding(start = 14.dp, bottom = 6.dp))
-            ChoiceRow(
-                text = stringResource(R.string.cc_inputs_boot_none),
-                selected = vm.sources.none { it.id == AerialSettings.bootSource },
-                focusRequester = null,
-                onClick = { AerialSettings.chooseBootSource(null) },
-            )
-            vm.sources.forEach { source ->
-                ChoiceRow(
-                    text = source.deviceName?.let { "${source.label} · $it" } ?: source.label,
-                    selected = source.id == AerialSettings.bootSource,
-                    focusRequester = null,
-                    onClick = { AerialSettings.chooseBootSource(source.id) },
-                )
-            }
-            BasicText(
-                stringResource(R.string.cc_inputs_boot_hint),
-                style = Type.Caption,
-                modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp),
-            )
+            Spacer(Modifier.height(10.dp))
+            MenuRow(Glyph.Gear, stringResource(R.string.cc_inputs_settings), onClick = { vm.overlay = Overlay.ControlCenter(CcPage.InputSettings) })
         }
     }
 }
 
-/** Aerial's own settings, a page inside Control Center like Inputs. */
+/**
+ * What Aerial does with the inputs: which ones are tiles on Home (any number) and which one the
+ * TV starts on (one, or none). Kept apart from the list that switches inputs.
+ */
 @Composable
-private fun SettingsPage(vm: HomeViewModel) {
+private fun InputSettingsPage(vm: HomeViewModel) {
     val first = remember { FocusRequester() }
     LaunchedEffect(Unit) {
         withFrameNanos { }
         runCatching { first.requestFocus() }
     }
+    fun name(source: app.orchard.tv.system.TvSource) = source.deviceName?.let { "${source.label} · $it" } ?: source.label
     Column(Modifier.heightIn(max = 470.dp).verticalScroll(rememberScrollState())) {
-        MenuRow(Glyph.ChevronLeft, stringResource(R.string.cc_aerial_settings), onClick = { vm.overlay = Overlay.ControlCenter(CcPage.Main) })
+        MenuRow(Glyph.ChevronLeft, stringResource(R.string.cc_inputs_settings), onClick = { vm.overlay = Overlay.ControlCenter(CcPage.Inputs) })
+
         Spacer(Modifier.height(10.dp))
-        BasicText(stringResource(R.string.st_focus_style), style = Type.Callout, modifier = Modifier.padding(start = 14.dp, bottom = 6.dp))
-        val current = AerialSettings.focusStyle
-        listOf(
-            FocusStyle.HighContrast to R.string.st_focus_high,
-            FocusStyle.Standard to R.string.st_focus_standard,
-        ).forEachIndexed { i, (style, label) ->
+        BasicText(stringResource(R.string.cc_inputs_pin), style = Type.Callout, modifier = Modifier.padding(start = 14.dp, bottom = 6.dp))
+        vm.sources.forEachIndexed { i, source ->
+            val pinned = source.id in AerialSettings.pinnedSources
             ChoiceRow(
-                text = stringResource(label),
-                selected = current == style,
+                text = name(source),
+                selected = pinned,
                 focusRequester = if (i == 0) first else null,
-                onClick = { AerialSettings.chooseFocusStyle(style) },
+                onClick = { vm.setSourcePinned(source, !pinned) },
             )
         }
         BasicText(
-            stringResource(if (current == FocusStyle.HighContrast) R.string.st_focus_high_hint else R.string.st_focus_standard_hint),
+            stringResource(R.string.cc_inputs_pin_hint),
+            style = Type.Caption,
+            modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp),
+        )
+
+        Spacer(Modifier.height(18.dp))
+        BasicText(stringResource(R.string.cc_inputs_boot), style = Type.Callout, modifier = Modifier.padding(start = 14.dp, bottom = 6.dp))
+        ChoiceRow(
+            text = stringResource(R.string.cc_inputs_boot_none),
+            selected = vm.sources.none { it.id == AerialSettings.bootSource },
+            focusRequester = null,
+            onClick = { AerialSettings.chooseBootSource(null) },
+        )
+        vm.sources.forEach { source ->
+            ChoiceRow(
+                text = name(source),
+                selected = source.id == AerialSettings.bootSource,
+                focusRequester = null,
+                onClick = { AerialSettings.chooseBootSource(source.id) },
+            )
+        }
+        BasicText(
+            stringResource(R.string.cc_inputs_boot_hint),
             style = Type.Caption,
             modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp),
         )

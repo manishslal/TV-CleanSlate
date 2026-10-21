@@ -38,7 +38,7 @@ Built for the Xiaomi, TCL and other TVs sold in China. It takes over at boot and
 </p>
 
 - **Clock**: a large, thin clock over your wallpaper, which darkens toward the bottom and left so everything stays readable. Scroll down and it tucks into the status bar.
-- **App grid**: five apps per row. The focused app lifts and shows its name, with a white ring so you can spot it from the couch. Prefer the plain tvOS look? Set Focus Style to Standard in Control Center → Aerial Settings.
+- **App grid**: five apps per row. The focused app lifts and shows its name, with a white ring so you can spot it from the couch. Prefer the plain tvOS look? Set Focus Style to Standard in Control Center → Personalize.
 - **Icons**: apps with a TV banner show it. Square icons fill the tile with their own color, and adaptive icons split into layers for a parallax effect.
 - **Every app**: including system apps with no launcher entry, like Xiaomi's App Store, Media Player and Mi Home.
 - **Input tiles**: pin HDMI, AV or the antenna to Home and switch to it in one press (Control Center → Inputs → Show on Home).
@@ -54,7 +54,7 @@ Hold OK to **Move** (other tiles make room), **Hide from Home**, open **App Info
 
 ![Control Center](site/img/control-center.jpg)
 
-Press the remote's menu button (≡), or press Up from the top row. You get inputs (with HDMI-CEC devices), network and settings, volume and brightness sliders, plus Wallpaper & Screensaver, Hidden Apps and Aerial Settings. Network and settings open your TV's own panels.
+Press Up from the top row to reach the top right, then OK (once there, the menu button ≡ opens it too). You get inputs (with HDMI-CEC devices), network and settings, volume and brightness sliders, plus Personalize (wallpaper, screensaver, focus style, weather) and Hidden Apps. Network and settings open your TV's own panels. On an app, the menu button opens that app's menu (move, hide and so on), the same as holding OK.
 
 ### Screensaver
 
@@ -72,7 +72,7 @@ On TVs that use Android's standard screensaver (TCL, for one), Aerial becomes th
 ### Wallpaper and phone setup
 
 <p align="center">
-  <img src="site/img/wallpaper.jpg" width="74%" alt="The Wallpaper & Screensaver panel">
+  <img src="site/img/wallpaper.jpg" width="74%" alt="The Personalize panel">
   <img src="site/img/phone.jpg" width="20%" alt="The setup page on a phone">
 </p>
 
