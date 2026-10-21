@@ -15,6 +15,7 @@ import android.net.wifi.WifiManager
 import android.os.Build
 import android.provider.Settings
 import androidx.core.content.getSystemService
+import app.orchard.tv.R
 import app.orchard.tv.guard.HomeGuardService
 
 enum class NetKind { Wifi, Ethernet, Offline }
@@ -159,6 +160,25 @@ object SystemProbe {
         }.isSuccess
     }
 
+    /**
+     * Opens the TV's own input picker, for TVs whose inputs Android does not list. TCL MT5879 keeps
+     * its inputs in its own middleware (TvInputManager has none) and its remote's input key opens a
+     * side panel: SystemUI's status bar service where the firmware has the custom source panel,
+     * TCL settings' otherwise (TclShortCutKeyManager.startTVInputService).
+     */
+    fun openInputPicker(context: Context): Boolean {
+        val pm = context.packageManager
+        val intent = if (pm.hasSystemFeature("com.tcl.software.systemui_custom_tv_source")) {
+            Intent("com.tcl.tvstatusbar.action.SHOW_WINDOW").setPackage("com.android.systemui")
+                .putExtra("TvStatusBar_Type", "Source")
+                .putExtra("TvStatusBar_StartFrom", "input")
+        } else {
+            Intent("com.tcl.insrc.SHOW_WINDOW").setPackage("com.tcl.settings")
+        }
+        if (pm.resolveService(intent, 0) == null) return false
+        return runCatching { context.startService(intent) }.getOrNull() != null
+    }
+
     private fun firstResolvable(context: Context, vararg intents: Intent): Intent {
         val pm = context.packageManager
         // Not Intent.resolveActivity: it returns an explicit component unchecked, so Xiaomi's
@@ -178,7 +198,9 @@ object SystemProbe {
      * Physical inputs from the TV input framework, routed through the maker's own player where the
      * generic passthrough intent has no handler (Xiaomi's China firmware).
      */
-    fun sources(context: Context): List<TvSource> {
+    fun sources(context: Context): List<TvSource> = frameworkSources(context).ifEmpty { tclSources(context) }
+
+    private fun frameworkSources(context: Context): List<TvSource> {
         val tim = context.getSystemService<TvInputManager>() ?: return emptyList()
         val infos = runCatching { tim.tvInputList }.getOrNull() ?: return emptyList()
         val xiaomi = isInstalled(context, XIAOMI_PLAYER)
@@ -213,6 +235,38 @@ object SystemProbe {
                 )
             }
             .sortedWith(compareBy({ it.kind.ordinal }, { it.label }))
+    }
+
+    private const val TCL_PLAYER = "com.tcl.tv"
+
+    /**
+     * TCL keeps its inputs in its own middleware, so the framework lists none (MT5879, China). Its
+     * player switches to any of them when started with the input's EnTCLInputSource ordinal, which
+     * is what TCL's own input panel does (SystemUI's ShareUtils.startLiveTV). The ports are the ones
+     * MT5879 has; the firmware does not tell an app which are connected or what is plugged in.
+     */
+    private fun tclSources(context: Context): List<TvSource> {
+        val player = ComponentName(TCL_PLAYER, "$TCL_PLAYER.TVActivity")
+        if (runCatching { context.packageManager.getActivityInfo(player, 0) }.isFailure) return emptyList()
+        fun source(name: String, ordinal: Int, kind: SourceKind, label: String) = TvSource(
+            id = "tcl:$name",
+            label = label,
+            kind = kind,
+            connected = false,
+            deviceName = null,
+            intent = Intent().setComponent(player)
+                .putExtra("targetSourceId", ordinal)
+                .putExtra("referer", "com.tcl.settings.module_source")
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+        )
+        return listOf(
+            source("HDMI1", 8, SourceKind.Hdmi, "HDMI 1"),
+            source("HDMI2", 9, SourceKind.Hdmi, "HDMI 2"),
+            source("HDMI3", 10, SourceKind.Hdmi, "HDMI 3"),
+            source("HDMI4", 11, SourceKind.Hdmi, "HDMI 4"),
+            source("DTV", 2, SourceKind.Tuner, context.getString(R.string.input_live_tv)),
+            source("AV1", 3, SourceKind.Av, context.getString(R.string.input_av)),
+        )
     }
 
     private fun hw(id: String): Int? = Regex("/HW(\\d+)$").find(id)?.groupValues?.get(1)?.toIntOrNull()

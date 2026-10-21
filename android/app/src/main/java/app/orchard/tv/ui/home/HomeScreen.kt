@@ -203,10 +203,12 @@ fun HomeScreen(
                     renderEffect = if (r > 0.5f && Build.VERSION.SDK_INT >= 31) BlurEffect(r, r, TileMode.Clamp) else null
                 },
         ) {
-            AmbientBackground(
+            HomeBackground(
                 // The chosen wallpaper; in "Follow App" mode, light from the focused app.
                 backdrop = Wallpapers.backdrop ?: ambientApp?.art?.backdrop,
-                dim = { (scroll.value / collapsePx).coerceIn(0f, 1f) * 0.5f },
+                frosted = Wallpapers.frosted.takeIf { Wallpapers.backdrop != null },
+                scroll = { scroll.value },
+                collapse = collapsePx,
             )
 
             Box(Modifier.fillMaxSize().offset { IntOffset(0, -scroll.value.roundToInt()) }) {

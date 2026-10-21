@@ -77,13 +77,27 @@ object Wallpapers {
     /** The home backdrop for the selection, shading baked in; null while loading or in Auto. */
     var backdrop by mutableStateOf<ImageBitmap?>(null); private set
 
+    /**
+     * The same picture frosted: blurred small and darkened. The glass under the top row samples it,
+     * and the whole screen turns to it once focus goes down into the grid, as on tvOS.
+     */
+    var frosted by mutableStateOf<ImageBitmap?>(null); private set
+
     private var backdropJob: Job? = null
     private var started = false
+
+    /** The UI's size in pixels. Pictures are decoded to it: 1080p on most TVs, 4K where the UI is. */
+    var screenW = 1920; private set
+    var screenH = 1080; private set
 
     fun init(context: Context) {
         if (started) return
         started = true
         app = context.applicationContext
+        context.resources.displayMetrics.let {
+            screenW = maxOf(it.widthPixels, it.heightPixels)
+            screenH = minOf(it.widthPixels, it.heightPixels)
+        }
         selectedId = prefs.getString("selected", LATEST_DAILY) ?: LATEST_DAILY
         screensaver = ScreensaverMode.of(prefs.getString("screensaver", null))
         rebuildList()
@@ -138,13 +152,19 @@ object Wallpapers {
         backdropJob = scope.launch {
             if (id == AUTO) {
                 backdrop = null
+                frosted = null
                 return@launch
             }
             val wp = resolve(id) ?: resolve(DEFAULT_FALLBACK)
-            val bmp = withContext(Dispatchers.Default) {
-                wp?.let { picture(it, 1280, 720) }?.let(Images::shadeForHome)
+            val (bmp, frost) = withContext(Dispatchers.Default) {
+                val picture = wp?.let { picture(it, screenW, screenH) }
+                // Frosted from the picture before the home shading: the glass sits low on the
+                // screen, where the shading is darkest, and would read as a grey slab.
+                val frost = picture?.let(Images::frost)
+                picture?.let(Images::shadeForHome) to frost
             }
             backdrop = bmp?.asImageBitmap()
+            frosted = frost?.asImageBitmap()
         }
     }
 
@@ -189,7 +209,9 @@ object Wallpapers {
                     val date = img.getString("startdate")
                     val file = File(dailyDir, "$date.jpg")
                     if (!file.exists()) {
-                        val bytes = get("https://cn.bing.com" + img.getString("url"))
+                        // url is the 1920×1080 picture; a UI drawn above 1080p gets the UHD one.
+                        val path = if (screenW > 1920) img.getString("urlbase") + "_UHD.jpg" else img.getString("url")
+                        val bytes = get("https://cn.bing.com" + path)
                         file.writeBytes(bytes)
                     }
                     val copyright = img.optString("copyright")

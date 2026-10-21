@@ -61,6 +61,22 @@ object Images {
         return out
     }
 
+    /**
+     * A home backdrop frosted: shrunk and blurred three times over. Small
+     * on purpose; it is only ever seen blurred, and it is drawn stretched in a single pass.
+     */
+    fun frost(b: Bitmap): Bitmap {
+        val w = 320
+        val h = 180
+        val small = Bitmap.createScaledBitmap(b, w, h, true)
+        val px = IntArray(w * h)
+        small.getPixels(px, 0, w, 0, 0, w, h)
+        repeat(3) { boxBlur(px, w, h, 7) }
+        val out = small.copy(Bitmap.Config.ARGB_8888, true).also { if (it !== small) small.recycle() }
+        out.setPixels(px, 0, w, 0, 0, w, h)
+        return out
+    }
+
     /** Fine noise, so long gradients do not band on 8-bit panels. */
     fun dither(b: Bitmap) {
         val w = b.width

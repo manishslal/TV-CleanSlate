@@ -8,9 +8,11 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.database.ContentObserver
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
+import android.os.Process
 import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
@@ -49,11 +51,14 @@ class HomeGuardService : AccessibilityService() {
 
     private val handler = Handler(Looper.getMainLooper())
 
+    private var takeOverReason = ""
+    private val takeOver = Runnable { takeOverIfStockHomeInFront(takeOverReason) }
+
     private val screenOn = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             // Firmwares put their own launcher back in front while the TV is in standby, and no
             // window change follows on wake. Look once things have settled after the screen lights.
-            handler.postDelayed({ takeOverIfStockHomeInFront("screen on") }, 1200)
+            takeOverOnceSettled("screen on")
         }
     }
 
@@ -66,6 +71,7 @@ class HomeGuardService : AccessibilityService() {
     override fun onServiceConnected() {
         instance = this
         refreshStockHomes()
+        filterKeys(false)
         registerReceiver(screenOn, IntentFilter(Intent.ACTION_SCREEN_ON))
         contentResolver.registerContentObserver(Settings.Global.getUriFor(Settings.Global.ADB_ENABLED), false, adbObserver)
         GuardSetup.ensureAdb(this)
@@ -74,13 +80,36 @@ class HomeGuardService : AccessibilityService() {
         // Not after an update, though: installing over Aerial also kills it, and whoever is watching
         // an input or another app at that moment must not be pulled back to Home.
         val revived = SystemClock.elapsedRealtime() - GuardSetup.lastRevivedAt < 60_000 && !justUpdated()
+        // Aerial died with its home screen in front (it crashed, was updated, or was killed) and the
+        // stock launcher was uncovered; pressing Home there changes nothing the guard could see
+        // (TCL MT5879, after the screensaver crash of 1.14). Updates count too: Aerial was in front.
+        val diedInFront = GuardSetup.wasHomeInFront(this) &&
+            (Build.VERSION.SDK_INT < 24 || SystemClock.elapsedRealtime() - Process.getStartElapsedRealtime() < 60_000)
         // Revived with the screen off (standby): the screen-on check takes over at wake.
-        if ((SystemClock.elapsedRealtime() < BOOT_WINDOW_MS && !isDefaultHome() || revived) &&
+        if ((SystemClock.elapsedRealtime() < BOOT_WINDOW_MS && !isDefaultHome() || revived || diedInFront) &&
             getSystemService<PowerManager>()?.isInteractive == true
         ) {
-            Log.i(TAG, if (revived) "re-enabled after being switched off; taking over Home" else "bound shortly after boot; taking over Home")
-            goHome()
+            takeOverOnceSettled(
+                when {
+                    revived -> "re-enabled after being switched off"
+                    diedInFront -> "back after Aerial died in front"
+                    else -> "bound shortly after boot"
+                },
+            )
         }
+    }
+
+    /**
+     * Takes Home back after a short wait, and only if nothing but the stock launcher came to the
+     * front meanwhile. At power-on an HDMI-CEC source (an Apple TV) switches the TV to its input
+     * just as the screen lights and the guard is bound again; taking Home at once bounced the
+     * viewer straight back out of the input (reported by a user, reproduced on Xiaomi MiTV-MFTR0:
+     * the input's ExternalSourceActivity started 130 ms before the guard was bound).
+     */
+    private fun takeOverOnceSettled(reason: String) {
+        takeOverReason = reason
+        handler.removeCallbacks(takeOver)
+        handler.postDelayed(takeOver, SETTLE_MS)
     }
 
     private fun justUpdated(): Boolean = runCatching {
@@ -94,8 +123,11 @@ class HomeGuardService : AccessibilityService() {
      */
     private fun takeOverIfStockHomeInFront(reason: String) {
         val last = lastWindow
-        // Unknown means we were only just bound, which happens after a standby kill.
-        val stockInFront = last == null || last.second in (stockHomes[last.first] ?: emptySet())
+        // Unknown means we were only just bound, which happens after a standby kill. Any screen of
+        // the stock launcher counts: when Aerial is killed, whatever was on top of the launcher's
+        // task is uncovered, not always its home activity (PatchWall's StrategicLayerActivity).
+        val stockInFront = last == null || last.first in stockHomes
+        if (!stockInFront && last != null) Log.i(TAG, "$reason with ${last.first} in front; leaving it there")
         if (!stockInFront || SystemClock.uptimeMillis() < allowStockUntil) return
         Log.i(TAG, "$reason with the stock launcher in front; bringing Aerial back")
         goHome()
@@ -116,15 +148,20 @@ class HomeGuardService : AccessibilityService() {
 
     override fun onInterrupt() = Unit
 
-    /** Filters keys only while the viewer is in the stock launcher on purpose; see the class comment. */
+    /**
+     * Filters keys only while the viewer is in the stock launcher on purpose; see the class comment.
+     * Up to Android 11 always: there, once Home reaches the system, it holds every background
+     * activity start for five seconds, so Aerial came back only after five seconds of the TCL
+     * launcher (TCL MT5879, since 1.11 stopped filtering by default).
+     */
     private fun filterKeys(on: Boolean) {
         val info = serviceInfo ?: return
         val flag = AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
-        val want = if (on) info.flags or flag else info.flags and flag.inv()
+        val want = if (on || Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) info.flags or flag else info.flags and flag.inv()
         if (want == info.flags) return
         info.flags = want
         serviceInfo = info
-        Log.i(TAG, if (on) "filtering keys while the stock launcher is open" else "stopped filtering keys")
+        Log.i(TAG, if (want and flag != 0) "filtering keys" else "stopped filtering keys")
     }
 
     override fun onKeyEvent(event: KeyEvent): Boolean {
@@ -190,6 +227,7 @@ class HomeGuardService : AccessibilityService() {
     companion object {
         private const val TAG = "AerialGuard"
         private const val BOOT_WINDOW_MS = 3 * 60 * 1000L
+        private const val SETTLE_MS = 1500L
 
         @Volatile
         private var instance: HomeGuardService? = null

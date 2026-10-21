@@ -24,7 +24,7 @@ import kotlin.math.sin
  * A small set of line glyphs drawn in the spirit of SF Symbols: one stroke weight, round caps,
  * optically centered in a square box. Drawn, not bundled, so they stay crisp at every size.
  */
-enum class Glyph { Wifi, Ethernet, Offline, Gear, Input, Speaker, SpeakerMuted, Switches, EyeSlash, Move, Info, Trash, ChevronRight, ChevronLeft, Check, Hdmi, Antenna, Av, Sun, Photo, Play }
+enum class Glyph { Wifi, Ethernet, Offline, Gear, Input, Speaker, SpeakerMuted, Switches, EyeSlash, Move, Info, Trash, ChevronRight, ChevronLeft, Check, Hdmi, Antenna, Av, Sun, Photo, Play, Bag, CloudSun, Calendar, Cast, Shield, Globe }
 
 @Composable
 fun GlyphIcon(glyph: Glyph, color: Color, size: Dp, modifier: Modifier = Modifier, level: Float = 1f) {
@@ -201,6 +201,63 @@ fun DrawScope.drawGlyph(glyph: Glyph, color: Color, level: Float = 1f) {
         Glyph.Av -> {
             drawCircle(color, radius = 0.3f * s, center = p(0.5f, 0.5f), style = stroke)
             drawCircle(color, radius = 0.09f * s, center = p(0.5f, 0.5f))
+        }
+        Glyph.Bag -> {
+            // A shopping bag, the app store.
+            drawRoundRect(color, p(0.14f, 0.34f), Size(0.72f * s, 0.56f * s), CornerRadius(0.09f * s), style = stroke)
+            drawArc(color, 180f, 180f, false, p(0.33f, 0.1f), Size(0.34f * s, 0.4f * s), style = stroke)
+        }
+        Glyph.CloudSun -> {
+            // The sun behind a cloud: rays first, the cloud filled over them.
+            val sun = p(0.66f, 0.32f)
+            drawCircle(color, radius = 0.12f * s, center = sun, style = stroke)
+            for (i in 0 until 8) {
+                val a = (i * 45f) * (Math.PI / 180).toFloat()
+                line(0.66f + 0.19f * cos(a), 0.32f + 0.19f * sin(a), 0.66f + 0.26f * cos(a), 0.32f + 0.26f * sin(a))
+            }
+            val cloud = Path().apply {
+                addOval(Rect(p(0.33f, 0.62f), 0.17f * s))
+                addOval(Rect(p(0.52f, 0.55f), 0.21f * s))
+                addRoundRect(androidx.compose.ui.geometry.RoundRect(0.1f * s, 0.6f * s, 0.84f * s, 0.86f * s, CornerRadius(0.13f * s)))
+            }
+            drawPath(cloud, color)
+        }
+        Glyph.Calendar -> {
+            drawRoundRect(color, p(0.1f, 0.18f), Size(0.8f * s, 0.7f * s), CornerRadius(0.1f * s), style = stroke)
+            line(0.1f, 0.38f, 0.9f, 0.38f)
+            line(0.32f, 0.08f, 0.32f, 0.24f); line(0.68f, 0.08f, 0.68f, 0.24f)
+            for (x in listOf(0.3f, 0.5f, 0.7f)) for (y in listOf(0.54f, 0.72f)) drawCircle(color, radius = w * 0.75f, center = p(x, y))
+        }
+        Glyph.Cast -> {
+            // A screen with a triangle rising into a gap in its lower edge, as AirPlay draws it.
+            val screen = Path().apply {
+                moveTo(0.34f * s, 0.7f * s); lineTo(0.2f * s, 0.7f * s)
+                quadraticTo(0.08f * s, 0.7f * s, 0.08f * s, 0.58f * s); lineTo(0.08f * s, 0.24f * s)
+                quadraticTo(0.08f * s, 0.12f * s, 0.2f * s, 0.12f * s); lineTo(0.8f * s, 0.12f * s)
+                quadraticTo(0.92f * s, 0.12f * s, 0.92f * s, 0.24f * s); lineTo(0.92f * s, 0.58f * s)
+                quadraticTo(0.92f * s, 0.7f * s, 0.8f * s, 0.7f * s); lineTo(0.66f * s, 0.7f * s)
+            }
+            drawPath(screen, color, style = stroke)
+            val tri = Path().apply {
+                moveTo(0.5f * s, 0.6f * s); lineTo(0.72f * s, 0.9f * s); lineTo(0.28f * s, 0.9f * s); close()
+            }
+            drawPath(tri, color)
+        }
+        Glyph.Shield -> {
+            val shield = Path().apply {
+                moveTo(0.5f * s, 0.07f * s); lineTo(0.85f * s, 0.2f * s); lineTo(0.85f * s, 0.46f * s)
+                cubicTo(0.85f * s, 0.7f * s, 0.68f * s, 0.85f * s, 0.5f * s, 0.93f * s)
+                cubicTo(0.32f * s, 0.85f * s, 0.15f * s, 0.7f * s, 0.15f * s, 0.46f * s)
+                lineTo(0.15f * s, 0.2f * s); close()
+            }
+            drawPath(shield, color, style = stroke)
+            line(0.35f, 0.5f, 0.46f, 0.62f); line(0.46f, 0.62f, 0.66f, 0.38f)
+        }
+        Glyph.Globe -> {
+            drawCircle(color, radius = 0.42f * s, center = p(0.5f, 0.5f), style = stroke)
+            drawOval(color, p(0.31f, 0.08f), Size(0.38f * s, 0.84f * s), style = stroke)
+            line(0.08f, 0.5f, 0.92f, 0.5f)
+            line(0.16f, 0.29f, 0.84f, 0.29f); line(0.16f, 0.71f, 0.84f, 0.71f)
         }
     }
 }

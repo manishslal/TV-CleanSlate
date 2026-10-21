@@ -1,5 +1,7 @@
 package app.orchard.tv.guard
 
+import android.os.Handler
+import android.os.Looper
 import android.service.notification.NotificationListenerService
 import android.util.Log
 
@@ -16,5 +18,8 @@ class RevivalListener : NotificationListenerService() {
     override fun onListenerConnected() {
         Log.i("AerialGuard", "revived by the notification listener binding")
         GuardSetup.ensureEnabled(this)
+        // After a crash Android keeps the guard enabled but does not bind it again (TCL MT5879),
+        // and nothing else would notice until Aerial is opened: Home went to the TCL launcher.
+        Handler(Looper.getMainLooper()).postDelayed({ GuardSetup.rebindIfStalled(this) }, 5_000)
     }
 }

@@ -31,10 +31,12 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import app.orchard.tv.apps.AppEntry
+import app.orchard.tv.apps.TileArtFactory
 import app.orchard.tv.guard.GuardSetup
 import app.orchard.tv.guard.HomeGuardService
 import app.orchard.tv.ui.home.HomeScreen
 import app.orchard.tv.ui.theme.LocalReducedMotion
+import app.orchard.tv.ui.theme.canvasDensity
 import app.orchard.tv.settings.AerialSettings
 import app.orchard.tv.wallpaper.Wallpapers
 
@@ -63,6 +65,7 @@ class MainActivity : ComponentActivity() {
             hide(WindowInsetsCompat.Type.systemBars())
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
+        TileArtFactory.useCanvasDensity(canvasDensity(resources.displayMetrics))
         Wallpapers.init(this)
         AerialSettings.init(this)
         val reducedMotion = Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
@@ -70,17 +73,17 @@ class MainActivity : ComponentActivity() {
         // The home screen paints every pixel itself; a window background would be one more
         // full-screen fill per frame for the TV's GPU.
         window.setBackgroundDrawable(null)
+        preferSmoothestRefreshRate()
 
         setContent {
             // TVs ship at different densities for the same 1080p panel (Xiaomi 320dpi, TCL 240dpi),
             // which would make the same layout bigger on one and smaller on the other. Aerial is
             // designed on a 960×540 canvas, so it scales that canvas to whatever the panel is.
-            val metrics = resources.displayMetrics
-            val canvasDensity = Density(
-                density = minOf(metrics.widthPixels, metrics.heightPixels * 16 / 9) / 960f,
+            val canvas = Density(
+                density = canvasDensity(resources.displayMetrics),
                 fontScale = LocalDensity.current.fontScale,
             )
-            CompositionLocalProvider(LocalReducedMotion provides reducedMotion, LocalDensity provides canvasDensity) {
+            CompositionLocalProvider(LocalReducedMotion provides reducedMotion, LocalDensity provides canvas) {
                 HomeScreen(
                     vm = vm,
                     onLaunch = ::launch,
@@ -92,6 +95,30 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    /**
+     * Runs Home at the fastest refresh rate the panel can switch to without going black, so focus
+     * and scrolling move as smoothly as the TV allows (a 120 Hz TV that idles its UI at 60 Hz).
+     * Only seamless switches, which Android 12 can name: on a TV a mode change is otherwise a second
+     * of black screen, every time Home comes back. Xiaomi MiTV-MFTR0 and MFFU1 have a single 60 Hz
+     * mode; TCL MT5879 (Android 11) lists 50 to 120 Hz but cannot say which switches are seamless,
+     * so both stay as they are.
+     */
+    private fun preferSmoothestRefreshRate() {
+        if (Build.VERSION.SDK_INT < 31) return
+        val display = display ?: return
+        val current = display.mode
+        val seamless = current.alternativeRefreshRates
+        val best = display.supportedModes
+            .filter { m ->
+                m.physicalWidth == current.physicalWidth && m.physicalHeight == current.physicalHeight &&
+                    m.refreshRate <= 120.5f && seamless.any { kotlin.math.abs(it - m.refreshRate) < 0.5f }
+            }
+            .maxByOrNull { it.refreshRate }
+            ?.takeIf { it.refreshRate > current.refreshRate + 0.5f } ?: return
+        android.util.Log.i("Aerial", "refresh rate ${current.refreshRate} -> ${best.refreshRate} Hz (mode ${best.modeId})")
+        window.attributes = window.attributes.apply { preferredDisplayModeId = best.modeId }
     }
 
     // ---- Screensaver: Aerial's own, before the firmware's ad-carrying one can start ----
@@ -195,6 +222,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         restartIdleTimer()
+        GuardSetup.setHomeInFront(this, true)
         HomeGuardService.onAerialResumed()
         vm.refreshSystem()
         // Back in front by any route (Home was handled in onNewIntent, which runs first; Back from
@@ -204,6 +232,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
+        GuardSetup.setHomeInFront(this, false)
         idleHandler.removeCallbacks(showScreensaver)
         hideScreensaver()
     }

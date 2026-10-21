@@ -14,6 +14,14 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import app.orchard.tv.R
 
+/**
+ * Pixels per dp of Aerial's 960×540 design canvas on this screen: 2 for a 1080p UI, 4 for a TV
+ * that draws its UI at 4K. Anything rasterized ahead of time (tile art, wallpapers) is sized from
+ * this too, so it stays as sharp as the text drawn live.
+ */
+fun canvasDensity(metrics: android.util.DisplayMetrics): Float =
+    minOf(metrics.widthPixels, metrics.heightPixels * 16 / 9) / 960f
+
 /** tvOS dark appearance. Values follow Apple's system colors for the dark, elevated context. */
 object Palette {
     val Background = Color(0xFF000000)

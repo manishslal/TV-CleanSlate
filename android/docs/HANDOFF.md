@@ -4,7 +4,7 @@
 
 ## 现状（2026-10-20）
 
-- 版本 **1.10（versionCode 11）**：小米装的是 1.10 的同一份代码（版本号还没改前编的包，versionCode 10）；TCL 还是 1.7（升级要在电视上点一次「同意」）。两台真机都在日常使用：小米 MiTV-MFTR0（`standard`）、TCL MT5879 国行（`guard`）。
+- 版本 **1.15（versionCode 16，还没发 Release）**：小米 MiTV-MFTR0（`standard`）和 TCL MT5879 国行（`guard`）都装的是这一版（2026-10-21）。1.15 改了磁贴图（自绘系统 App、Logo 统一大小、最高密度图标）、按实际分辨率画位图、无黑屏时用更高刷新率，见 ARCHITECTURE.md。
 - 具体 IP、每台电视上改过的设置、户主自己的数据：见 **`local/TVS.md`**（不在版本库，需要单独私下拿到）。
 - 开源在 https://github.com/pengchujin/aerial-tv（MIT）。官网在 `site/`，已部署到 https://aerial.qust.me（Cloudflare Worker 静态资源）。还没有自动化测试，以下结论都来自真机操作和日志。
 

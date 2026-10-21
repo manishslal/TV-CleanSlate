@@ -190,11 +190,11 @@ fun MiniTile(app: AppEntry, focused: Boolean, modifier: Modifier = Modifier) {
     ) {
         drawImage(app.art.back, dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()), filterQuality = FilterQuality.Medium)
         app.art.fore?.let {
-            val s = size.height * app.art.foreFraction
+            val at = app.art.foreAt
             drawImage(
                 it,
-                dstOffset = IntOffset(((size.width - s) / 2).roundToInt(), ((size.height - s) / 2).roundToInt()),
-                dstSize = IntSize(s.roundToInt(), s.roundToInt()),
+                dstOffset = IntOffset((at.left * size.width).roundToInt(), (at.top * size.height).roundToInt()),
+                dstSize = IntSize((at.width * size.width).roundToInt(), (at.height * size.height).roundToInt()),
                 filterQuality = FilterQuality.Medium,
             )
         }

@@ -6,12 +6,19 @@ import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.LinearGradient
 import android.graphics.Paint
+import android.graphics.RectF
 import android.graphics.Shader
 import android.graphics.drawable.AdaptiveIconDrawable
 import androidx.annotation.RequiresApi
 import android.os.Build
 import android.graphics.drawable.Drawable
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
+import app.orchard.tv.ui.theme.Glyph
+import app.orchard.tv.ui.theme.drawGlyph
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.ColorUtils
@@ -27,12 +34,13 @@ import kotlin.math.roundToInt
  *
  * - [back] always fills the tile: the app's TV banner, the adaptive icon's background layer, or a
  *   plate in the icon's own color.
- * - [fore] is drawn centered on top, [foreFraction] of the tile height tall, and moves with parallax.
+ * - [fore] is drawn on top at [foreAt] (fractions of the tile), and moves with parallax. It is cut
+ *   down to its visible pixels: tiles are drawn every frame, and the TV's GPU is short of fill rate.
  */
 class TileArt(
     val back: ImageBitmap,
     val fore: ImageBitmap?,
-    val foreFraction: Float,
+    val foreAt: androidx.compose.ui.geometry.Rect,
     val tint: Color,
     /**
      * The whole home backdrop for this app, baked small: its blurred artwork as ambient light plus
@@ -42,10 +50,42 @@ class TileArt(
     val backdrop: ImageBitmap,
 )
 
+/** Firmware apps Aerial draws its own tile for, each in the color that tells the kind apart. */
+enum class SystemTile(top: Long, bottom: Long, val glyph: Glyph) {
+    Settings(0xFF8E8E93, 0xFF48484A, Glyph.Gear),
+    Photos(0xFFFFB340, 0xFFFF5E3A, Glyph.Photo),
+    Media(0xFF3A3A3C, 0xFF111113, Glyph.Play),
+    Store(0xFF40B0FF, 0xFF0A5FD8, Glyph.Bag),
+    Weather(0xFF5AC8FA, 0xFF1C6FD6, Glyph.CloudSun),
+    Calendar(0xFFFF6B5E, 0xFFD02A1E, Glyph.Calendar),
+    Cast(0xFF8E8CFF, 0xFF4744D0, Glyph.Cast),
+    Security(0xFF3ED97A, 0xFF138A47, Glyph.Shield),
+    Browser(0xFF64D2FF, 0xFF0A7BEA, Glyph.Globe);
+
+    val top = top.toInt()
+    val bottom = bottom.toInt()
+}
+
 object TileArtFactory {
-    // Rendered at the tile's focused size on a 1080p panel, so the lifted tile is still pixel-sharp.
-    const val W = 352
-    const val H = 198
+    /**
+     * Pixel size of the artwork: the tile at its focused size on this screen, so the lifted tile is
+     * still pixel-sharp. 352×198 on a 1080p UI, twice that on a TV that draws its UI at 4K.
+     */
+    @Volatile var W = 352; private set
+    @Volatile var H = 198; private set
+
+    /** Called with [app.orchard.tv.ui.theme.canvasDensity] before any tile is built. */
+    fun useCanvasDensity(density: Float) {
+        // 176dp: the 147dp tile at its 1.15× focus scale, with a little to spare.
+        W = (176 * density).roundToInt().coerceIn(352, 704)
+        H = W * 9 / 16
+    }
+
+    /** How large a logo is, as the side of the square of the same area, in tile heights. */
+    private const val LOGO = 0.5f
+
+    /** The resolution an icon is sampled at to find its logo. */
+    private const val SAMPLE = 256
 
     private const val GRAPHITE_TOP = 0xFF3A3A3C.toInt()
     private const val GRAPHITE_BOTTOM = 0xFF242426.toInt()
@@ -56,7 +96,7 @@ object TileArtFactory {
             drawColor(GRAPHITE_BOTTOM)
             drawCover(banner, W, H)
         }
-        return finish(back, null, 0f)
+        return finish(back, null)
     }
 
     /**
@@ -126,7 +166,33 @@ object TileArtFactory {
                 drawText(device, cx, H * 0.84f, sub)
             }
         }
-        return finish(back, null, 0f)
+        return finish(back, null)
+    }
+
+    /**
+     * A firmware app (settings, photos, weather...) drawn as Aerial's own tile: a white glyph over
+     * a color that tells the kind apart, the way tvOS draws its system apps. TV makers ship these
+     * with phone icons that look different on every TV and unlike the apps around them.
+     */
+    fun forSystem(kind: SystemTile): TileArt {
+        val back = layer {
+            drawRect(0f, 0f, W.toFloat(), H.toFloat(), Paint().apply {
+                shader = LinearGradient(0f, 0f, W * 0.4f, H.toFloat(), kind.top, kind.bottom, Shader.TileMode.CLAMP)
+            })
+            // Soft light from the top left, as on the input tiles.
+            drawRect(0f, 0f, W.toFloat(), H.toFloat(), Paint().apply {
+                shader = android.graphics.RadialGradient(W * 0.25f, -H * 0.2f, W * 0.8f, 0x38FFFFFF, 0x00FFFFFF, Shader.TileMode.CLAMP)
+            })
+        }
+        // The glyph on its own layer, so it shifts against the color when the tile leans.
+        val g = H * 0.46f
+        val fore = layer {
+            translate((W - g) / 2f, (H - g) / 2f)
+            CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, androidx.compose.ui.graphics.Canvas(this), Size(g, g)) {
+                drawGlyph(kind.glyph, Color.White)
+            }
+        }
+        return finish(back, fore)
     }
 
     fun fromIcon(icon: Drawable): TileArt {
@@ -134,73 +200,48 @@ object TileArtFactory {
         return plate(icon) ?: legacy(icon)
     }
 
-    /** Null when the foreground ignores the adaptive safe zone (a legacy icon wrapped as adaptive). */
+    /**
+     * Null when the foreground ignores the adaptive safe zone (a legacy icon wrapped as adaptive),
+     * or when the background has shapes of its own (a disc the logo sits in, Google's Clock):
+     * the layers only line up drawn together, so those go on as a whole icon.
+     */
     @RequiresApi(26)
     private fun adaptive(icon: AdaptiveIconDrawable): TileArt? {
-        // The foreground's 108-unit square keeps the logo inside its middle 66 units, so a
-        // square as tall as the tile shows the logo at roughly the size tvOS uses.
-        val size = H
-        val fore = createBitmap(size, size)
-        icon.foreground.setBounds(0, 0, size, size)
-        icon.foreground.draw(Canvas(fore))
-        if (opaqueExtent(fore) > 0.7f) {
-            fore.recycle()
-            return null
-        }
-        val back = createBitmap(W, H)
-        Canvas(back).apply {
+        val logo = visible(raster(icon.foreground, SAMPLE), SAMPLE) ?: return null
+        // A logo inside the 66-unit safe zone of the 108-unit layer spans at most about 0.61.
+        if (max(logo.width(), logo.height()) > 0.7f) return null
+        val bg = icon.background
+        if (bg != null && !isFlat(raster(bg, 32))) return null
+        val back = layer {
             drawColor(GRAPHITE_BOTTOM)
-            icon.background?.let { bg ->
+            bg?.let {
                 // The background layer is a square; cover the wide tile with it.
-                bg.setBounds(0, (H - W) / 2, W, (H - W) / 2 + W)
-                bg.draw(this)
+                it.setBounds(0, (H - W) / 2, W, (H - W) / 2 + W)
+                it.draw(this)
             }
         }
-        return finish(back, fore, 1f)
-    }
-
-    /** How much of the bitmap's width or height its visible pixels span, 0..1. */
-    private fun opaqueExtent(b: Bitmap): Float {
-        val n = b.width
-        var min = n; var max = -1
-        val step = 2
-        for (y in 0 until n step step) for (x in 0 until n step step) {
-            if (android.graphics.Color.alpha(b.getPixel(x, y)) > 24) {
-                min = minOf(min, x, y); max = maxOf(max, x, y)
-            }
-        }
-        return if (max < 0) 0f else (max - min) / n.toFloat()
+        return finish(back, placeLogo(icon.foreground, ::visible)?.first)
     }
 
     /**
      * A legacy icon that is a filled rounded square (most China-market apps ship these: a logo on a
      * white or colored plate). Drawn small in the middle it reads as an icon on a tile, not as the
      * tile. Instead the plate's own color is carried across the whole tile, top edge to bottom
-     * edge, and the icon is drawn the full tile height with its sides faded into that color, the
-     * way a tvOS icon fills its card. Null for any other shape.
+     * edge, and the logo on it is sized like every other logo, the plate fading into the tile
+     * around it. Null for any other shape.
      */
     private fun plate(icon: Drawable): TileArt? {
-        val n = 256
-        val b = createBitmap(n, n)
-        icon.setBounds(0, 0, n, n)
-        icon.draw(Canvas(b))
-        val px = IntArray(n * n)
-        b.getPixels(px, 0, n, 0, 0, n, n)
-        fun solid(c: Int) = c ushr 24 > 200
-        var l = n; var t = n; var r = -1; var bt = -1
-        for (y in 0 until n) for (x in 0 until n) if (solid(px[y * n + x])) {
-            l = minOf(l, x); r = maxOf(r, x); t = minOf(t, y); bt = maxOf(bt, y)
-        }
-        val w = r - l + 1
-        val h = bt - t + 1
+        val n = SAMPLE
+        val px = raster(icon, n)
+        val box = solidBox(px, n) ?: return null
+        val l = box.left; val t = box.top; val r = box.right - 1; val bt = box.bottom - 1
+        val w = box.width()
+        val h = box.height()
         // A square at least half the canvas, and nearly all of it solid: a rounded square fills
         // about 96% of its box, a circle 79%.
         var filled = 0
-        if (r >= 0) for (y in t..bt) for (x in l..r) if (solid(px[y * n + x])) filled++
-        if (r < 0 || w < n / 2 || kotlin.math.abs(w - h) > w * 0.06f || filled < w * h * 0.9f) {
-            b.recycle()
-            return null
-        }
+        for (y in t..bt) for (x in l..r) if (solid(px[y * n + x])) filled++
+        if (w < n / 2 || kotlin.math.abs(w - h) > w * 0.06f || filled < w * h * 0.9f) return null
         // The plate's color along its top and bottom edges, inside the corner rounding.
         fun band(fromY: Int, toY: Int): Int? {
             var rr = 0L; var gg = 0L; var bb = 0L; var count = 0
@@ -209,55 +250,47 @@ object TileArtFactory {
                 val c = px[y * n + x]
                 rr += (c shr 16) and 0xFF; gg += (c shr 8) and 0xFF; bb += c and 0xFF; count++
             }
-            val mr = rr / count; val mg = gg / count; val mb = bb / count
+            val mean = android.graphics.Color.rgb((rr / count).toInt(), (gg / count).toInt(), (bb / count).toInt())
             // A logo running into the edge leaves no single color to carry across the tile.
             var spread = 0L
-            for (y in fromY..toY) for (x in xs) {
-                val c = px[y * n + x]
-                spread += kotlin.math.abs(((c shr 16) and 0xFF) - mr) + kotlin.math.abs(((c shr 8) and 0xFF) - mg) + kotlin.math.abs((c and 0xFF) - mb)
-            }
-            return if (spread / count > 36) null else android.graphics.Color.rgb(mr.toInt(), mg.toInt(), mb.toInt())
+            for (y in fromY..toY) for (x in xs) spread += distance(px[y * n + x], mean)
+            return if (spread / count > 36) null else mean
         }
         val edge = (h * 0.04f).roundToInt()
         val depth = (h * 0.06f).roundToInt()
-        val top = band(t + edge, t + edge + depth)
-        val bottom = band(bt - edge - depth, bt - edge)
-        if (top == null || bottom == null) {
-            b.recycle()
-            return null
+        val top = band(t + edge, t + edge + depth) ?: return null
+        val bottom = band(bt - edge - depth, bt - edge) ?: return null
+        // Two colors (Xiaomi's 视频头条: white over red) are a picture, not a plate to carry across.
+        if (distance(top, bottom) > 150) return null
+
+        // The logo: whatever on the plate stands out from the plate's color at that height.
+        fun logoOnPlate(px: IntArray, n: Int): RectF? {
+            val plate = solidBox(px, n) ?: return null
+            val inset = (plate.width() * 0.08f).roundToInt()
+            return bounds(px, n, android.graphics.Rect(plate.left + inset, plate.top + inset, plate.right - inset, plate.bottom - inset)) { i, c ->
+                solid(c) && distance(c, ColorUtils.blendARGB(top, bottom, (i / n - plate.top) / plate.height().toFloat())) > 72
+            } ?: RectF(plate.left / n.toFloat(), plate.top / n.toFloat(), plate.right / n.toFloat(), plate.bottom / n.toFloat())
         }
 
-        val back = createBitmap(W, H)
-        Canvas(back).drawRect(0f, 0f, W.toFloat(), H.toFloat(), Paint().apply {
-            shader = LinearGradient(0f, 0f, 0f, H.toFloat(), top, bottom, Shader.TileMode.CLAMP)
-        })
-        val fore = createBitmap(H, H)
-        Canvas(fore).apply {
-            drawBitmap(b, android.graphics.Rect(l, t, r + 1, bt + 1), android.graphics.Rect(0, 0, H, H), Paint(Paint.FILTER_BITMAP_FLAG))
-            // Fade the left and right sides, corners included, into the tile.
-            val fade = H * 0.24f
-            drawRect(0f, 0f, H.toFloat(), H.toFloat(), Paint().apply {
-                shader = LinearGradient(
-                    0f, 0f, H.toFloat(), 0f,
-                    intArrayOf(0, android.graphics.Color.BLACK, android.graphics.Color.BLACK, 0),
-                    floatArrayOf(0f, fade / H, 1f - fade / H, 1f), Shader.TileMode.CLAMP,
-                )
-                xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.DST_IN)
+        val back = layer {
+            drawRect(0f, 0f, W.toFloat(), H.toFloat(), Paint().apply {
+                shader = LinearGradient(0f, 0f, 0f, H.toFloat(), top, bottom, Shader.TileMode.CLAMP)
             })
         }
-        b.recycle()
-        return finish(back, fore, 1f)
+        val (fore, logo) = placeLogo(icon, ::logoOnPlate) ?: return null
+        feather(fore, logo)
+        return finish(back, fore)
     }
 
     private fun legacy(icon: Drawable): TileArt {
-        // A legacy icon. It sits, at the size tvOS gives a logo, on a frosted plate made from
+        // A legacy icon. Its logo sits, sized like every other, on a frosted plate made from
         // itself: the icon blown up past the tile's edges, blurred and dimmed. Full-square icons
         // (many China-market system apps expect the launcher to mask them) get rounded corners.
         val sample = 192
         val iconBitmap = createBitmap(sample, sample)
         icon.setBounds(0, 0, sample, sample)
         icon.draw(Canvas(iconBitmap))
-        val fore = if (opaqueCorners(iconBitmap)) roundCorners(iconBitmap, 0.225f) else iconBitmap
+        val fore = placeLogo(icon, ::visible, round = opaqueCorners(iconBitmap))?.first
 
         val pw = 48
         val ph = 27
@@ -267,19 +300,20 @@ object TileArtFactory {
             val inset = (sample * 0.2f).roundToInt()
             drawBitmap(iconBitmap, android.graphics.Rect(inset, inset + sample / 8, sample - inset, sample - inset - sample / 8), android.graphics.Rect(0, 0, pw, ph), Paint(Paint.FILTER_BITMAP_FLAG))
         }
-        val px = IntArray(pw * ph)
-        plate.getPixels(px, 0, pw, 0, 0, pw, ph)
-        repeat(3) { Images.boxBlur(px, pw, ph, 3) }
-        plate.setPixels(px, 0, pw, 0, 0, pw, ph)
-        val back = createBitmap(W, H)
+        val platePx = IntArray(pw * ph)
+        plate.getPixels(platePx, 0, pw, 0, 0, pw, ph)
+        repeat(3) { Images.boxBlur(platePx, pw, ph, 3) }
+        plate.setPixels(platePx, 0, pw, 0, 0, pw, ph)
         val frost = ColorMatrix().apply {
             setSaturation(1.3f)
             postConcat(ColorMatrix().apply { setScale(0.7f, 0.7f, 0.7f, 1f) })
         }
-        Canvas(back).drawBitmap(plate, null, android.graphics.Rect(0, 0, W, H), Paint(Paint.FILTER_BITMAP_FLAG).apply { colorFilter = ColorMatrixColorFilter(frost) })
+        val back = layer {
+            drawBitmap(plate, null, android.graphics.Rect(0, 0, W, H), Paint(Paint.FILTER_BITMAP_FLAG).apply { colorFilter = ColorMatrixColorFilter(frost) })
+        }
         plate.recycle()
-        if (fore !== iconBitmap) iconBitmap.recycle()
-        return finish(back, fore, 0.6f)
+        iconBitmap.recycle()
+        return finish(back, fore)
     }
 
     private fun opaqueCorners(b: Bitmap): Boolean {
@@ -289,30 +323,156 @@ object TileArtFactory {
             .all { android.graphics.Color.alpha(it) > 200 }
     }
 
-    private fun roundCorners(src: Bitmap, radiusFraction: Float): Bitmap {
-        val out = createBitmap(src.width, src.height)
-        val r = src.width * radiusFraction
-        Canvas(out).drawRoundRect(
-            0f, 0f, src.width.toFloat(), src.height.toFloat(), r, r,
-            Paint(Paint.ANTI_ALIAS_FLAG).apply { shader = android.graphics.BitmapShader(src, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP) },
-        )
-        return out
+    // ---- Logos: found in a sample of the icon, then drawn sharp at their size on the tile ----
+
+    private inline fun layer(draw: Canvas.() -> Unit): Bitmap = createBitmap(W, H).also { Canvas(it).draw() }
+
+    private fun raster(d: Drawable, n: Int): IntArray {
+        val b = createBitmap(n, n)
+        d.setBounds(0, 0, n, n)
+        d.draw(Canvas(b))
+        return IntArray(n * n).also { b.getPixels(it, 0, n, 0, 0, n, n); b.recycle() }
     }
 
-    private fun finish(back: Bitmap, fore: Bitmap?, foreFraction: Float): TileArt {
+    /**
+     * The box around the pixels of the n×n sample that [isLogo] picks (given the pixel's index
+     * and color), searched within [within], as fractions of the sample. Null when there are none.
+     */
+    private inline fun bounds(
+        px: IntArray, n: Int,
+        within: android.graphics.Rect = android.graphics.Rect(0, 0, n, n),
+        isLogo: (Int, Int) -> Boolean,
+    ): RectF? {
+        var l = n; var t = n; var r = -1; var b = -1
+        for (y in within.top until within.bottom) for (x in within.left until within.right) {
+            val i = y * n + x
+            if (isLogo(i, px[i])) { l = minOf(l, x); r = maxOf(r, x); t = minOf(t, y); b = maxOf(b, y) }
+        }
+        return if (r < 0) null else RectF(l / n.toFloat(), t / n.toFloat(), (r + 1) / n.toFloat(), (b + 1) / n.toFloat())
+    }
+
+    private fun distance(a: Int, b: Int): Int =
+        kotlin.math.abs(((a shr 16) and 0xFF) - ((b shr 16) and 0xFF)) +
+            kotlin.math.abs(((a shr 8) and 0xFF) - ((b shr 8) and 0xFF)) +
+            kotlin.math.abs((a and 0xFF) - (b and 0xFF))
+
+    /** True for a layer of (nearly) one color. */
+    private fun isFlat(px: IntArray): Boolean {
+        val first = px[px.size / 2]
+        return px.count { distance(it, first) > 24 || kotlin.math.abs((it ushr 24) - (first ushr 24)) > 24 } < px.size / 20
+    }
+
+    /**
+     * Where the whole icon goes on the tile so that its [logo] (fractions of the icon's box) sits
+     * centered at logo size. Logos are sized by area rather than by their box, so a wide wordmark
+     * and a round symbol carry the same weight, and all of them stay inside the tile's safe zone,
+     * as on tvOS: focus scale and parallax never take a logo near the edge.
+     */
+    private fun iconOnTile(logo: RectF): RectF {
+        val aspect = logo.width() / logo.height()
+        val h = minOf(LOGO * H / kotlin.math.sqrt(aspect), 0.6f * H, 0.62f * W / aspect)
+        val box = h / logo.height()
+        val left = W / 2f - box * logo.centerX()
+        val top = H / 2f - box * logo.centerY()
+        return RectF(left, top, left + box, top + box)
+    }
+
+    /** The opaque part of a sample. */
+    private fun visible(px: IntArray, n: Int): RectF? = bounds(px, n) { _, c -> c ushr 24 > 24 }
+
+    private fun solid(c: Int) = c ushr 24 > 200
+
+    /** The box around the solid pixels of an n×n sample, in its pixels. */
+    private fun solidBox(px: IntArray, n: Int): android.graphics.Rect? {
+        var l = n; var t = n; var r = -1; var b = -1
+        for (y in 0 until n) for (x in 0 until n) if (solid(px[y * n + x])) {
+            l = minOf(l, x); r = maxOf(r, x); t = minOf(t, y); b = maxOf(b, y)
+        }
+        return if (r < 0) null else android.graphics.Rect(l, t, r + 1, b + 1)
+    }
+
+    /**
+     * A tile-sized layer with [d] drawn so that the logo [find] picks out of it sits at
+     * [iconOnTile], and where that logo ended up on the tile. Null when [find] finds none.
+     *
+     * The icon is drawn at the size it will have, so it stays sharp, then measured again: a
+     * layer-list of dp-sized shapes does not scale with its bounds (遥遥电视助手 on Xiaomi
+     * MiTV-MFTR0), and is placed by what was actually drawn.
+     */
+    private fun placeLogo(d: Drawable, find: (IntArray, Int) -> RectF?, round: Boolean = false): Pair<Bitmap, RectF>? {
+        val first = find(raster(d, SAMPLE), SAMPLE) ?: return null
+        val size = iconOnTile(first).width().roundToInt().coerceIn(16, 4 * H)
+        val icon = createBitmap(size, size)
+        d.setBounds(0, 0, size, size)
+        d.draw(Canvas(icon))
+        val px = IntArray(size * size).also { icon.getPixels(it, 0, size, 0, 0, size, size) }
+        val logo = find(px, size) ?: first
+        val at = iconOnTile(logo)
+        val out = layer {
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+            if (round) {
+                val r = at.width() * 0.225f
+                drawRoundRect(at, r, r, paint.apply {
+                    shader = android.graphics.BitmapShader(icon, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply {
+                        setLocalMatrix(android.graphics.Matrix().apply {
+                            setScale(at.width() / size, at.height() / size)
+                            postTranslate(at.left, at.top)
+                        })
+                    }
+                })
+            } else {
+                drawBitmap(icon, null, at, paint)
+            }
+        }
+        icon.recycle()
+        val box = at.width()
+        return out to RectF(at.left + box * logo.left, at.top + box * logo.top, at.left + box * logo.right, at.top + box * logo.bottom)
+    }
+
+    /** Fades [layer] out around [keep], so a plate's own edges and corners melt into the tile color. */
+    private fun feather(layer: Bitmap, keep: RectF) {
+        val margin = H * 0.04f
+        val fade = H * 0.22f
+        val c = Canvas(layer)
+        fun mask(from: Float, to: Float, horizontal: Boolean) = Paint().apply {
+            val span = to - from + 2 * (margin + fade)
+            val f = fade / span
+            val start = from - margin - fade
+            shader = LinearGradient(
+                if (horizontal) start else 0f, if (horizontal) 0f else start,
+                if (horizontal) start + span else 0f, if (horizontal) 0f else start + span,
+                intArrayOf(0, android.graphics.Color.BLACK, android.graphics.Color.BLACK, 0),
+                floatArrayOf(0f, f, 1f - f, 1f), Shader.TileMode.CLAMP,
+            )
+            xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.DST_IN)
+        }
+        c.drawRect(0f, 0f, W.toFloat(), H.toFloat(), mask(keep.left, keep.right, horizontal = true))
+        c.drawRect(0f, 0f, W.toFloat(), H.toFloat(), mask(keep.top, keep.bottom, horizontal = false))
+    }
+
+    /** [back] and [fore] are both tile-sized; the foreground is trimmed here. */
+    private fun finish(back: Bitmap, fore: Bitmap?): TileArt {
         val composed = if (fore == null) back else back.copy(Bitmap.Config.ARGB_8888, true).also {
-            val size = (H * foreFraction).roundToInt()
-            val left = (W - size) / 2
-            val top = (H - size) / 2
-            Canvas(it).drawBitmap(fore, null, android.graphics.Rect(left, top, left + size, top + size), Paint(Paint.FILTER_BITMAP_FLAG))
+            Canvas(it).drawBitmap(fore, 0f, 0f, null)
         }
         val tint = dominant(composed)
         val backdrop = backdropOf(composed)
         if (composed !== back) composed.recycle()
+        var foreAt = androidx.compose.ui.geometry.Rect.Zero
+        val trimmed = fore?.let { layer ->
+            val px = IntArray(W * H).also { layer.getPixels(it, 0, W, 0, 0, W, H) }
+            var l = W; var t = H; var r = -1; var b = -1
+            for (y in 0 until H) for (x in 0 until W) if (px[y * W + x] ushr 24 != 0) {
+                l = minOf(l, x); r = maxOf(r, x); t = minOf(t, y); b = maxOf(b, y)
+            }
+            if (r < 0) return@let null
+            foreAt = androidx.compose.ui.geometry.Rect(l / W.toFloat(), t / H.toFloat(), (r + 1) / W.toFloat(), (b + 1) / H.toFloat())
+            Bitmap.createBitmap(layer, l, t, r - l + 1, b - t + 1).also { if (it !== layer) layer.recycle() }
+        }
         return TileArt(
             back = back.asImageBitmap(),
-            fore = fore?.asImageBitmap(),
-            foreFraction = foreFraction,
+            fore = trimmed?.asImageBitmap(),
+            foreAt = foreAt,
             tint = Color(tint),
             backdrop = backdrop.asImageBitmap(),
         )

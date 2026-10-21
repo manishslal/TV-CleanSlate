@@ -241,7 +241,7 @@ private fun PhotoSaver(now: LocalDateTime, steps: SharedFlow<Int>) {
     LaunchedEffect(pool, slide) {
         if (pool.isEmpty()) return@LaunchedEffect
         val wp = pool[slide.mod(pool.size)]
-        val bmp = withContext(Dispatchers.Default) { Wallpapers.picture(wp, 1920, 1080)?.asImageBitmap() }
+        val bmp = withContext(Dispatchers.Default) { Wallpapers.picture(wp, Wallpapers.screenW, Wallpapers.screenH)?.asImageBitmap() }
         if (bmp != null) image = slide to bmp
         delay(18_000)
         slide++

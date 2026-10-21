@@ -31,6 +31,18 @@ object GuardSetup {
     private const val PREFS = "system"
     private const val KEY_KEEP_ADB = "keep_adb"
     private const val KEY_OWN_SCREENSAVER = "own_screensaver"
+    private const val KEY_HOME_IN_FRONT = "home_in_front"
+
+    /**
+     * Kept on disk while Aerial's home screen is in front, so a new process can tell how the last
+     * one ended: still set means it died in front (a crash, an update, the firmware killing it),
+     * and whatever the viewer sees now was uncovered rather than chosen.
+     */
+    fun setHomeInFront(context: Context, inFront: Boolean) =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_HOME_IN_FRONT, inFront).apply()
+
+    fun wasHomeInFront(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_HOME_IN_FRONT, false)
 
     /**
      * Some firmwares (Xiaomi) switch ADB debugging off on their own, usually around standby.

@@ -19,6 +19,9 @@ class BootReceiver : BroadcastReceiver() {
             PackageManager.MATCH_DEFAULT_ONLY,
         )?.activityInfo?.packageName
         if (home == context.packageName) return
+        // The guard takes Home over itself once it can see what is in front: by the time this
+        // arrives, an HDMI-CEC source may already have switched the TV to its input.
+        if (HomeGuardService.isRunning) return
         runCatching {
             context.startActivity(MainActivity.bringBackIntent(context))
         }

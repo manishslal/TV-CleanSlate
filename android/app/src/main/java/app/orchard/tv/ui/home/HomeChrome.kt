@@ -9,6 +9,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.runtime.produceState
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,32 +75,53 @@ fun dateText(now: LocalDateTime): String {
 }
 
 /**
- * Light from the focused app's artwork, spread across the screen like the glow of tvOS's top shelf.
- * Each app's backdrop is pre-baked small (see TileArt.backdrop), so a frame here is a single
- * full-screen draw. Nothing animates at rest: an idle home screen draws no frames.
+ * The home background, in two states as on tvOS. Focus in the top row: the picture itself. Focus
+ * down in the grid: the whole screen turns to the picture frosted and darker, so the rows read
+ * over anything.
+ *
+ * Everything follows [scroll] (the grid's scroll, [collapse] being where the grid has fully come
+ * in), so the change is exactly as fast as the movement that causes it. Nothing is blurred or
+ * tinted live: the frosted copy is baked small ahead of time (Images.frost) and darkened here
+ * once. At rest a frame is one full-screen draw; both pictures are drawn only through the middle
+ * of the scroll, since each frame that draws both costs a second full-screen fill (Xiaomi
+ * MiTV-MFTR0: 90th percentile 20 -> 30 ms when the crossfade ran end to end).
  */
 @Composable
-fun AmbientBackground(backdrop: ImageBitmap?, dim: () -> Float) {
+fun HomeBackground(backdrop: ImageBitmap?, frosted: ImageBitmap?, scroll: () -> Float, collapse: Float) {
     Crossfade(
-        targetState = backdrop,
+        targetState = backdrop to frosted,
         animationSpec = tween(450, easing = Motion.EaseOut),
         modifier = Modifier.fillMaxSize(),
         label = "ambient",
-    ) { bmp ->
+    ) { (bmp, frost) ->
+        // In "Follow App" mode there is no frosted copy: the app's light is soft already and
+        // changes with every move, so the grid darkens it live.
+        val dark = remember(frost) { frost?.let { darkened(it, 0.55f) } }
         Canvas(Modifier.fillMaxSize()) {
-            val d = dim()
             if (bmp == null) {
                 drawRect(Color.Black)
-            } else {
+                return@Canvas
+            }
+            val full = IntSize(size.width.roundToInt(), size.height.roundToInt())
+            val g = ((scroll() / collapse - 0.3f) / 0.4f).coerceIn(0f, 1f)
+            if (dark == null) {
                 drawImage(
-                    bmp,
-                    dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()),
-                    filterQuality = FilterQuality.Low,
-                    colorFilter = if (d > 0.01f) ColorFilter.tint(Color.Black.copy(alpha = d), BlendMode.SrcAtop) else null,
+                    bmp, dstSize = full, filterQuality = FilterQuality.Low,
+                    colorFilter = if (g > 0.01f) ColorFilter.tint(Color.Black.copy(alpha = g * 0.5f), BlendMode.SrcAtop) else null,
                 )
+            } else {
+                if (g < 0.99f) drawImage(bmp, dstSize = full, filterQuality = FilterQuality.Low)
+                if (g > 0.01f) drawImage(dark, dstSize = full, filterQuality = FilterQuality.Low, alpha = g)
             }
         }
     }
+}
+
+/** A small picture darkened ahead of time, so the grid's background costs no tint per frame. */
+private fun darkened(src: ImageBitmap, alpha: Float): ImageBitmap {
+    val out = src.asAndroidBitmap().copy(android.graphics.Bitmap.Config.ARGB_8888, true)
+    android.graphics.Canvas(out).drawColor(android.graphics.Color.argb((alpha * 255).roundToInt(), 0, 0, 0))
+    return out.asImageBitmap()
 }
 
 /** Date over a large, light clock: the lock-screen arrangement. */

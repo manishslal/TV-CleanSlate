@@ -2,6 +2,8 @@
 
 - Android 11（SDK 30），build RQ3A.210705.001，MediaTek MT5879，32 位 ARM，约 4 GB 内存。
 - 1920×1080，**240dpi**（1280×720dp）。Aerial 的画布缩放会让它和小米显示得一模一样。
+- 显示模式：1080p 下 50 / 60 / 100 / 120Hz，平时是 60Hz。Android 11 说不出哪些切换不黑屏，所以 Aerial 不切。1.15 导航帧耗时中位数 8ms、90 分位 10ms（2026-10-21）。
+- 240dpi 下 `loadIcon` 给的是 72px 的图标，所以磁贴图要取 App 自带的最高密度。
 - 原桌面：`com.tcl.cyberui/.MainActivity`（唯一的 HOME 候选）。
 - 安装的 flavor：`guard`。
 
@@ -77,11 +79,18 @@ TCL 手机 App 有一个「把手机里的 APK 推到电视」的功能。电视
 - 音量：App 调用 `adjustStreamVolume` 只会改 Android 记录的数值（`system volume_music_speaker`），不会写入功放。真正写硬件的是 SystemUI 里的 `tsdkNative.setVolumeForDevice`，而它只在显示音量条时才执行。所以 Aerial 在 TCL 上调音量要带 `AudioManager.FLAG_SHOW_UI`（会同时弹出 TCL 的音量条）。
 - 亮度：标准的 `screen_brightness` 被忽略，背光走 TCL 私有的 `tvos.tv.picture.TPictureManager` / `com.tcl.tv.pq.TvBacklightManager`。控制中心的「亮度」改为打开 TCL 的侧边设置面板：`startService(Intent("com.tcl.settings.SHOW_WINDOW").setPackage("com.tcl.settings"))`，打开后默认就在「图像」页，第一项是亮度。
 
+## 信号源
+
+- TCL 的信号源在自己的中间件里，`TvInputManager` 一个都没有（`dumpsys tv_input` 是空的），所以 Aerial 列不出信号源，也不能把信号源固定到主屏幕。
+- 遥控器的信号源键由 `TclShortCutKeyManager.startTVInputService`（`/apex/com.tcl.tcore/javalib/tcl-service.jar`）处理：有 `com.tcl.software.systemui_custom_tv_source` 功能时，用 `startService` 打开 SystemUI 的 `com.tcl.tvstatusbar.action.SHOW_WINDOW`（extra `TvStatusBar_Type=Source`、`TvStatusBar_StartFrom=input`），否则打开 TCL 设置的 `com.tcl.insrc.SHOW_WINDOW`。两个服务都是 exported。1.15 起控制中心的「信号源」在列不出信号源时直接打开这个面板（`SystemProbe.openInputPicker`）。
+- 这台电视在截图（`screencap`）时会弹出「截图成功，请扫码分享」的二维码卡片，有人在看电视时不要截图。
+
 ## 屏保
 
 - 使用 Android 标准 Dream，空闲 `screen_off_timeout`（120000 = 2 分钟）后启动。原组件是 `com.tcl.appreciate.art/.service.screensaver.ScreenSaverBootService`（「艺术画报」，带 VIP 会员推销）。
 - `install.sh` 会把 `secure screensaver_components` 换成 `app.orchard.tv/app.orchard.tv.dream.AerialDream`；`restore.sh` 会换回 `screensaver_default_component`。
 - 手动测试：`adb shell am start -n com.android.systemui/.Somnambulator`。
+- 1.14 及以前，按键结束屏保时 Aerial 会崩溃：Android 11 起屏保跑在 Activity 里，窗口先被移除（生命周期变成 DESTROYED），然后才调用 `onDreamingStopped`，往回设成 CREATED 会抛异常。崩溃后无障碍服务处于「已启用但没绑定」，守护失效，按 HOME 就进了 TCL 桌面。1.15 修复了崩溃，并在复活时也检查一次「已启用但没绑定」。
 - **截图截不到视频画面**（视频走独立的硬件图层，截出来是黑的），但字幕和时钟能截到。地名字幕出现，说明视频已经在渲染。
 
 ## 其他

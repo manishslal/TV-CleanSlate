@@ -276,14 +276,14 @@ fun AppTile(
                     filterQuality = FilterQuality.Medium,
                 )
                 art.fore?.let { fore ->
-                    val s = size.height * art.foreFraction
+                    val at = art.foreAt
                     // Parallax: the logo travels further than the plate when the tile leans.
                     val px = leanY.value / 7f * size.width * 0.035f
                     val py = -leanX.value / 7f * size.height * 0.035f
                     drawImage(
                         fore,
-                        dstOffset = IntOffset(((size.width - s) / 2 + px).roundToInt(), ((size.height - s) / 2 + py).roundToInt()),
-                        dstSize = IntSize(s.roundToInt(), s.roundToInt()),
+                        dstOffset = IntOffset((at.left * size.width + px).roundToInt(), (at.top * size.height + py).roundToInt()),
+                        dstSize = IntSize((at.width * size.width).roundToInt(), (at.height * size.height).roundToInt()),
                         filterQuality = FilterQuality.Medium,
                     )
                 }

@@ -1,7 +1,7 @@
 # 小米 MiTV-MFTR0（codename freeguy）
 
 - Android 14（SDK 34），HyperOS TV，固件 OS3.0.101.0.UFTMATV，MediaTek MT9653，32 位 ARM（armeabi-v7a），4 GB 内存。
-- 1920×1080，320dpi（960×540dp）。GPU 很弱，见 ARCHITECTURE.md 的性能约束。
+- 1920×1080，320dpi（960×540dp），只有一个 60Hz 显示模式。GPU 很弱，见 ARCHITECTURE.md 的性能约束。1.15 导航帧耗时：第一排中位数 14ms、网格 18ms、第一排与网格之间切换的 90 分位 20ms（2026-10-21）。
 - 原桌面：`com.mitv.tvhome/.MainActivityUserMode`（PatchWall）。备用桌面：`com.xiaomi.mitv.settings/.entry.FallbackHome`（priority -1000）。
 - 安装的 flavor：`standard`。普通的 `adb install` 就能装。
 - 同平台的零售型号：**Redmi X65 2026** 也上报 `MiTV-MFTR0`。用户在 OS3.0.107.0.UFTMATV 上验证过一键安装和重启后自动进入 Aerial（GitHub #3）。
@@ -23,6 +23,13 @@
 - 豁免条件：系统应用、`MitvConfigParser.isAppInWhiteList(0x8000)`（云端规则）；以及 STR 模式（`persist.sys.system_str == 1`，这台为空）下的 `strKillWhiteList`（来自 `Settings.System str_killbackgroud_pkg_white_list`，只在开机时读取）。在这台电视上，都没有可用的正规途径。
 - 后果：Android 对被强制停止的 App 会移除它的无障碍服务 → 唤醒后守护失效。
 - 解决办法：`RevivalListener`（通知监听）。系统会在绑定断开后主动重绑，日志里可以看到 `notification listener binding died` 然后 `binding:`，约 0.5 秒。复活后 `GuardSetup` 用 `WRITE_SECURE_SETTINGS` 重新写入守护服务。已实测：待机再唤醒后直接是 Aerial。
+
+## 开机时 HDMI-CEC 自动切信号源（1.15 修复）
+
+- 用户反馈：接了 Apple TV（CEC），开机时电视显示「正在连接 HDMI」，随即被拉回 Aerial。
+- 原因：待机唤醒后守护服务被复活，`onServiceConnected` 立刻接管桌面，不看前台是什么。复现方法：`am force-stop app.orchard.tv` 后马上用 `EXTSRC_PLAY`（`input` 23）打开 HDMI 1，日志里 `ExternalSourceActivity` 比守护绑定早 130ms 启动，接着被 Aerial 盖住。
+- 修复：复活、开机、亮屏这三种情况都等 1.5 秒再接管，期间如果有原桌面以外的窗口到了前台（信号源、别的 App），就不动它。`BootReceiver` 在守护已运行时不再直接打开 Aerial。
+- 注意：覆盖安装后 2 分钟内，守护不会因为「被复活」而接管（防止打断正在看的内容），测这条路径要等 2 分钟。
 
 ## ADB 会被关闭
 

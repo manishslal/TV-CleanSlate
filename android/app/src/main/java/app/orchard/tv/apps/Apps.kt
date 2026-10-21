@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
-import android.os.Build
 import app.orchard.tv.system.TvSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -60,7 +59,44 @@ object AppCatalog {
         ComponentName("com.xiaomi.smarthome.tv", "com.xiaomi.smarthome.tv.ui.MainActivity"), // 米家
     )
 
-    private class Cached(val stamp: Long, val label: String, val art: TileArt)
+    /**
+     * Firmware apps drawn as Aerial's own tiles (see [TileArtFactory.forSystem]). None of them
+     * declares a standard app category, so they are listed by package, each checked on its TV.
+     */
+    private val SYSTEM_TILES = mapOf(
+        // Xiaomi MiTV-MFTR0
+        "com.xiaomi.mitv.settings" to SystemTile.Settings,
+        "com.mitv.gallery" to SystemTile.Photos,
+        "com.xiaomi.mitv.calendar" to SystemTile.Calendar,
+        "com.xiaomi.tweather" to SystemTile.Weather,
+        "com.xiaomi.mitv.smartshare" to SystemTile.Cast,
+        "com.xiaomi.mitv.tvmanager" to SystemTile.Security,
+        "com.xiaomi.mitv.appstore" to SystemTile.Store,
+        "com.xiaomi.mitv.mediaexplorer" to SystemTile.Media,
+        // TCL MT5879 (China)
+        "com.tcl.settings" to SystemTile.Settings,
+        "com.tcl.tvsmartalbum" to SystemTile.Photos,
+        "com.tcl.common.weather" to SystemTile.Weather,
+        "com.tcl.MultiScreenInteraction_TV" to SystemTile.Cast,
+        "com.tcl.guard" to SystemTile.Security,
+        "com.tcl.appmarket2" to SystemTile.Store,
+        "com.tcl.ui_mediaCenter" to SystemTile.Media,
+        "com.tcl.browser" to SystemTile.Browser,
+    )
+
+    /**
+     * Firmwares that do declare the standard categories. Only for system apps without a TV
+     * banner: a banner is artwork made for the TV (Google TV's own apps have them) and wins.
+     */
+    private val SYSTEM_CATEGORIES = listOf(
+        Intent.CATEGORY_APP_GALLERY to SystemTile.Photos,
+        Intent.CATEGORY_APP_CALENDAR to SystemTile.Calendar,
+        Intent.CATEGORY_APP_BROWSER to SystemTile.Browser,
+        Intent.CATEGORY_APP_MARKET to SystemTile.Store,
+        CATEGORY_APPSTORE_LAUNCHER to SystemTile.Store,
+    )
+
+    private class Cached(val stamp: Long, val width: Int, val label: String, val art: TileArt)
     private val cache = HashMap<String, Cached>()
 
     /**
@@ -84,33 +120,37 @@ object AppCatalog {
         }
         found.remove(context.packageName)
 
+        val byCategory = HashMap<String, SystemTile>()
+        for ((category, tile) in SYSTEM_CATEGORIES) {
+            pm.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(category), 0)
+                .forEach { byCategory.putIfAbsent(it.activityInfo.packageName, tile) }
+        }
+        pm.resolveActivity(Intent(android.provider.Settings.ACTION_SETTINGS), 0)
+            ?.let { byCategory.putIfAbsent(it.activityInfo.packageName, SystemTile.Settings) }
+
         coroutineScope {
             found.values.map { (info, leanback) ->
-                async { runCatching { entry(pm, info, leanback) }.getOrNull() }
+                async { runCatching { entry(pm, info, leanback, byCategory) }.getOrNull() }
             }.awaitAll().filterNotNull()
         }
     }
 
     /**
-     * Before Android 8 there are no adaptive icons, and loadIcon picks the density bucket of the
-     * screen: 96 px at 320 dpi, stretched to the 198 px tile it looks soft (Xiaomi MiTV4-ANSM0,
-     * Android 6, issue #17). Ask for the densest bucket the app ships instead.
+     * loadIcon and loadBanner pick the density bucket of the screen: a 96 px icon at 320 dpi, 72 px
+     * at TCL's 240 dpi, stretched to a 198 px tile it looks soft (Xiaomi MiTV4-ANSM0, issue #17).
+     * Ask for the densest bucket the app ships instead; the bitmap layers of adaptive icons too.
      */
-    private fun bestIcon(pm: PackageManager, info: ActivityInfo): android.graphics.drawable.Drawable {
-        if (Build.VERSION.SDK_INT < 26) {
-            val res = info.iconResource
-            if (res != 0) runCatching {
-                pm.getResourcesForApplication(info.applicationInfo)
-                    .getDrawableForDensity(res, android.util.DisplayMetrics.DENSITY_XXXHIGH, null)
-            }.getOrNull()?.let { return it }
-        }
-        return info.loadIcon(pm)
-    }
+    private fun densest(pm: PackageManager, info: ActivityInfo, res: Int): android.graphics.drawable.Drawable? =
+        if (res == 0) null else runCatching {
+            pm.getResourcesForApplication(info.applicationInfo)
+                .getDrawableForDensity(res, android.util.DisplayMetrics.DENSITY_XXXHIGH, null)
+        }.getOrNull()
 
-    private fun entry(pm: PackageManager, info: ActivityInfo, leanback: Boolean): AppEntry {
+    private fun entry(pm: PackageManager, info: ActivityInfo, leanback: Boolean, byCategory: Map<String, SystemTile>): AppEntry {
         val pkg = info.packageName
         val stamp = runCatching { pm.getPackageInfo(pkg, 0).lastUpdateTime }.getOrDefault(0L)
-        val cached = synchronized(cache) { cache[pkg] }?.takeIf { it.stamp == stamp }
+        val cached = synchronized(cache) { cache[pkg] }?.takeIf { it.stamp == stamp && it.width == TileArtFactory.W }
+        val system = (info.applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
         val label: String
         val art: TileArt
         if (cached != null) {
@@ -120,11 +160,19 @@ object AppCatalog {
             label = info.loadLabel(pm).toString().trim().ifEmpty { pkg }
             // Banner first: it is the artwork the app designed for a TV. ActivityInfo falls back
             // to the application's banner by itself.
-            val banner = if (leanback) runCatching { info.loadBanner(pm) }.getOrNull() else null
-            art = if (banner != null) TileArtFactory.fromBanner(banner) else TileArtFactory.fromIcon(bestIcon(pm, info))
-            synchronized(cache) { cache[pkg] = Cached(stamp, label, art) }
+            // A "banner" that is not wide is the app's square icon declared again (遥遥电视助手 on
+            // Xiaomi MiTV-MFTR0); covering the tile with it blows the logo up past the edges.
+            val banner = (if (leanback) densest(pm, info, info.bannerResource) ?: runCatching { info.loadBanner(pm) }.getOrNull() else null)
+                ?.takeIf { it.intrinsicWidth >= it.intrinsicHeight * 4 / 3 }
+            val own = if (system) SYSTEM_TILES[pkg] ?: byCategory[pkg]?.takeIf { banner == null } else null
+            art = when {
+                own != null -> TileArtFactory.forSystem(own)
+                banner != null -> TileArtFactory.fromBanner(banner)
+                else -> TileArtFactory.fromIcon(densest(pm, info, info.iconResource) ?: info.loadIcon(pm))
+            }
+            synchronized(cache) { cache[pkg] = Cached(stamp, TileArtFactory.W, label, art) }
         }
-        val removable = (info.applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) == 0
+        val removable = !system
         return AppEntry(pkg, label, ComponentName(pkg, info.name), leanback, removable, art)
     }
 }

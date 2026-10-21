@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
+import app.orchard.tv.ui.theme.canvasDensity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -47,8 +48,7 @@ class AerialDream : DreamService(), LifecycleOwner, SavedStateRegistryOwner {
         isInteractive = true
         isFullscreen = true
         Wallpapers.init(this)
-        val metrics = resources.displayMetrics
-        val canvas = minOf(metrics.widthPixels, metrics.heightPixels * 16 / 9) / 960f
+        val canvas = canvasDensity(resources.displayMetrics)
         setContentView(
             ComposeView(this).apply {
                 setContent {
@@ -76,7 +76,10 @@ class AerialDream : DreamService(), LifecycleOwner, SavedStateRegistryOwner {
     }
 
     override fun onDreamingStopped() {
-        registry.currentState = Lifecycle.State.CREATED
+        // Since Android 11 the dream lives in an activity: a key press finishes it, the window is
+        // detached first (DESTROYED), and only then is the dream stopped. Moving back to CREATED
+        // from there throws and took Aerial down on every wake (TCL MT5879).
+        if (registry.currentState.isAtLeast(Lifecycle.State.CREATED)) registry.currentState = Lifecycle.State.CREATED
         super.onDreamingStopped()
     }
 

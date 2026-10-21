@@ -174,7 +174,9 @@ private fun MainPage(vm: HomeViewModel, now: LocalDateTime, onOpen: (android.con
         Spacer(Modifier.height(16.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             RoundButton(Glyph.Input, stringResource(R.string.cc_inputs), focusRequester = first) {
-                vm.overlay = Overlay.ControlCenter(CcPage.Inputs)
+                // TCL lists no inputs to Android; its own input panel is the next best thing.
+                vm.overlay = if (vm.sources.isEmpty() && SystemProbe.openInputPicker(context)) Overlay.None
+                else Overlay.ControlCenter(CcPage.Inputs)
             }
             RoundButton(
                 when (vm.network.kind) { NetKind.Ethernet -> Glyph.Ethernet; NetKind.Offline -> Glyph.Offline; else -> Glyph.Wifi },
