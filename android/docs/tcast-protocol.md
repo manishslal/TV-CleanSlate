@@ -1,7 +1,6 @@
 # T-Cast 6553 补充指令与加密模式
 
-> 提交建议：作为 `docs/tcast-protocol.md` 合入，或补进 `tcl-mt5879-cn.md` / `tcl-mt9655-cn.md` 的多屏互动章节。
-> 现有文档只记录了 `159 >> 223>>INSTALL >> 223>>PROGRESS` 这一条链路，本文补的是**加密协商**与**另外几条可用指令**。
+> [devices/tcl-mt5879-cn.md](devices/tcl-mt5879-cn.md) 记录了安装用的 `159 >> 223>>INSTALL >> 223>>PROGRESS` 这一条链路；本文补的是**加密协商**与**另外几条可用指令**。来源：#53（作者 @sherlock2221b）。
 
 ## 1. 两种握手：明文 vs 加密
 

@@ -1,8 +1,6 @@
 # TCL MT9655（国行，雷鸟 55S595C Ultra）
 
-> 提交建议：作为 `docs/devices/tcl-mt9655-cn.md` 合入。
-> 与现有的 `tcl-mt5879-cn.md` 是**两个不同平台**，行为差异很大，不要合并成同一份。
-> 机型信息已脱敏（唯一序列号 / MAC / IP 已移除）。
+> 和 [tcl-mt5879-cn.md](tcl-mt5879-cn.md) 是**两个不同平台**，行为差异很大。来源：#50（作者 @sherlock2221b），对应 issue #52。
 
 - 零售型号：雷鸟 **55S595C Ultra**；设备串号 `FF-CN-0015-S595CPRO-TX`；固件 `V8-0015T11-LF1V487`。
 - 平台 MediaTek **MT9655**，3840×2160，4 GB / 64 GB。
@@ -63,7 +61,7 @@ HTTP 服务日志里完全没有来自电视的请求（本机 macOS 防火墙�
 
 ## 无 ADB 时的补救：T-Cast 6553 的高级指令
 
-多屏互动除了 `223>>INSTALL`，还支持更多指令（详见另附的 `tcast-extras.md`）：
+多屏互动除了 `223>>INSTALL`，还支持更多指令（详见 [../tcast-protocol.md](../tcast-protocol.md)）：
 
 | 指令 | 作用 | 本机实测 |
 |---|---|---|

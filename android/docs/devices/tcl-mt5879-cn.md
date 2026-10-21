@@ -40,6 +40,7 @@ TCL 手机 App 有一个「把手机里的 APK 推到电视」的功能。电视
 - 下载地址用的是 `adb reverse tcp:8765 tcp:8765` 加上 Mac 本机 `127.0.0.1` 的 HTTP 服务，电视下载的是 `http://127.0.0.1:8765/Aerial.apk`，所以不需要在局域网上开端口。
 - 用遥控器操作时：提示框出现后焦点在「拒绝」上，要先按「右」再按 OK。
 - 同一个 versionCode 也可以覆盖安装。
+- 其他指令（发 Intent、截图、模拟按键、应用列表）和加密握手见 [../tcast-protocol.md](../tcast-protocol.md)。
 
 **方法二：当贝**（多屏互动不在或 6553 端口不通时，`install.sh` 会自动回退到这条）
 1. `adb push app-guard-release.apk /sdcard/Download/Aerial.apk`，然后触发媒体扫描（`content call --uri content://media --method scan_volume --arg external_primary`）。
