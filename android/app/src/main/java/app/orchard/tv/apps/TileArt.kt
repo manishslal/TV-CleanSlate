@@ -102,12 +102,13 @@ object TileArtFactory {
 
     /**
      * A TV input's tile, in the spirit of an app icon: the connector drawn in white over a gradient
-     * that tells the kind apart (HDMI blue, tuner teal, AV amber), the input's name under it, and
+     * that tells the kind apart (HDMI blue, DP violet, tuner teal, AV amber), the input's name under it, and
      * the HDMI-CEC device name (e.g. "Apple TV") as a second line when there is one.
      */
     fun forSource(kind: app.orchard.tv.system.SourceKind, label: String, device: String?): TileArt {
         val (top, bottom) = when (kind) {
             app.orchard.tv.system.SourceKind.Hdmi -> 0xFF3B6FD8.toInt() to 0xFF1D3A86.toInt()
+            app.orchard.tv.system.SourceKind.DisplayPort -> 0xFF6E5BD8.toInt() to 0xFF3A2D86.toInt()
             app.orchard.tv.system.SourceKind.Tuner -> 0xFF1FA88E.toInt() to 0xFF0E5C55.toInt()
             app.orchard.tv.system.SourceKind.Av -> 0xFFE0912F.toInt() to 0xFF9A4F12.toInt()
             app.orchard.tv.system.SourceKind.Other -> 0xFF5E6470.toInt() to 0xFF30343C.toInt()
@@ -130,8 +131,8 @@ object TileArtFactory {
             val cy = H * (if (two) 0.3f else 0.36f)
             val u = H * 0.1f
             when (kind) {
-                app.orchard.tv.system.SourceKind.Hdmi -> {
-                    // The HDMI plug face: a wide trapezoid with chamfered lower corners.
+                app.orchard.tv.system.SourceKind.Hdmi, app.orchard.tv.system.SourceKind.DisplayPort -> {
+                    // The HDMI plug face (also for DP, whose plug looks much the same): a wide trapezoid with chamfered lower corners.
                     val p = android.graphics.Path().apply {
                         moveTo(cx - 2.2f * u, cy - 0.9f * u)
                         lineTo(cx + 2.2f * u, cy - 0.9f * u)

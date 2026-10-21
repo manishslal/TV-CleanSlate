@@ -335,7 +335,7 @@ private fun InputsPage(vm: HomeViewModel, onOpen: (android.content.Intent) -> Un
         vm.sources.forEachIndexed { i, source ->
             MenuRow(
                 glyph = when (source.kind) {
-                    SourceKind.Hdmi -> Glyph.Hdmi
+                    SourceKind.Hdmi, SourceKind.DisplayPort -> Glyph.Hdmi
                     SourceKind.Tuner -> Glyph.Antenna
                     SourceKind.Av -> Glyph.Av
                     SourceKind.Other -> Glyph.Input
