@@ -91,6 +91,7 @@ adb -s $XIAOMI_TV:5555 shell cmd package compile -m speed -f app.orchard.tv
 - **立即预览屏保**：`adb shell am start -a app.orchard.tv.PREVIEW_SCREENSAVER -n app.orchard.tv/.MainActivity`；TCL 上测系统屏保：`am start -n com.android.systemui/.Somnambulator`。
 - **模拟小米的待机清理**：`adb shell am force-stop app.orchard.tv`，然后看日志里出现 `revived by the notification listener binding`。
 - **配置**：`adb shell am broadcast -a app.orchard.tv.CONFIG -n app.orchard.tv/.guard.ConfigReceiver --ez keep_adb true`。
+- **磁贴对比图**：`adb shell am broadcast -a app.orchard.tv.CONFIG -n app.orchard.tv/.guard.ConfigReceiver --es export_tiles before`，等日志 `AerialTiles` 出现 `Wrote`，再 `adb pull /sdcard/Android/data/app.orchard.tv/files/tiles/before.png`。改 `TileArt` 或 `TileRecipes` 前后各导一次。别的电视上的 App 不用装：把 APK 去掉 `lib/`、`assets/`、`*.dex` 之后推到 `files/tiles/apks/`，会按「装上了」的样子画在后面（名字后带「·」）。这个目录是自己建的，用完可以整个删掉。
 
 ## 必须遵守（踩过的坑）
 

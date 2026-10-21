@@ -82,6 +82,12 @@ object TileArtFactory {
         H = W * 9 / 16
     }
 
+    /**
+     * Icons drawn in Aerial's one look ([unify]) rather than in their own colors. Banners are
+     * the app's own art for TV and are left as they are.
+     */
+    @Volatile var unified = true
+
     /** How large a logo is, as the side of the square of the same area, in tile heights. */
     private const val LOGO = 0.5f
 
@@ -176,30 +182,35 @@ object TileArtFactory {
      * a color that tells the kind apart, the way tvOS draws its system apps. TV makers ship these
      * with phone icons that look different on every TV and unlike the apps around them.
      */
-    fun forSystem(kind: SystemTile): TileArt {
-        val back = layer {
-            drawRect(0f, 0f, W.toFloat(), H.toFloat(), Paint().apply {
-                shader = LinearGradient(0f, 0f, W * 0.4f, H.toFloat(), kind.top, kind.bottom, Shader.TileMode.CLAMP)
-            })
-            // Soft light from the top left, as on the input tiles.
-            drawRect(0f, 0f, W.toFloat(), H.toFloat(), Paint().apply {
-                shader = android.graphics.RadialGradient(W * 0.25f, -H * 0.2f, W * 0.8f, 0x38FFFFFF, 0x00FFFFFF, Shader.TileMode.CLAMP)
-            })
-        }
+    fun forSystem(kind: SystemTile): TileArt = glyphTile(kind.top, kind.bottom, kind.glyph)
+
+    /** One of Aerial's own glyphs in white over [top] to [bottom]; also for [TileRecipe.glyph]. */
+    fun glyphTile(top: Int, bottom: Int, glyph: Glyph): TileArt {
+        val back = colorTile(top, bottom)
         // The glyph on its own layer, so it shifts against the color when the tile leans.
         val g = H * 0.46f
         val fore = layer {
             translate((W - g) / 2f, (H - g) / 2f)
             CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, androidx.compose.ui.graphics.Canvas(this), Size(g, g)) {
-                drawGlyph(kind.glyph, Color.White)
+                drawGlyph(glyph, Color.White)
             }
         }
         return finish(back, fore)
     }
 
-    fun fromIcon(icon: Drawable): TileArt {
-        if (Build.VERSION.SDK_INT >= 26 && icon is AdaptiveIconDrawable && icon.foreground != null) adaptive(icon)?.let { return it }
-        return plate(icon) ?: legacy(icon)
+    /** Aerial's own tile color: a diagonal gradient with soft light from the top left. */
+    private fun colorTile(top: Int, bottom: Int): Bitmap = layer {
+        drawRect(0f, 0f, W.toFloat(), H.toFloat(), Paint().apply {
+            shader = LinearGradient(0f, 0f, W * 0.4f, H.toFloat(), top, bottom, Shader.TileMode.CLAMP)
+        })
+        drawRect(0f, 0f, W.toFloat(), H.toFloat(), Paint().apply {
+            shader = android.graphics.RadialGradient(W * 0.25f, -H * 0.2f, W * 0.8f, 0x38FFFFFF, 0x00FFFFFF, Shader.TileMode.CLAMP)
+        })
+    }
+
+    fun fromIcon(icon: Drawable, recipe: TileRecipe? = null): TileArt {
+        if (recipe?.top == null && Build.VERSION.SDK_INT >= 26 && icon is AdaptiveIconDrawable && icon.foreground != null) adaptive(icon)?.let { return it }
+        return plate(icon, recipe) ?: legacy(icon, recipe)
     }
 
     /**
@@ -213,7 +224,11 @@ object TileArtFactory {
         // A logo inside the 66-unit safe zone of the 108-unit layer spans at most about 0.61.
         if (max(logo.width(), logo.height()) > 0.7f) return null
         val bg = icon.background
-        if (bg != null && !isFlat(raster(bg, 32))) return null
+        val bgPx = bg?.let { raster(it, 32) }
+        if (bgPx != null && !isFlat(bgPx)) return null
+        val (fore, at) = placeLogo(icon.foreground, ::visible) ?: return null
+        val color = bgPx?.get(bgPx.size / 2)?.takeIf { it ushr 24 > 200 } ?: GRAPHITE_BOTTOM
+        if (unified && !multiColor(fore, at, color)) return unify(fore, at, color, color)
         val back = layer {
             drawColor(GRAPHITE_BOTTOM)
             bg?.let {
@@ -222,7 +237,7 @@ object TileArtFactory {
                 it.draw(this)
             }
         }
-        return finish(back, placeLogo(icon.foreground, ::visible)?.first)
+        return finish(back, fore)
     }
 
     /**
@@ -232,7 +247,7 @@ object TileArtFactory {
      * edge, and the logo on it is sized like every other logo, the plate fading into the tile
      * around it. Null for any other shape.
      */
-    private fun plate(icon: Drawable): TileArt? {
+    private fun plate(icon: Drawable, recipe: TileRecipe?): TileArt? {
         val n = SAMPLE
         val px = raster(icon, n)
         val box = solidBox(px, n) ?: return null
@@ -244,19 +259,20 @@ object TileArtFactory {
         var filled = 0
         for (y in t..bt) for (x in l..r) if (solid(px[y * n + x])) filled++
         if (w < n / 2 || kotlin.math.abs(w - h) > w * 0.06f || filled < w * h * 0.9f) return null
-        // The plate's color along its top and bottom edges, inside the corner rounding.
+        // The plate's color along its top and bottom edges, inside the corner rounding: the
+        // median, so a badge in a corner (WPS's "TV") or a logo touching the edge does not tint it.
         fun band(fromY: Int, toY: Int): Int? {
-            var rr = 0L; var gg = 0L; var bb = 0L; var count = 0
-            val xs = (l + w / 4)..(r - w / 4)
+            val xs = (l + w / 6)..(r - w / 6)
+            val rs = ArrayList<Int>(); val gs = ArrayList<Int>(); val bs = ArrayList<Int>()
             for (y in fromY..toY) for (x in xs) {
                 val c = px[y * n + x]
-                rr += (c shr 16) and 0xFF; gg += (c shr 8) and 0xFF; bb += c and 0xFF; count++
+                rs += (c shr 16) and 0xFF; gs += (c shr 8) and 0xFF; bs += c and 0xFF
             }
-            val mean = android.graphics.Color.rgb((rr / count).toInt(), (gg / count).toInt(), (bb / count).toInt())
-            // A logo running into the edge leaves no single color to carry across the tile.
-            var spread = 0L
-            for (y in fromY..toY) for (x in xs) spread += distance(px[y * n + x], mean)
-            return if (spread / count > 36) null else mean
+            val median = android.graphics.Color.rgb(rs.sorted()[rs.size / 2], gs.sorted()[gs.size / 2], bs.sorted()[bs.size / 2])
+            // Most of the edge has to be that color: a picture running into the edge has no plate.
+            var near = 0
+            for (y in fromY..toY) for (x in xs) if (distance(px[y * n + x], median) <= 48) near++
+            return if (near < rs.size * 0.6f) null else median
         }
         val edge = (h * 0.04f).roundToInt()
         val depth = (h * 0.06f).roundToInt()
@@ -274,48 +290,231 @@ object TileArtFactory {
             } ?: RectF(plate.left / n.toFloat(), plate.top / n.toFloat(), plate.right / n.toFloat(), plate.bottom / n.toFloat())
         }
 
+        val (fore, logo) = placeLogo(icon, ::logoOnPlate) ?: return null
+        if (recipe?.top != null && recipe.bottom != null) {
+            // The tile gets the recipe's colors, so the plate has to go: only the logo is kept.
+            cutOut(fore, logo, top, bottom, white = recipe.white || unified)
+            return finish(colorTile(recipe.top, recipe.bottom), fore)
+        }
+        if (unified && recipe?.keepColors != true && (recipe?.white == true || !multiColor(fore, logo, ColorUtils.blendARGB(top, bottom, 0.5f)))) {
+            return unify(fore, logo, top, bottom)
+        }
         val back = layer {
             drawRect(0f, 0f, W.toFloat(), H.toFloat(), Paint().apply {
                 shader = LinearGradient(0f, 0f, 0f, H.toFloat(), top, bottom, Shader.TileMode.CLAMP)
             })
         }
-        val (fore, logo) = placeLogo(icon, ::logoOnPlate) ?: return null
-        feather(fore, logo)
+        if (recipe?.white == true) cutOut(fore, logo, top, bottom, white = true) else feather(fore, logo)
         return finish(back, fore)
     }
 
-    private fun legacy(icon: Drawable): TileArt {
-        // A legacy icon. Its logo sits, sized like every other, on a frosted plate made from
-        // itself: the icon blown up past the tile's edges, blurred and dimmed. Full-square icons
-        // (many China-market system apps expect the launcher to mask them) get rounded corners.
+    /**
+     * Keeps only what stands out from the plate (colored [top] to [bottom] across [logo]) in a
+     * logo layer, its edges eased by how far each pixel is from the plate color; in white if asked.
+     */
+    private fun cutOut(layer: Bitmap, logo: RectF, top: Int, bottom: Int, white: Boolean) {
+        val px = IntArray(W * H).also { layer.getPixels(it, 0, W, 0, 0, W, H) }
+        for (y in 0 until H) {
+            val plate = ColorUtils.blendARGB(top, bottom, ((y - logo.top) / logo.height()).coerceIn(0f, 1f))
+            for (x in 0 until W) {
+                val i = y * W + x
+                val c = px[i]
+                if (c ushr 24 == 0) continue
+                val keep = ((distance(c, plate) - 24) / 72f).coerceIn(0f, 1f)
+                val a = ((c ushr 24) * keep).roundToInt()
+                px[i] = (a shl 24) or (if (white) 0xFFFFFF else c and 0xFFFFFF)
+            }
+        }
+        layer.setPixels(px, 0, W, 0, 0, W, H)
+    }
+
+    private fun legacy(icon: Drawable, recipe: TileRecipe?): TileArt {
+        // A legacy icon with no plate to carry across the tile. It sits, sized like every other
+        // logo, on a tile in its own hue, the way tvOS draws its system apps. (It used to sit on
+        // a blurred copy of itself, which read as a phone icon dropped on a smudge.) Full-square
+        // icons (many China-market system apps expect the launcher to mask them) get rounded corners.
         val sample = 192
         val iconBitmap = createBitmap(sample, sample)
         icon.setBounds(0, 0, sample, sample)
         icon.draw(Canvas(iconBitmap))
-        val fore = placeLogo(icon, ::visible, round = opaqueCorners(iconBitmap))?.first
-
-        val pw = 48
-        val ph = 27
-        val plate = createBitmap(pw, ph)
-        Canvas(plate).apply {
-            drawColor(plateFromTint(dominant(iconBitmap)))
-            val inset = (sample * 0.2f).roundToInt()
-            drawBitmap(iconBitmap, android.graphics.Rect(inset, inset + sample / 8, sample - inset, sample - inset - sample / 8), android.graphics.Rect(0, 0, pw, ph), Paint(Paint.FILTER_BITMAP_FLAG))
-        }
-        val platePx = IntArray(pw * ph)
-        plate.getPixels(platePx, 0, pw, 0, 0, pw, ph)
-        repeat(3) { Images.boxBlur(platePx, pw, ph, 3) }
-        plate.setPixels(platePx, 0, pw, 0, 0, pw, ph)
-        val frost = ColorMatrix().apply {
-            setSaturation(1.3f)
-            postConcat(ColorMatrix().apply { setScale(0.7f, 0.7f, 0.7f, 1f) })
-        }
-        val back = layer {
-            drawBitmap(plate, null, android.graphics.Rect(0, 0, W, H), Paint(Paint.FILTER_BITMAP_FLAG).apply { colorFilter = ColorMatrixColorFilter(frost) })
-        }
-        plate.recycle()
+        val square = opaqueCorners(iconBitmap)
+        val tint = dominant(iconBitmap)
         iconBitmap.recycle()
-        return finish(back, fore)
+        val (top, bottom) = if (recipe?.top != null && recipe.bottom != null) recipe.top to recipe.bottom else tileFromTint(tint)
+        // A white logo on a picture (Z视介's Z on blue facets): a recipe can ask for just the logo,
+        // taken by its lightness, on the recipe's colors.
+        if (recipe?.white == true && (square || edgeColors(icon) != null)) {
+            placeLogo(icon, ::lightPart)?.let { (fore, _) ->
+                keepLight(fore)
+                return finish(colorTile(top, bottom), fore)
+            }
+        }
+        // A logo with no plate of its own (the icon is just its shape) goes on in white like the
+        // rest; a full-square icon is a picture, and stays one.
+        if (unified && !square && recipe?.keepColors != true) {
+            placeLogo(icon, ::visible)?.let { (fore, at) ->
+                if (recipe?.white == true || !multiColor(fore, at, 0)) {
+                    whiten(fore)
+                    return finish(colorTile(top, bottom), fore)
+                }
+                fore.recycle()
+            }
+        }
+        // A square icon is a picture with its logo somewhere inside: sized up so the logo reads
+        // as large as the others. When its edges are one color each, those colors are carried
+        // across the tile and the picture fades into them, so it fills the tile instead of sitting
+        // on it (HiFi音乐, 华数TV, 开唛K歌 from 当贝市场). A recipe's colors win.
+        if (recipe?.top == null) edgeColors(icon)?.let { (edgeTop, edgeBottom) ->
+            placeLogo(icon, ::visible, scale = 1.25f)?.let { (fore, at) ->
+                val side = at.width()
+                feather(fore, RectF(at.left + side * 0.18f, at.top + side * 0.18f, at.right - side * 0.18f, at.bottom - side * 0.18f), margin = 0f, fade = side * 0.18f)
+                val back = layer {
+                    drawRect(0f, 0f, W.toFloat(), H.toFloat(), Paint().apply {
+                        shader = LinearGradient(0f, at.top, 0f, at.bottom, edgeTop, edgeBottom, Shader.TileMode.CLAMP)
+                    })
+                }
+                return finish(back, fore)
+            }
+        }
+        val fore = placeLogo(icon, ::visible, round = square, scale = if (square) 1.25f else 1f)?.first
+        return finish(colorTile(top, bottom), fore)
+    }
+
+    /**
+     * For an icon that is a filled (rounded) square, the colors along its top and bottom edges,
+     * just inside them and away from the corners. Null for any other shape, when either edge is
+     * not mostly one color (a photo running off the edge), or when the two are far apart (black
+     * over orange, 华数南瓜电影), which fades into the tile as a stripe. A gradient (pink into
+     * purple) is fine.
+     */
+    private fun edgeColors(icon: Drawable): Pair<Int, Int>? {
+        val n = 96
+        val px = raster(icon, n)
+        val box = solidBox(px, n) ?: return null
+        val w = box.width(); val h = box.height()
+        if (w < n / 2 || kotlin.math.abs(w - h) > w * 0.06f) return null
+        var filled = 0
+        for (y in box.top until box.bottom) for (x in box.left until box.right) if (solid(px[y * n + x])) filled++
+        if (filled < w * h * 0.88f) return null
+        fun band(y0: Int, y1: Int): Int? {
+            val cs = ArrayList<Int>()
+            for (y in y0..y1) for (x in box.left + w / 5 until box.right - w / 5) cs += px[y * n + x]
+            val median = android.graphics.Color.rgb(
+                cs.map { (it shr 16) and 0xFF }.sorted()[cs.size / 2],
+                cs.map { (it shr 8) and 0xFF }.sorted()[cs.size / 2],
+                cs.map { it and 0xFF }.sorted()[cs.size / 2],
+            )
+            return if (cs.count { distance(it, median) <= 48 } < cs.size * 0.6f) null else median
+        }
+        // Close to the edge: a picture icon's subject often reaches within a few percent of it.
+        val top = band(box.top + h * 2 / 100, box.top + h * 5 / 100) ?: return null
+        val bottom = band(box.bottom - 1 - h * 5 / 100, box.bottom - 1 - h * 2 / 100) ?: return null
+        return if (distance(top, bottom) > 260) null else top to bottom
+    }
+
+    /**
+     * Aerial's one look for tiles made from icons, as tvOS draws its own apps: the logo in white,
+     * on a gradient in the app's color. The plate the icon came on ([top] to [bottom]) gives that
+     * color when it has one; a white, black or grey plate does not, and the logo's own color is
+     * used instead. A logo that is itself grey on such a plate gets graphite.
+     */
+    private fun unify(fore: Bitmap, logo: RectF, top: Int, bottom: Int): TileArt {
+        val plate = ColorUtils.blendARGB(top, bottom, 0.5f)
+        val hsl = FloatArray(3)
+        ColorUtils.colorToHSL(plate, hsl)
+        val colored = hsl[1] > 0.25f && hsl[2] in 0.18f..0.85f
+        val tint = if (colored) null else logoTint(fore, logo, plate)
+        cutOut(fore, logo, top, bottom, white = true)
+        val (a, b) = if (colored) tileFromPlate(top, bottom) else tileFromTint(tint!!)
+        return finish(colorTile(a, b), fore)
+    }
+
+    /**
+     * True for a logo of several colors (Geekbench's bars on glasses, a star on a bubble). In
+     * white those parts melt into one shape, so such logos keep their colors. Pixels close to
+     * [plate] are not part of the logo; pass 0 for a logo with no plate.
+     */
+    private fun multiColor(layer: Bitmap, logo: RectF, plate: Int): Boolean {
+        val l = logo.left.toInt().coerceIn(0, W - 1); val t = logo.top.toInt().coerceIn(0, H - 1)
+        val r = logo.right.toInt().coerceIn(l + 1, W); val b = logo.bottom.toInt().coerceIn(t + 1, H)
+        val px = IntArray((r - l) * (b - t)).also { layer.getPixels(it, 0, r - l, l, t, r - l, b - t) }
+        // Twelve hues, plus light and dark for colors with too little saturation to have one.
+        val bins = IntArray(14)
+        val hsv = FloatArray(3)
+        fun binOf(c: Int): Int {
+            android.graphics.Color.colorToHSV(c, hsv)
+            return when {
+                hsv[1] < 0.25f || hsv[2] < 0.2f -> if (hsv[2] > 0.6f) 12 else 13
+                else -> ((hsv[0] + 15f) / 30f).toInt() % 12
+            }
+        }
+        // The plate's own hue inside the logo is its edge blending into the plate (pink around
+        // Xiaomi's white "mi" on red), not a second color.
+        val plateBin = if (plate != 0) binOf(plate).takeIf { it < 12 } else null
+        var count = 0
+        for (c in px) {
+            if (c ushr 24 < 200 || (plate != 0 && distance(c, plate) < 96)) continue
+            val bin = binOf(c)
+            if (plateBin != null && (bin == plateBin || bin == (plateBin + 1) % 12 || bin == (plateBin + 11) % 12)) continue
+            bins[bin]++; count++
+        }
+        if (count == 0) return false
+        // Neighbouring hues are one color in a gradient (a red that runs into orange).
+        val groups = ArrayList<Int>()
+        for (i in 0 until 12) {
+            val v = bins[i]
+            if (v > 0 && v >= bins[(i + 11) % 12] && v >= bins[(i + 1) % 12]) groups += v + bins[(i + 11) % 12] + bins[(i + 1) % 12]
+        }
+        groups += bins[12]; groups += bins[13]
+        return groups.count { it > count * 0.08f } >= 2
+    }
+
+    /** The saturation-weighted color of what stands out from [plate] in a logo layer. */
+    private fun logoTint(layer: Bitmap, logo: RectF, plate: Int): Int {
+        val l = logo.left.toInt().coerceIn(0, W - 1); val t = logo.top.toInt().coerceIn(0, H - 1)
+        val r = logo.right.toInt().coerceIn(l + 1, W); val b = logo.bottom.toInt().coerceIn(t + 1, H)
+        val px = IntArray((r - l) * (b - t)).also { layer.getPixels(it, 0, r - l, l, t, r - l, b - t) }
+        var rr = 0.0; var gg = 0.0; var bb = 0.0; var total = 0.0
+        val hsv = FloatArray(3)
+        for (c in px) {
+            if (c ushr 24 < 200 || distance(c, plate) < 96) continue
+            android.graphics.Color.colorToHSV(c, hsv)
+            val w = hsv[1] * hsv[2] + 0.02
+            rr += ((c shr 16) and 0xFF) * w; gg += ((c shr 8) and 0xFF) * w; bb += (c and 0xFF) * w; total += w
+        }
+        if (total == 0.0) return GRAPHITE_TOP
+        return android.graphics.Color.rgb((rr / total).roundToInt(), (gg / total).roundToInt(), (bb / total).roundToInt())
+    }
+
+    /** The plate's colors as a tile: kept, but evened out so no tile is much paler or deeper than the rest. */
+    private fun tileFromPlate(top: Int, bottom: Int): Pair<Int, Int> {
+        val hsl = FloatArray(3)
+        ColorUtils.colorToHSL(ColorUtils.blendARGB(top, bottom, 0.5f), hsl)
+        val s = hsl[1].coerceIn(0.45f, 0.85f)
+        val l = hsl[2].coerceIn(0.4f, 0.56f)
+        return ColorUtils.HSLToColor(floatArrayOf(hsl[0], s, l + 0.08f)) to ColorUtils.HSLToColor(floatArrayOf(hsl[0], s, l - 0.08f))
+    }
+
+    /** The near-white part of a sample. */
+    private fun lightPart(px: IntArray, n: Int): RectF? = bounds(px, n) { _, c -> solid(c) && minOf((c shr 16) and 0xFF, (c shr 8) and 0xFF, c and 0xFF) > 200 }
+
+    /** Only the near-white pixels of a logo layer kept, in white, their edges eased. */
+    private fun keepLight(layer: Bitmap) {
+        val px = IntArray(W * H).also { layer.getPixels(it, 0, W, 0, 0, W, H) }
+        for (i in px.indices) {
+            val c = px[i]
+            val low = minOf((c shr 16) and 0xFF, (c shr 8) and 0xFF, c and 0xFF)
+            val keep = ((low - 150) / 70f).coerceIn(0f, 1f)
+            px[i] = (((c ushr 24) * keep).roundToInt() shl 24) or 0xFFFFFF
+        }
+        layer.setPixels(px, 0, W, 0, 0, W, H)
+    }
+
+    /** Every visible pixel of a logo layer turned white, its alpha kept. */
+    private fun whiten(layer: Bitmap) {
+        val px = IntArray(W * H).also { layer.getPixels(it, 0, W, 0, 0, W, H) }
+        for (i in px.indices) px[i] = (px[i] and 0xFF000000.toInt()) or 0xFFFFFF
+        layer.setPixels(px, 0, W, 0, 0, W, H)
     }
 
     private fun opaqueCorners(b: Bitmap): Boolean {
@@ -370,9 +569,9 @@ object TileArtFactory {
      * and a round symbol carry the same weight, and all of them stay inside the tile's safe zone,
      * as on tvOS: focus scale and parallax never take a logo near the edge.
      */
-    private fun iconOnTile(logo: RectF): RectF {
+    private fun iconOnTile(logo: RectF, scale: Float = 1f): RectF {
         val aspect = logo.width() / logo.height()
-        val h = minOf(LOGO * H / kotlin.math.sqrt(aspect), 0.6f * H, 0.62f * W / aspect)
+        val h = minOf(scale * LOGO * H / kotlin.math.sqrt(aspect), 0.66f * H, 0.62f * W / aspect)
         val box = h / logo.height()
         val left = W / 2f - box * logo.centerX()
         val top = H / 2f - box * logo.centerY()
@@ -401,15 +600,15 @@ object TileArtFactory {
      * layer-list of dp-sized shapes does not scale with its bounds (遥遥电视助手 on Xiaomi
      * MiTV-MFTR0), and is placed by what was actually drawn.
      */
-    private fun placeLogo(d: Drawable, find: (IntArray, Int) -> RectF?, round: Boolean = false): Pair<Bitmap, RectF>? {
+    private fun placeLogo(d: Drawable, find: (IntArray, Int) -> RectF?, round: Boolean = false, scale: Float = 1f): Pair<Bitmap, RectF>? {
         val first = find(raster(d, SAMPLE), SAMPLE) ?: return null
-        val size = iconOnTile(first).width().roundToInt().coerceIn(16, 4 * H)
+        val size = iconOnTile(first, scale).width().roundToInt().coerceIn(16, 4 * H)
         val icon = createBitmap(size, size)
         d.setBounds(0, 0, size, size)
         d.draw(Canvas(icon))
         val px = IntArray(size * size).also { icon.getPixels(it, 0, size, 0, 0, size, size) }
         val logo = find(px, size) ?: first
-        val at = iconOnTile(logo)
+        val at = iconOnTile(logo, scale)
         val out = layer {
             val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
             if (round) {
@@ -432,9 +631,7 @@ object TileArtFactory {
     }
 
     /** Fades [layer] out around [keep], so a plate's own edges and corners melt into the tile color. */
-    private fun feather(layer: Bitmap, keep: RectF) {
-        val margin = H * 0.04f
-        val fade = H * 0.22f
+    private fun feather(layer: Bitmap, keep: RectF, margin: Float = H * 0.04f, fade: Float = H * 0.22f) {
         val c = Canvas(layer)
         fun mask(from: Float, to: Float, horizontal: Boolean) = Paint().apply {
             val span = to - from + 2 * (margin + fade)
@@ -526,14 +723,16 @@ object TileArtFactory {
         return android.graphics.Color.rgb((r / total).roundToInt(), (g / total).roundToInt(), (bl / total).roundToInt())
     }
 
-    /** A plate behind a logo that has no background of its own: the logo's hue, deep and calm. */
-    private fun plateFromTint(tint: Int): Int {
+    /**
+     * Tile colors, top and bottom, for a logo with no background of its own: its hue, a little
+     * deeper than the logo so the logo still stands out. Grey logos get graphite.
+     */
+    private fun tileFromTint(tint: Int): Pair<Int, Int> {
         val hsl = FloatArray(3)
         ColorUtils.colorToHSL(tint, hsl)
-        if (hsl[1] < 0.18f) return GRAPHITE_TOP
-        hsl[1] = hsl[1].coerceAtMost(0.55f)
-        hsl[2] = 0.24f
-        return ColorUtils.HSLToColor(hsl)
+        if (hsl[1] < 0.18f) return 0xFF6E6E74.toInt() to 0xFF3A3A3C.toInt()
+        val s = hsl[1].coerceIn(0.5f, 0.85f)
+        return ColorUtils.HSLToColor(floatArrayOf(hsl[0], s, 0.56f)) to ColorUtils.HSLToColor(floatArrayOf(hsl[0], s, 0.4f))
     }
 
     private fun backdropOf(src: Bitmap): Bitmap {

@@ -149,6 +149,29 @@ object AppCatalog {
                 .getDrawableForDensity(res, android.util.DisplayMetrics.DENSITY_XXXHIGH, null)
         }.getOrNull()
 
+    /**
+     * The tile an APK file that is not installed would get, for [TileSheet]: apps from another TV
+     * can be tried here without installing them. Its TV banner if it has one, else its icon.
+     */
+    fun archiveArt(pm: PackageManager, path: String): Pair<String, TileArt>? = runCatching {
+        val pi = pm.getPackageArchiveInfo(path, PackageManager.GET_ACTIVITIES) ?: return null
+        val ai = pi.applicationInfo ?: return null
+        ai.sourceDir = path
+        ai.publicSourceDir = path
+        val res = pm.getResourcesForApplication(ai)
+        fun drawable(id: Int) = if (id == 0) null else runCatching {
+            res.getDrawableForDensity(id, android.util.DisplayMetrics.DENSITY_XXXHIGH, null)
+        }.getOrNull()
+        val label = ai.loadLabel(pm).toString().trim().ifEmpty { pi.packageName }
+        val bannerId = ai.banner.takeIf { it != 0 } ?: pi.activities?.firstOrNull { it.bannerResource != 0 }?.bannerResource ?: 0
+        val banner = drawable(bannerId)?.takeIf { it.intrinsicWidth >= it.intrinsicHeight * 4 / 3 }
+        val recipe = TileRecipes.of(pi.packageName)
+        val drawn = recipe?.glyph?.let { TileArtFactory.glyphTile(recipe.top ?: 0, recipe.bottom ?: 0, it) }
+        val art = drawn ?: if (banner != null && recipe?.useIcon != true) TileArtFactory.fromBanner(banner)
+            else TileArtFactory.fromIcon(drawable(ai.icon) ?: return null, recipe)
+        label to art
+    }.getOrNull()
+
     private fun entry(pm: PackageManager, info: ActivityInfo, leanback: Boolean, byCategory: Map<String, SystemTile>): AppEntry {
         val pkg = info.packageName
         // A picture chosen on the phone page changes the tile as much as an update does.
@@ -170,11 +193,13 @@ object AppCatalog {
                 ?.takeIf { it.intrinsicWidth >= it.intrinsicHeight * 4 / 3 }
             val own = if (system) SYSTEM_TILES[pkg] ?: byCategory[pkg]?.takeIf { banner == null } else null
             val custom = CustomIcons.load(pkg)
+            val recipe = TileRecipes.of(pkg)
             art = when {
                 custom != null -> TileArtFactory.fromBanner(android.graphics.drawable.BitmapDrawable(android.content.res.Resources.getSystem(), custom))
                 own != null -> TileArtFactory.forSystem(own)
-                banner != null -> TileArtFactory.fromBanner(banner)
-                else -> TileArtFactory.fromIcon(densest(pm, info, info.iconResource) ?: info.loadIcon(pm))
+                recipe?.glyph != null -> TileArtFactory.glyphTile(recipe.top ?: 0, recipe.bottom ?: 0, recipe.glyph)
+                banner != null && recipe?.useIcon != true -> TileArtFactory.fromBanner(banner)
+                else -> TileArtFactory.fromIcon(densest(pm, info, info.iconResource) ?: info.loadIcon(pm), recipe)
             }
             synchronized(cache) { cache[pkg] = Cached(stamp, TileArtFactory.W, label, art) }
         }
