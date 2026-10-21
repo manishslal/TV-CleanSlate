@@ -152,6 +152,7 @@ a.chip-link:hover { text-decoration: none; border-color: rgba(41,151,255,.5); co
 .panel { display: none; }
 .panel.on { display: block; }
 .panel > p { color: var(--muted); margin: 0 0 14px; }
+.panel > p.note { color: var(--dim); margin: 14px 0 0; }
 .code { position: relative; background: #0d0d0f; border: 1px solid var(--line); border-radius: 16px; }
 .code pre {
   margin: 0; padding: 22px 22px 22px; overflow-x: auto; white-space: pre-wrap; word-break: break-word;
@@ -171,6 +172,9 @@ a.chip-link:hover { text-decoration: none; border-color: rgba(41,151,255,.5); co
 .panel b { color: var(--text); font-weight: 600; }
 .panel a b { color: inherit; }
 .hint { color: var(--muted); margin: 0 0 14px; }
+.agents { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0 0 14px; }
+.agents li { display: flex; align-items: center; gap: 8px; padding: 6px 14px 6px 8px; border: 1px solid var(--line); border-radius: 980px; background: var(--card); color: var(--text); font-size: 15px; line-height: 1.3; }
+.agents img { width: 20px; height: 20px; flex: none; }
 
 details { border-bottom: 1px solid var(--line); padding: 18px 0; }
 details summary { cursor: pointer; font-size: 19px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 16px; }

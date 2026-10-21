@@ -97,7 +97,9 @@ The TV's IP address is under Settings → Network. The first time your computer 
 
 ### 2. Install (pick one)
 
-**With an agent (recommended)**: paste this into an agent that can run commands on your computer, like Claude Code, Codex, Cursor or WorkBuddy. Phone apps and web chats can't do it.
+**With an agent (recommended)**: paste this into an agent that can run commands on your computer, such as:
+
+<img src="site/img/agents/claude-code.svg" width="18" height="18" alt=""> Claude Code &nbsp; <img src="site/img/agents/codex.svg" width="18" height="18" alt=""> Codex &nbsp; <img src="site/img/agents/workbuddy.svg" width="18" height="18" alt=""> WorkBuddy &nbsp; <img src="site/img/agents/trae.svg" width="18" height="18" alt=""> Trae &nbsp; or Cursor
 
 ```text
 Please install Aerial, an open-source home screen for Android TV, on my TV, and make it the home screen the TV starts into.
@@ -111,7 +113,7 @@ Read the whole guide before you start. Then run the commands yourself on my comp
 At the end, paste the raw output of the commands under "Check" in the guide.
 ```
 
-When the agent says it's done, check that the last output it pasted includes `app.orchard.tv`. If it doesn't, it isn't installed.
+Phone apps and web chats only tell you the steps; they can't install it. When the agent says it's done, check that the last output it pasted includes `app.orchard.tv`. If it doesn't, it isn't installed.
 
 **One command (macOS / Linux)**:
 

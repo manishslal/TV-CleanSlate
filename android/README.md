@@ -96,7 +96,9 @@
 
 ### 2. 安装（三选一）
 
-**交给 Agent（推荐）**：把下面这段发给能在电脑上运行命令的 Agent，比如 WorkBuddy、豆包电脑版、Trae、Claude Code、Codex。手机 App 和网页版聊天装不了。
+**交给 Agent（推荐）**：把下面这段发给能在电脑上运行命令的 Agent，比如：
+
+<img src="site/img/agents/workbuddy.svg" width="18" height="18" alt=""> WorkBuddy &nbsp; <img src="site/img/agents/doubao.svg" width="18" height="18" alt=""> 豆包电脑版 &nbsp; <img src="site/img/agents/qwen.svg" width="18" height="18" alt=""> 千问电脑版 &nbsp; <img src="site/img/agents/trae.svg" width="18" height="18" alt=""> Trae &nbsp; <img src="site/img/agents/claude-code.svg" width="18" height="18" alt=""> Claude Code &nbsp; <img src="site/img/agents/codex.svg" width="18" height="18" alt=""> Codex
 
 ```text
 请帮我把开源电视桌面 Aerial 装到我的电视上，并设为开机进入的桌面。
@@ -110,7 +112,7 @@
 最后按说明里的「验收」，把那几条命令的原始输出贴给我。
 ```
 
-Agent 说装好了，看它贴出的最后一条输出里有没有 `app.orchard.tv`，没有就是没装上。
+手机 App 和网页版聊天只会把步骤告诉你，装不了。Agent 说装好了，看它贴出的最后一条输出里有没有 `app.orchard.tv`，没有就是没装上。
 
 **一行命令（macOS / Linux）**：
 
