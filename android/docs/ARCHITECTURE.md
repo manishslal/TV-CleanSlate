@@ -21,7 +21,7 @@ app/src/main/java/app/orchard/tv/
 │   ├── home/AppTile.kt      单个磁贴：聚焦弹簧、阴影、柔光、视差、边缘回弹、长按、移动抖动
 │   ├── home/HomeChrome.kt   背景（AmbientBackground）、大时钟、右上角状态胶囊、时间格式
 │   ├── home/Overlays.kt     长按菜单、隐藏的 App 面板、MenuRow、MiniTile
-│   ├── home/Screensaver.kt  屏保 UI：航拍（VideoView）/ 照片（Ken Burns）/ 时钟
+│   ├── home/Screensaver.kt  屏保 UI：航拍（Media3 ExoPlayer，见 wallpaper/AerialStream.kt）/ 照片（Ken Burns）/ 时钟
 │   ├── control/ControlCenter.kt  控制中心：按钮、音量/亮度滑块、「个性化」「隐藏的 App」两个入口；信号源页（只负责切换）和信号源设置页（显示在主屏幕、开机时打开）
 │   └── wallpaper/WallpaperSheet.kt  个性化面板（壁纸、屏保、焦点样式、天气）+ 手机扫码卡片
 ├── wallpaper/
@@ -109,7 +109,7 @@ Logo 的大小统一：先在 256×256 的采样里找出 Logo 的范围，再�
 - 屏保有两条路径：
   1. **桌面内**：`MainActivity` 空闲计时 5 分钟，或在第一行按返回、点「立即开始」→ `vm.screensaverVisible`，同时加 `FLAG_KEEP_SCREEN_ON`，用来压住厂商屏保（小米靠这条）。
   2. **系统级**：`AerialDream`，由 `install.sh` 在使用标准屏保（`screensaver_enabled=1`）的电视上写入 `screensaver_components`（TCL 靠这条）。
-- 航拍：`assets/aerials.json` 只含地址和地名，影片实时从 `sylvan.apple.com` 播放（1080p H.264）。连续 3 次播放失败就改用照片屏保。
+- 航拍：`assets/aerials.json` 只含地址和地名，影片实时从 `sylvan.apple.com` 播放（1080p H.264），用 Media3 ExoPlayer（#46，`AerialStream`）：全部影片放进一个播放列表，下一段提前加载；连接 5 秒、读取 8 秒超时，只重试一次。`sylvan.apple.com` 的证书链到 Apple Root CA，Android 自带的根证书里没有，`network_security_config.xml` 只对这个域名信任打包的 `raw/apple_root_ca.pem`；Android 5、6 不读这个配置，一开始就走 HTTP。8 秒没画面就换下一段，失败 3 次换照片屏保；这次屏保一帧都没播出来时，2 次就换。播放时把下一次屏保第一段影片的开头和索引预取到磁盘（缓存上限 48MB），下次几乎秒开。小米 MFTR0 实测冷启动 1.3 秒出第一帧。
 
 ## 手机配置（PhoneServer）
 
@@ -136,10 +136,15 @@ NanoHTTPD 监听 8790 端口，路径前缀是 8 位随机令牌（每次打开�
 安装：install.sh 授权（WRITE_SECURE_SETTINGS、通知监听、SAW、WRITE_SETTINGS）
   → MainActivity.onStart → GuardSetup.ensureEnabled()（把守护写进 enabled_accessibility_services）
   → 5 秒后 rebindIfStalled()（已启用但没运行 → 先移除、1.5 秒后加回，触发重绑）
+开机：守护、RevivalListener、BootReceiver 都声明了 directBootAware（#45），用户解锁之前就绑定
+  - 锁定期间只记窗口，不启动界面、不拦 HOME；凭据加密存储里的偏好（keep_adb、屏保）解锁后再读
+  - ACTION_USER_UNLOCKED → 1.5 秒后按下面的规则接管。TCL 75S365C 上从解锁到 Aerial 7.6 秒 → 约 2 秒
 运行：HomeGuardService
-  - onKeyEvent(HOME) → 不是默认桌面时吞掉按键，打开 Aerial
+  - onKeyEvent(HOME) → 不是默认桌面时吞掉按键，打开 Aerial（Android 11 及以下一直开着按键过滤，见 filterKeys）
   - TYPE_WINDOW_STATE_CHANGED → 原桌面的 HOME Activity 到前台 → 打开 Aerial
-  - SCREEN_ON → 1.2 秒后如果最后的窗口是原桌面（或者未知）→ 打开 Aerial
+  - 亮屏、开机、复活、解锁 → 等 1.5 秒，前台还是原桌面（或者不知道）才打开 Aerial（takeOverOnceSettled）。
+    只有 Activity 窗口算前台，浮层和对话框不算（TCL 语音助手）。前台是信号源时不动：CEC 切过去的，
+    或者电视自己「开机播放上次的信号源」（小米 PatchWall 的 autoPlay），都以电视为准
   - adb_enabled 的 ContentObserver → keep_adb 时写回 1
 被杀（小米待机 killAllThirdApp）：系统移除无障碍授权
   → 通知监听绑定断开 → 系统约 0.5 秒后重绑 RevivalListener（进程复活）
