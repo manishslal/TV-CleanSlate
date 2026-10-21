@@ -178,8 +178,21 @@ Aerial 启动后会自己打开桌面守护。屏保、亮度、TCL 自启等完
 | TCL MT5879 国行 | Android 11 | 日常使用中 | [笔记](docs/devices/tcl-mt5879-cn.md) |
 | 索尼 XRJ-77A80J 国行（BRAVIA VH2） | Android 10 | 用户验证：安装、开机自启、待机唤醒、屏保（[#16](https://github.com/pengchujin/aerial-tv/issues/16)） | — |
 | 索尼 BRAVIA VH1 国行 | Android 12 | 用户验证；亮度改为打开索尼的图像设置（[#2](https://github.com/pengchujin/aerial-tv/issues/2)） | — |
+| 创维酷开 K3 Pro 90P3D Max（8R145） | Android 11 | 用户验证：开机自启（[#43](https://github.com/pengchujin/aerial-tv/issues/43)）。1.15 起不用再避免设为默认桌面 | — |
+| 康佳 2861 | Android 5.1.1 | 用户验证：安装成功（[#37](https://github.com/pengchujin/aerial-tv/issues/37)） | — |
+| PPTV K55U27 | Android 6 | 用户验证：能用（[#39](https://github.com/pengchujin/aerial-tv/issues/39)） | — |
+| 腾讯极光盒子 7S | — | 用户验证：安装成功；有两个「设置」，可以长按隐藏一个；待机后回到原桌面，待查（[#51](https://github.com/pengchujin/aerial-tv/issues/51)） | — |
+| 小米 MiTV-ASTP0 | Android 9 | 用户验证：安装、开机自启、待机唤醒；按 HOME 会先闪一下原桌面（[#48](https://github.com/pengchujin/aerial-tv/issues/48)） | — |
+| 极米投影（m7642） | Android 9 | 用户验证：开机自启；看完视频按 HOME 偶尔卡住，待查（[#44](https://github.com/pengchujin/aerial-tv/issues/44)） | — |
+| 雷鸟 55S595C Ultra（MT9655） | Android 11 | 能装，但 ADB 只有无线调试且拿不到授权，接管不了 HOME（[#52](https://github.com/pengchujin/aerial-tv/issues/52)） | [笔记](docs/devices/tcl-mt9655-cn.md) |
 
-其他品牌（海信、创维等）应该也能用，但还没在真机上验证。欢迎[提交 Issue](https://github.com/pengchujin/aerial-tv/issues) 或 PR 补充你的机型。
+### 用户反馈的机型（没有日志，未验证）
+
+来自微博评论（[#33](https://github.com/pengchujin/aerial-tv/issues/33)），只说装好了，没有型号细节或日志，仅供参考：小米电视 S Pro Mini LED 2026、小米电视 4A（Android 6）、小米盒子 5、小米显示器 / G Pro、红米电视、红米投影 5 Pro、索尼 A8G / X9000H / X90J、TCL 75Q10G Pro、雷鸟鹏 6SE、OPPO S1、夏普老款、当贝投影 F5、亚马逊 Fire TV。
+
+能装但开机进不了 Aerial 的：Vidda、海信（要删掉原桌面才行，Aerial 不会这么做）、OPPO K9、雷鸟鹤 6 2025 Ultra。
+
+欢迎[提交 Issue](https://github.com/pengchujin/aerial-tv/issues) 或 PR 补充你的机型，附上 `getprop ro.product.model` 和安装输出最好。
 
 ## 已知限制
 
