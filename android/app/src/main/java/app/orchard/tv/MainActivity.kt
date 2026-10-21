@@ -261,6 +261,7 @@ class MainActivity : ComponentActivity() {
         super.onStart()
         GuardSetup.ensureEnabled(this)
         idleHandler.postDelayed({ GuardSetup.rebindIfStalled(this) }, 5_000)
+        vm.reloadIfPackagesChanged()
         ContextCompat.registerReceiver(
             this, packageReceiver,
             IntentFilter().apply {

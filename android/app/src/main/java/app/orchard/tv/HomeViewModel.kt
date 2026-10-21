@@ -1,6 +1,7 @@
 package app.orchard.tv
 
 import android.app.Application
+import android.os.Build
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -75,7 +76,24 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { snapshotFlow { CustomIcons.version }.drop(1).collect { reload() } }
     }
 
+    /** PackageManager's change counter when the list was last loaded (Android 8+). */
+    private var packagesSeen = 0
+
+    /**
+     * Apps installed or removed while Aerial was in the background (from an app store in front)
+     * send no broadcast Aerial hears: it listens only while started. Catch up when Home comes back
+     * (issue #55). Before Android 8 there is no change counter; the reload is cheap, tiles are cached.
+     */
+    fun reloadIfPackagesChanged() {
+        if (!loaded) return
+        if (Build.VERSION.SDK_INT >= 26 && context.packageManager.getChangedPackages(packagesSeen) == null) return
+        reload()
+    }
+
     fun reload() {
+        if (Build.VERSION.SDK_INT >= 26) {
+            packagesSeen = context.packageManager.getChangedPackages(0)?.sequenceNumber ?: packagesSeen
+        }
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
             val ctx = context
