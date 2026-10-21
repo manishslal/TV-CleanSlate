@@ -14,6 +14,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.WindowManager
 import android.provider.Settings
@@ -23,6 +24,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
@@ -30,7 +32,10 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
 import app.orchard.tv.apps.AppEntry
+import app.orchard.tv.apps.CustomIcons
 import app.orchard.tv.apps.TileArtFactory
 import app.orchard.tv.guard.GuardSetup
 import app.orchard.tv.guard.HomeGuardService
@@ -39,6 +44,11 @@ import app.orchard.tv.ui.theme.LocalReducedMotion
 import app.orchard.tv.ui.theme.canvasDensity
 import app.orchard.tv.settings.AerialSettings
 import app.orchard.tv.wallpaper.Wallpapers
+import app.orchard.tv.weather.Weather
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 class MainActivity : ComponentActivity() {
 
@@ -67,6 +77,8 @@ class MainActivity : ComponentActivity() {
         }
         TileArtFactory.useCanvasDensity(canvasDensity(resources.displayMetrics))
         Wallpapers.init(this)
+        Weather.init(this)
+        CustomIcons.init(this)
         AerialSettings.init(this)
         val reducedMotion = Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
 
@@ -94,6 +106,60 @@ class MainActivity : ComponentActivity() {
                     onStartScreensaver = { idleHandler.postDelayed({ showScreensaver.run() }, 150) },
                 )
             }
+        }
+
+        ContextCompat.registerReceiver(this, screenOnReceiver, IntentFilter(Intent.ACTION_SCREEN_ON), ContextCompat.RECEIVER_NOT_EXPORTED)
+        if (savedInstanceState == null && firstStartSinceBoot()) openBootSource("boot")
+        if (intent.getBooleanExtra(EXTRA_WOKE, false)) openBootSource("brought back on wake")
+    }
+
+    override fun onDestroy() {
+        runCatching { unregisterReceiver(screenOnReceiver) }
+        super.onDestroy()
+    }
+
+    // ---- The input the TV starts on (issue #25) ----
+
+    private var bootSourceOpenedAt = Long.MIN_VALUE / 2
+
+    /**
+     * Woken with Aerial still in front (TCL keeps it through standby). Where the firmware killed
+     * Aerial instead (Xiaomi), Home Guard brings it back with [EXTRA_WOKE].
+     */
+    private val screenOnReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            idleHandler.postDelayed({
+                if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) openBootSource("screen on")
+            }, 1500)
+        }
+    }
+
+    /** Once per boot (Settings.Global.BOOT_COUNT, Android 7+), within a few minutes of it. */
+    private fun firstStartSinceBoot(): Boolean {
+        if (SystemClock.elapsedRealtime() > 3 * 60 * 1000L) return false
+        if (Build.VERSION.SDK_INT < 24) return true
+        val boot = Settings.Global.getInt(contentResolver, Settings.Global.BOOT_COUNT, -1)
+        val prefs = getSharedPreferences("system", MODE_PRIVATE)
+        if (boot < 0 || prefs.getInt("boot_source_boot", -2) == boot) return false
+        prefs.edit().putInt("boot_source_boot", boot).apply()
+        return true
+    }
+
+    /**
+     * Opens the input the owner wants the TV to start on, if any. The list of inputs loads with
+     * the apps, so wait for it a moment. Several routes may fire for one wake; the first wins.
+     */
+    private fun openBootSource(reason: String) {
+        val id = AerialSettings.bootSource ?: return
+        if (SystemClock.elapsedRealtime() - bootSourceOpenedAt < 15_000) return
+        bootSourceOpenedAt = SystemClock.elapsedRealtime()
+        lifecycleScope.launch {
+            val source = withTimeoutOrNull(8_000) {
+                snapshotFlow { vm.sources.firstOrNull { it.id == id } }.filterNotNull().first()
+            } ?: return@launch
+            android.util.Log.i("Aerial", "$reason: opening ${source.label}, the input the TV starts on")
+            openedAppSinceHome = true
+            open(source.intent)
         }
     }
 
@@ -178,6 +244,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        if (intent.getBooleanExtra(EXTRA_WOKE, false)) openBootSource("brought back on wake")
         if (intent.action == ACTION_PREVIEW_SCREENSAVER) {
             idleHandler.post { showScreensaver.run() }
             return
@@ -217,6 +284,7 @@ class MainActivity : ComponentActivity() {
         // Apps can change while Aerial is in the background without it hearing about it.
         vm.reload()
         Wallpapers.refreshDailyIfStale()
+        Weather.refreshIfStale()
     }
 
     override fun onResume() {
@@ -282,5 +350,8 @@ class MainActivity : ComponentActivity() {
 
         /** `adb shell am start -a app.orchard.tv.PREVIEW_SCREENSAVER -n app.orchard.tv/.MainActivity` */
         const val ACTION_PREVIEW_SCREENSAVER = "app.orchard.tv.PREVIEW_SCREENSAVER"
+
+        /** Set by Home Guard when it brings Aerial back after standby or a boot. */
+        const val EXTRA_WOKE = "app.orchard.tv.WOKE"
     }
 }

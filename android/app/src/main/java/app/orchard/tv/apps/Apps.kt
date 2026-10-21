@@ -99,6 +99,9 @@ object AppCatalog {
     private class Cached(val stamp: Long, val width: Int, val label: String, val art: TileArt)
     private val cache = HashMap<String, Cached>()
 
+    /** The apps of the last load, for the phone page. */
+    @Volatile var loaded: List<AppEntry> = emptyList(); private set
+
     /**
      * Every app with a TV entry, plus apps that only have a phone-style entry. China-market firmwares
      * (Xiaomi's settings, gallery, weather...) expose many of their own apps with CATEGORY_LAUNCHER only,
@@ -132,7 +135,7 @@ object AppCatalog {
             found.values.map { (info, leanback) ->
                 async { runCatching { entry(pm, info, leanback, byCategory) }.getOrNull() }
             }.awaitAll().filterNotNull()
-        }
+        }.also { loaded = it }
     }
 
     /**
@@ -148,7 +151,8 @@ object AppCatalog {
 
     private fun entry(pm: PackageManager, info: ActivityInfo, leanback: Boolean, byCategory: Map<String, SystemTile>): AppEntry {
         val pkg = info.packageName
-        val stamp = runCatching { pm.getPackageInfo(pkg, 0).lastUpdateTime }.getOrDefault(0L)
+        // A picture chosen on the phone page changes the tile as much as an update does.
+        val stamp = runCatching { pm.getPackageInfo(pkg, 0).lastUpdateTime }.getOrDefault(0L) + CustomIcons.stamp(pkg)
         val cached = synchronized(cache) { cache[pkg] }?.takeIf { it.stamp == stamp && it.width == TileArtFactory.W }
         val system = (info.applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
         val label: String
@@ -165,7 +169,9 @@ object AppCatalog {
             val banner = (if (leanback) densest(pm, info, info.bannerResource) ?: runCatching { info.loadBanner(pm) }.getOrNull() else null)
                 ?.takeIf { it.intrinsicWidth >= it.intrinsicHeight * 4 / 3 }
             val own = if (system) SYSTEM_TILES[pkg] ?: byCategory[pkg]?.takeIf { banner == null } else null
+            val custom = CustomIcons.load(pkg)
             art = when {
+                custom != null -> TileArtFactory.fromBanner(android.graphics.drawable.BitmapDrawable(android.content.res.Resources.getSystem(), custom))
                 own != null -> TileArtFactory.forSystem(own)
                 banner != null -> TileArtFactory.fromBanner(banner)
                 else -> TileArtFactory.fromIcon(densest(pm, info, info.iconResource) ?: info.loadIcon(pm))

@@ -11,7 +11,8 @@ app/src/main/java/app/orchard/tv/
 ├── apps/
 │   ├── Apps.kt              AppCatalog：枚举 LEANBACK_LAUNCHER + LAUNCHER，按包去重，缓存磁贴图（按 lastUpdateTime）
 │   ├── TileArt.kt           磁贴图生成：横幅 / 自适应图标双层 / 老式图标毛玻璃底板；主色；每 App 的 64×36 环境光背景
-│   └── LayoutStore.kt       用户排序与隐藏（SharedPreferences "layout"），首次运行的默认排序
+│   ├── LayoutStore.kt       用户排序与隐藏（SharedPreferences "layout"），首次运行的默认排序
+│   └── CustomIcons.kt       用户在手机页给 App 换的磁贴图（files/icons/<包名>.png，16:9）
 ├── ui/
 │   ├── theme/Theme.kt       Palette（tvOS 深色系统色）、Motion（缓动曲线）、Inter 字体（opsz 14/32）、Type
 │   ├── theme/Glyphs.kt      自绘 SF Symbols 风格图标（Canvas 线条）
@@ -30,7 +31,9 @@ app/src/main/java/app/orchard/tv/
 │   ├── Aerials.kt           读取 assets/aerials.json（Apple 航拍目录）
 │   └── PhoneServer.kt       NanoHTTPD 手机配置页 + 二维码生成
 ├── settings/
-│   └── AerialSettings.kt    Aerial 自己的偏好（SharedPreferences "settings"）：焦点样式 FocusStyle，默认高对比度
+│   └── AerialSettings.kt    Aerial 自己的偏好（SharedPreferences "settings"）：焦点样式 FocusStyle（默认高对比度）、固定到主屏幕的信号源、开机信号源
+├── weather/
+│   └── Weather.kt           时钟旁的天气：Open-Meteo 实时天气，城市来自手机页或 IP 定位
 ├── system/
 │   ├── SystemState.kt       SystemProbe：网络、音量、桌面状态、设置入口、信号源（TvInputManager + 小米路由 + 机型修正）
 │   └── Brightness.kt        亮度：小米 picture_backlight / 标准 screen_brightness / TCL 走面板
@@ -108,7 +111,20 @@ Logo 的大小统一：先在 256×256 的采样里找出 Logo 的范围，再�
 
 ## 手机配置（PhoneServer）
 
-NanoHTTPD 监听 8790 端口，路径前缀是 8 位随机令牌（每次打开面板都重新生成，二维码里带着）。只在壁纸面板打开时运行，关闭后再保留 5 分钟。接口：`GET /` 页面、`GET api/state`、`GET thumb/<id>`、`POST api/wallpaper|screensaver|delete`（表单）、`POST api/upload`（multipart，可多张）。页面在 `assets/web/index.html`。
+NanoHTTPD 监听 8790 端口，路径前缀是 8 位随机令牌（每次打开面板都重新生成，二维码里带着）。只在壁纸面板打开时运行，关闭后再保留 5 分钟。接口：`GET /` 页面、`GET api/state`、`GET thumb/<id>`、`POST api/wallpaper|screensaver|delete`（表单）、`POST api/upload`（multipart，可多张）；`GET tile/<包名>`（磁贴现在的样子）、`POST api/icon`（multipart：`app` 加一张图片）、`POST api/icon/reset`、`POST api/weather/city`（`name`）、`POST api/weather/auto`。页面在 `assets/web/index.html`。
+
+- **自定义图标**：图片裁成 16:9、1280×720 存成 PNG，有这张图的 App 直接当横幅画（`AppCatalog.entry`，排在系统 App 自绘磁贴前面）。磁贴缓存的键里带着图片的修改时间；`CustomIcons.version` 变化时 `HomeViewModel` 重新加载 App。电视上的长按菜单里有「恢复默认图标」。包名必须是已安装的 App，同时也保证它是一个合法的文件名。
+- **天气**（`Weather`）：Open-Meteo 的实时天气接口和地名查询接口都不需要 Key，国内能访问。城市优先用手机页里设置的；没设置时用 ipinfo.io 按 IP 定位，每天最多一次。整个家庭网络走代理时 IP 定位会定到别的国家（家里的网络就会定到新加坡），所以手机页会显示定位结果，让用户改。回到主页时刷新，最多每小时一次；最近一次结果缓存 3 小时，开机后先显示缓存。老系统不信任 Let's Encrypt 的根证书，HTTPS 失败时改用 HTTP（`network_security_config.xml` 只对这几个域名放行明文）。
+
+## 开机信号源
+
+控制中心 → 信号源 →「开机时打开」（`AerialSettings.bootSource`，issue #25）。国内电视的「开机」大多是从待机唤醒，所以三条路径都会触发 `MainActivity.openBootSource`：真重启后第一次启动（按 `Settings.Global.BOOT_COUNT` 每次开机只开一次）；守护在亮屏、复活或开机后把 Aerial 拉回前台时带上 `EXTRA_WOKE`（Aerial 被杀掉的小米）；Aerial 本来就在前台时自己收到的亮屏广播（TCL）。15 秒内重复触发只开一次。如果唤醒时 CEC 已经切到了某个信号源，守护不会拉回 Aerial，这一次也就不再打开设定的信号源。
+
+## 遥控器按键
+
+- 方向键、确认键由磁贴自己处理；长按确认键打开长按菜单。
+- 菜单键：焦点在 App 磁贴上时打开这个 App 的长按菜单（老遥控器长按确认键识别不出来，issue #28），其他时候开关控制中心。和长按一样，只在本磁贴上按下、抬起时才触发，抬起不会误选菜单的第一项。
+- `KEYCODE_TV_INPUT` 打开控制中心的信号源页。
 
 ## 桌面接管（guard/）
 

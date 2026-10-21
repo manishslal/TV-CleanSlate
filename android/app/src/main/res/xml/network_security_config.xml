@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- HTTPS everywhere, except Apple's aerial films: the screensaver falls back to HTTP for them on
-     TVs that do not trust Apple's root certificate (see AerialSaver). -->
+<!-- HTTPS everywhere, except where an old TV may not trust the host's root certificate and the
+     host serves the same over HTTP: Apple's aerial films (see AerialSaver), and the weather and
+     location services, which use Let's Encrypt (see Weather). -->
 <network-security-config>
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="false">sylvan.apple.com</domain>
+        <domain includeSubdomains="false">api.open-meteo.com</domain>
+        <domain includeSubdomains="false">geocoding-api.open-meteo.com</domain>
+        <domain includeSubdomains="false">ipinfo.io</domain>
     </domain-config>
 </network-security-config>

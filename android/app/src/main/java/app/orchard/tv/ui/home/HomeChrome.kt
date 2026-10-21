@@ -42,6 +42,9 @@ import app.orchard.tv.ui.theme.GlyphIcon
 import app.orchard.tv.ui.theme.Motion
 import app.orchard.tv.ui.theme.Palette
 import app.orchard.tv.ui.theme.Type
+import app.orchard.tv.weather.Weather
+import app.orchard.tv.weather.WeatherKind
+import app.orchard.tv.weather.WeatherNow
 import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -124,13 +127,30 @@ private fun darkened(src: ImageBitmap, alpha: Float): ImageBitmap {
     return out.asImageBitmap()
 }
 
-/** Date over a large, light clock: the lock-screen arrangement. */
+/** Date over a large, light clock: the lock-screen arrangement. The weather follows the date. */
 @Composable
 fun ShelfClock(now: LocalDateTime, modifier: Modifier = Modifier) {
+    val dim = Color.White.copy(alpha = 0.86f)
     Column(modifier) {
-        BasicText(dateText(now), style = Type.Title.copy(color = Color.White.copy(alpha = 0.86f)))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            BasicText(dateText(now), style = Type.Title.copy(color = dim))
+            Weather.now?.let { w ->
+                GlyphIcon(glyphFor(w), dim, 22.dp, Modifier.padding(start = 18.dp, end = 6.dp))
+                BasicText("${w.celsius}°", style = Type.Title.copy(color = dim))
+            }
+        }
         BasicText(timeText(now), style = Type.Clock, modifier = Modifier.padding(top = 2.dp))
     }
+}
+
+private fun glyphFor(w: WeatherNow): Glyph = when (w.kind) {
+    WeatherKind.Clear -> if (w.day) Glyph.Sun else Glyph.Moon
+    WeatherKind.PartlyCloudy -> if (w.day) Glyph.CloudSun else Glyph.Cloud
+    WeatherKind.Cloudy -> Glyph.Cloud
+    WeatherKind.Fog -> Glyph.CloudFog
+    WeatherKind.Rain -> Glyph.CloudRain
+    WeatherKind.Snow -> Glyph.CloudSnow
+    WeatherKind.Thunder -> Glyph.CloudBolt
 }
 
 /**

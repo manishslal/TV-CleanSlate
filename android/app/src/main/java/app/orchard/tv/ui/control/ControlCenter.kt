@@ -364,6 +364,28 @@ private fun InputsPage(vm: HomeViewModel, onOpen: (android.content.Intent) -> Un
                 style = Type.Caption,
                 modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp),
             )
+
+            Spacer(Modifier.height(14.dp))
+            BasicText(stringResource(R.string.cc_inputs_boot), style = Type.Callout, modifier = Modifier.padding(start = 14.dp, bottom = 6.dp))
+            ChoiceRow(
+                text = stringResource(R.string.cc_inputs_boot_none),
+                selected = vm.sources.none { it.id == AerialSettings.bootSource },
+                focusRequester = null,
+                onClick = { AerialSettings.chooseBootSource(null) },
+            )
+            vm.sources.forEach { source ->
+                ChoiceRow(
+                    text = source.deviceName?.let { "${source.label} · $it" } ?: source.label,
+                    selected = source.id == AerialSettings.bootSource,
+                    focusRequester = null,
+                    onClick = { AerialSettings.chooseBootSource(source.id) },
+                )
+            }
+            BasicText(
+                stringResource(R.string.cc_inputs_boot_hint),
+                style = Type.Caption,
+                modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp),
+            )
         }
     }
 }

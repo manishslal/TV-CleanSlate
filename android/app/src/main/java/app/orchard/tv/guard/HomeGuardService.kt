@@ -52,13 +52,14 @@ class HomeGuardService : AccessibilityService() {
     private val handler = Handler(Looper.getMainLooper())
 
     private var takeOverReason = ""
-    private val takeOver = Runnable { takeOverIfStockHomeInFront(takeOverReason) }
+    private var takeOverOnWake = false
+    private val takeOver = Runnable { takeOverIfStockHomeInFront(takeOverReason, takeOverOnWake) }
 
     private val screenOn = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             // Firmwares put their own launcher back in front while the TV is in standby, and no
             // window change follows on wake. Look once things have settled after the screen lights.
-            takeOverOnceSettled("screen on")
+            takeOverOnceSettled("screen on", woke = true)
         }
     }
 
@@ -95,6 +96,9 @@ class HomeGuardService : AccessibilityService() {
                     diedInFront -> "back after Aerial died in front"
                     else -> "bound shortly after boot"
                 },
+                // Back from standby or a boot, not from a crash: the moment to open the input
+                // the owner wants the TV to start on.
+                woke = !diedInFront || revived,
             )
         }
     }
@@ -106,8 +110,9 @@ class HomeGuardService : AccessibilityService() {
      * viewer straight back out of the input (reported by a user, reproduced on Xiaomi MiTV-MFTR0:
      * the input's ExternalSourceActivity started 130 ms before the guard was bound).
      */
-    private fun takeOverOnceSettled(reason: String) {
+    private fun takeOverOnceSettled(reason: String, woke: Boolean) {
         takeOverReason = reason
+        takeOverOnWake = woke
         handler.removeCallbacks(takeOver)
         handler.postDelayed(takeOver, SETTLE_MS)
     }
@@ -121,7 +126,7 @@ class HomeGuardService : AccessibilityService() {
      * (Android 9) accepts set-home-activity, yet when standby force-stops Aerial, PatchWall's old
      * task is simply uncovered and stays in front after wake (issue #6).
      */
-    private fun takeOverIfStockHomeInFront(reason: String) {
+    private fun takeOverIfStockHomeInFront(reason: String, woke: Boolean) {
         val last = lastWindow
         // Unknown means we were only just bound, which happens after a standby kill. Any screen of
         // the stock launcher counts: when Aerial is killed, whatever was on top of the launcher's
@@ -130,7 +135,7 @@ class HomeGuardService : AccessibilityService() {
         if (!stockInFront && last != null) Log.i(TAG, "$reason with ${last.first} in front; leaving it there")
         if (!stockInFront || SystemClock.uptimeMillis() < allowStockUntil) return
         Log.i(TAG, "$reason with the stock launcher in front; bringing Aerial back")
-        goHome()
+        goHome(woke)
     }
 
     override fun onDestroy() {
@@ -220,8 +225,8 @@ class HomeGuardService : AccessibilityService() {
      * system Home, that category made the system open a second, home-type task with a fresh
      * MainActivity every time, which lost the focused tile (Xiaomi MiTV-MFTR0, 1.11).
      */
-    private fun goHome() {
-        startActivity(MainActivity.bringBackIntent(this))
+    private fun goHome(woke: Boolean = false) {
+        startActivity(MainActivity.bringBackIntent(this).putExtra(MainActivity.EXTRA_WOKE, woke))
     }
 
     companion object {

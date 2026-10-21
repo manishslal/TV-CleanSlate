@@ -8,6 +8,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import app.orchard.tv.ui.theme.canvasDensity
+import app.orchard.tv.weather.Weather
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -48,6 +49,7 @@ class AerialDream : DreamService(), LifecycleOwner, SavedStateRegistryOwner {
         isInteractive = true
         isFullscreen = true
         Wallpapers.init(this)
+        Weather.init(this)
         val canvas = canvasDensity(resources.displayMetrics)
         setContentView(
             ComposeView(this).apply {

@@ -109,6 +109,7 @@ fun AppTile(
     var bounds by remember { mutableStateOf<Rect?>(null) }
     var longPressJob by remember { mutableStateOf<Job?>(null) }
     var longFired by remember { mutableStateOf(false) }
+    var menuPressed by remember { mutableStateOf(false) }
 
     // Lean (degrees) and push (px) used by the edge nudge.
     val leanY = remember { Animatable(0f) }
@@ -235,6 +236,17 @@ fun AppTile(
                                 FocusDirection.Up -> nudge(0f, -1f)
                                 else -> nudge(0f, 1f)
                             }
+                        }
+                        return@onKeyEvent true
+                    }
+                    // The Menu key opens the same menu: old remotes (Phicomm boxes) rarely report a
+                    // held OK as held (issue #28). On key-up, and only for a press that began on
+                    // this tile, so no release is left over to choose the menu's first row.
+                    if (e.nativeKeyEvent.keyCode == NativeKeyEvent.KEYCODE_MENU) {
+                        if (down && e.nativeKeyEvent.repeatCount == 0) menuPressed = true
+                        else if (e.type == KeyEventType.KeyUp && menuPressed) {
+                            menuPressed = false
+                            onLongPress(bounds)
                         }
                         return@onKeyEvent true
                     }

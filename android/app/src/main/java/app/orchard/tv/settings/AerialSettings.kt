@@ -32,6 +32,12 @@ object AerialSettings {
     /** TV inputs pinned to Home as tiles, by TvInputInfo id. */
     var pinnedSources by mutableStateOf<Set<String>>(emptySet()); private set
 
+    /**
+     * The input to open when the TV is switched on (a set-top box, an Apple TV), by TvSource id;
+     * null for none. Home still comes back to Aerial. Issue #25.
+     */
+    var bootSource by mutableStateOf<String?>(null); private set
+
     fun init(context: Context) {
         if (started) return
         started = true
@@ -39,6 +45,12 @@ object AerialSettings {
         val prefs = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         focusStyle = FocusStyle.of(prefs.getString("focus_style", null))
         pinnedSources = prefs.getStringSet("pinned_sources", null)?.toSet() ?: emptySet()
+        bootSource = prefs.getString("boot_source", null)
+    }
+
+    fun chooseBootSource(id: String?) {
+        bootSource = id
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString("boot_source", id) }
     }
 
     fun setPinned(inputId: String, pinned: Boolean) {

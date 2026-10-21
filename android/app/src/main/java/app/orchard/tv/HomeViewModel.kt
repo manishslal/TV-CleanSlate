@@ -4,11 +4,13 @@ import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.geometry.Rect
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.orchard.tv.apps.AppCatalog
 import app.orchard.tv.apps.AppEntry
+import app.orchard.tv.apps.CustomIcons
 import app.orchard.tv.apps.LayoutStore
 import app.orchard.tv.apps.sourceEntry
 import app.orchard.tv.settings.AerialSettings
@@ -21,6 +23,7 @@ import app.orchard.tv.system.VolumeStatus
 import app.orchard.tv.ui.home.ScreensaverSkips
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -66,7 +69,11 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
 
     private var loadJob: Job? = null
 
-    init { reload() }
+    init {
+        reload()
+        // A tile picture set or removed from the phone page.
+        viewModelScope.launch { snapshotFlow { CustomIcons.version }.drop(1).collect { reload() } }
+    }
 
     fun reload() {
         loadJob?.cancel()
@@ -85,6 +92,14 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         val (visible, hidden) = store.arrange(all + pinned)
         apps = visible
         hiddenApps = hidden
+    }
+
+    /** Drops the picture chosen on the phone page; the tile goes back to the app's own artwork. */
+    fun resetIcon(key: String) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { CustomIcons.clear(key) }
+            CustomIcons.changed()
+        }
     }
 
     /** Pins a TV input to Home (as the first tile, where it is easiest to reach) or takes it off. */

@@ -77,13 +77,29 @@
   }
   .toast.on { opacity: 1; transform: translate(-50%, 0); }
   .empty { color: var(--secondary); font-size: 15px; padding: 4px; }
+  .wx { display: flex; align-items: baseline; gap: 10px; padding: 14px 16px; }
+  .wx b { font-size: 28px; font-weight: 600; letter-spacing: -.01em; }
+  .wx span { color: var(--secondary); font-size: 15px; }
+  .city { display: flex; gap: 8px; margin-top: 10px; }
+  .city input {
+    flex: 1; min-width: 0; font: inherit; font-size: 16px; color: var(--label); background: var(--card);
+    border: 0; border-radius: 10px; padding: 11px 12px; box-shadow: var(--shadow); outline: none;
+  }
+  .city input:focus { box-shadow: 0 0 0 2px var(--tint); }
+  .city button {
+    font: inherit; font-weight: 600; font-size: 15px; border: 0; border-radius: 10px; padding: 0 16px;
+    background: var(--tint); color: #fff; transition: transform .16s ease-out, opacity .2s ease;
+  }
+  .city button:active { transform: scale(.97); }
+  .city button[disabled] { opacity: .6; }
+  .link { appearance: none; border: 0; background: none; color: var(--tint); font: inherit; font-size: 13px; padding: 0; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
 <header>
   <h1>Aerial</h1>
-  <p>{{DEVICE}} · 壁纸与屏保</p>
+  <p>{{DEVICE}} · 壁纸、屏保、图标与天气</p>
 </header>
 
 <h2>屏幕保护程序</h2>
@@ -101,6 +117,14 @@
 </div>
 <p class="hint" id="focusHint"></p>
 
+<h2>天气</h2>
+<div class="group wx"><b id="wxNow">—</b><span id="wxPlace"></span></div>
+<form class="city" id="cityForm">
+  <input id="city" type="text" placeholder="输入城市，例如 杭州" enterkeyhint="done" autocomplete="off">
+  <button id="cityBtn">设置</button>
+</form>
+<p class="hint" id="wxHint"></p>
+
 <h2>从手机添加</h2>
 <label class="upload" id="uploadBtn">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg>
@@ -109,6 +133,11 @@
 </label>
 
 <div id="sections"></div>
+
+<h2>App 图标</h2>
+<p class="hint" style="margin-top:0;margin-bottom:12px">点一个 App，从手机选一张图片换掉它在电视上的图标。图片会裁成 16:9；横图效果最好。</p>
+<div class="grid" id="apps"></div>
+<input id="iconFile" type="file" accept="image/*" hidden>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -165,7 +194,53 @@ function card(w, selected, extraClass) {
   return b;
 }
 
+const weatherNames = { clear: '晴', partlycloudy: '多云', cloudy: '阴', fog: '雾', rain: '雨', snow: '雪', thunder: '雷雨' };
+
+function renderWeather() {
+  const w = state.weather || {};
+  $('#wxNow').textContent = w.celsius !== undefined ? `${w.celsius}° ${weatherNames[w.kind] || ''}` : '—';
+  $('#wxPlace').textContent = w.place || '';
+  const hint = $('#wxHint'); hint.innerHTML = '';
+  if (w.chosen) {
+    hint.append(`显示 ${w.place} 的天气。`);
+    const b = document.createElement('button'); b.className = 'link'; b.textContent = '改回按网络自动定位';
+    b.onclick = async () => { state = await api('api/weather/auto', {}); render(); toast('已改回自动定位'); };
+    hint.append(b);
+  } else {
+    hint.textContent = w.place
+      ? `按网络自动定位：${w.place}。用了代理时常会定错，不对的话输入你所在的城市。`
+      : '还没有定位到。输入你所在的城市。';
+  }
+}
+
+let iconFor = null;
+function renderApps() {
+  const g = $('#apps'); g.innerHTML = '';
+  for (const a of state.apps || []) {
+    const b = document.createElement('button');
+    b.className = 'wp';
+    b.innerHTML = `<img loading="lazy" alt=""><div class="t"></div><div class="c"></div>`;
+    b.querySelector('img').src = `${base}tile/${encodeURIComponent(a.key)}?v=${a.stamp}`;
+    b.querySelector('.t').textContent = a.label;
+    b.querySelector('.c').textContent = a.custom ? '自定义图标' : '';
+    b.onclick = () => { iconFor = a; $('#iconFile').click(); };
+    if (a.custom) {
+      const r = document.createElement('button');
+      r.className = 'del'; r.textContent = '↺'; r.setAttribute('aria-label', '恢复默认图标');
+      r.onclick = async e => {
+        e.stopPropagation();
+        if (!confirm(`恢复「${a.label}」的默认图标？`)) return;
+        state = await api('api/icon/reset', { app: a.key }); render(); toast('已恢复默认图标');
+      };
+      b.appendChild(r);
+    }
+    g.appendChild(b);
+  }
+}
+
 function render() {
+  renderWeather();
+  renderApps();
   document.querySelectorAll('#ss button').forEach(b =>
     b.setAttribute('aria-pressed', b.dataset.mode === state.screensaver ? 'true' : 'false'));
   $('#ssHint').textContent = hints[state.screensaver] || '';
@@ -210,6 +285,31 @@ $('#file').onchange = async e => {
     toast(state.added ? `已添加 ${state.added} 张，最后一张已设为壁纸` : '没有可用的照片');
   } catch (err) { toast('发送失败，请重试'); }
   btn.removeAttribute('disabled'); label.textContent = '选择照片，设为电视壁纸'; e.target.value = '';
+};
+
+$('#cityForm').onsubmit = async e => {
+  e.preventDefault();
+  const name = $('#city').value.trim(); if (!name) return;
+  const btn = $('#cityBtn'); btn.setAttribute('disabled', '');
+  try {
+    state = await api('api/weather/city', { name }); render();
+    toast(state.found ? `已设为 ${state.weather.place}` : `没有找到「${name}」`);
+    if (state.found) $('#city').value = '';
+  } catch (err) { toast('设置失败，请重试'); }
+  btn.removeAttribute('disabled');
+};
+
+$('#iconFile').onchange = async e => {
+  const f = e.target.files[0]; const a = iconFor; e.target.value = '';
+  if (!f || !a) return;
+  toast(`正在发送「${a.label}」的图标…`);
+  try {
+    const fd = new FormData(); fd.append('app', a.key); fd.append('picture', f, f.name);
+    const r = await fetch(base + 'api/icon', { method: 'POST', body: fd });
+    if (!r.ok) throw new Error(r.status);
+    state = await r.json(); render();
+    toast(state.saved ? '电视上已更换' : '这张图片用不了');
+  } catch (err) { toast('发送失败，请重试'); }
 };
 
 async function refresh() { try { state = await api('api/state'); render(); } catch (e) {} }

@@ -24,7 +24,7 @@ import kotlin.math.sin
  * A small set of line glyphs drawn in the spirit of SF Symbols: one stroke weight, round caps,
  * optically centered in a square box. Drawn, not bundled, so they stay crisp at every size.
  */
-enum class Glyph { Wifi, Ethernet, Offline, Gear, Input, Speaker, SpeakerMuted, Switches, EyeSlash, Move, Info, Trash, ChevronRight, ChevronLeft, Check, Hdmi, Antenna, Av, Sun, Photo, Play, Bag, CloudSun, Calendar, Cast, Shield, Globe }
+enum class Glyph { Wifi, Ethernet, Offline, Gear, Input, Speaker, SpeakerMuted, Switches, EyeSlash, Move, Info, Trash, ChevronRight, ChevronLeft, Check, Hdmi, Antenna, Av, Sun, Photo, Play, Bag, CloudSun, Calendar, Cast, Shield, Globe, Moon, Cloud, CloudRain, CloudSnow, CloudFog, CloudBolt }
 
 @Composable
 fun GlyphIcon(glyph: Glyph, color: Color, size: Dp, modifier: Modifier = Modifier, level: Float = 1f) {
@@ -38,6 +38,15 @@ fun DrawScope.drawGlyph(glyph: Glyph, color: Color, level: Float = 1f) {
     fun p(x: Float, y: Float) = Offset(x * s, y * s)
     fun line(x1: Float, y1: Float, x2: Float, y2: Float, c: Color = color) =
         drawLine(c, p(x1, y1), p(x2, y2), strokeWidth = w, cap = StrokeCap.Round)
+    // A filled cloud, raised by [lift] to leave room for rain, snow or fog under it.
+    fun cloud(lift: Float = 0f) = drawPath(
+        Path().apply {
+            addOval(Rect(p(0.33f, 0.62f - lift), 0.17f * s))
+            addOval(Rect(p(0.52f, 0.55f - lift), 0.21f * s))
+            addRoundRect(androidx.compose.ui.geometry.RoundRect(0.1f * s, (0.6f - lift) * s, 0.84f * s, (0.86f - lift) * s, CornerRadius(0.13f * s)))
+        },
+        color,
+    )
 
     when (glyph) {
         Glyph.Wifi -> {
@@ -215,12 +224,36 @@ fun DrawScope.drawGlyph(glyph: Glyph, color: Color, level: Float = 1f) {
                 val a = (i * 45f) * (Math.PI / 180).toFloat()
                 line(0.66f + 0.19f * cos(a), 0.32f + 0.19f * sin(a), 0.66f + 0.26f * cos(a), 0.32f + 0.26f * sin(a))
             }
-            val cloud = Path().apply {
-                addOval(Rect(p(0.33f, 0.62f), 0.17f * s))
-                addOval(Rect(p(0.52f, 0.55f), 0.21f * s))
-                addRoundRect(androidx.compose.ui.geometry.RoundRect(0.1f * s, 0.6f * s, 0.84f * s, 0.86f * s, CornerRadius(0.13f * s)))
+            cloud()
+        }
+        Glyph.Moon -> {
+            // A crescent: a disc with a smaller one taken out of its upper right.
+            val disc = Path().apply { addOval(Rect(p(0.48f, 0.52f), 0.34f * s)) }
+            val bite = Path().apply { addOval(Rect(p(0.66f, 0.36f), 0.28f * s)) }
+            drawPath(Path.combine(PathOperation.Difference, disc, bite), color)
+        }
+        Glyph.Cloud -> cloud(0.1f)
+        Glyph.CloudRain -> {
+            cloud(0.2f)
+            line(0.36f, 0.76f, 0.3f, 0.9f); line(0.54f, 0.76f, 0.48f, 0.9f); line(0.72f, 0.76f, 0.66f, 0.9f)
+        }
+        Glyph.CloudSnow -> {
+            cloud(0.2f)
+            for ((x, y) in listOf(0.32f to 0.8f, 0.52f to 0.8f, 0.72f to 0.8f, 0.42f to 0.92f, 0.62f to 0.92f)) {
+                drawCircle(color, radius = w * 0.7f, center = p(x, y))
             }
-            drawPath(cloud, color)
+        }
+        Glyph.CloudFog -> {
+            cloud(0.2f)
+            line(0.16f, 0.8f, 0.84f, 0.8f); line(0.26f, 0.92f, 0.74f, 0.92f)
+        }
+        Glyph.CloudBolt -> {
+            cloud(0.2f)
+            val bolt = Path().apply {
+                moveTo(0.56f * s, 0.64f * s); lineTo(0.4f * s, 0.84f * s); lineTo(0.5f * s, 0.84f * s)
+                lineTo(0.44f * s, 0.98f * s); lineTo(0.64f * s, 0.76f * s); lineTo(0.54f * s, 0.76f * s); close()
+            }
+            drawPath(bolt, color)
         }
         Glyph.Calendar -> {
             drawRoundRect(color, p(0.1f, 0.18f), Size(0.8f * s, 0.7f * s), CornerRadius(0.1f * s), style = stroke)

@@ -6,9 +6,13 @@ import android.graphics.Color
 import android.net.ConnectivityManager
 import android.os.Build
 import androidx.core.content.getSystemService
+import app.orchard.tv.apps.AppCatalog
+import app.orchard.tv.apps.CustomIcons
+import app.orchard.tv.apps.TileArtFactory
 import app.orchard.tv.settings.AerialSettings
 import app.orchard.tv.system.currentNetwork
 import app.orchard.tv.settings.FocusStyle
+import app.orchard.tv.weather.Weather
 import androidx.core.graphics.createBitmap
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
@@ -27,7 +31,8 @@ import java.security.SecureRandom
 
 /**
  * The page a phone opens after scanning the TV's QR code: choose a wallpaper and the screensaver,
- * or send photos from the phone. Choosing pictures with a remote is slow; with a phone it is not.
+ * send photos, give an app's tile a picture of one's own, and name the weather's city. Choosing
+ * pictures or typing a place with a remote is slow; with a phone it is not.
  *
  * It listens on the local network only while the wallpaper sheet is open on the TV (and a few
  * minutes after, so an upload can finish), and every address carries a random token shown only in
@@ -66,6 +71,22 @@ class PhoneServer private constructor(private val context: Context, private val 
                     json(state())
                 }
                 session.method == Method.POST && path == "/api/upload" -> upload(session)
+                path.startsWith("/tile/") -> tile(java.net.URLDecoder.decode(path.removePrefix("/tile/"), "UTF-8"))
+                session.method == Method.POST && path == "/api/icon" -> icon(session)
+                session.method == Method.POST && path == "/api/icon/reset" -> {
+                    val pkg = form(session)["app"].orEmpty()
+                    if (installed(pkg)) { CustomIcons.clear(pkg); onMain { CustomIcons.changed() } }
+                    json(state())
+                }
+                session.method == Method.POST && path == "/api/weather/city" -> {
+                    val name = form(session)["name"].orEmpty()
+                    val found = name.isNotBlank() && runBlocking(Dispatchers.Main) { Weather.choose(name) }
+                    json(state().put("found", found))
+                }
+                session.method == Method.POST && path == "/api/weather/auto" -> {
+                    onMain { Weather.useNetworkLocation() }
+                    json(state())
+                }
                 else -> text(Response.Status.NOT_FOUND, "Not found")
             }
         }.getOrElse { text(Response.Status.INTERNAL_ERROR, it.message ?: "error") }
@@ -86,6 +107,43 @@ class PhoneServer private constructor(private val context: Context, private val 
             .put("screensaver", Wallpapers.screensaver.key)
             .put("focusStyle", AerialSettings.focusStyle.key)
             .put("wallpapers", list)
+            .put("apps", JSONArray().apply {
+                AppCatalog.loaded.sortedBy { it.label }.forEach { a ->
+                    // The stamp makes the phone fetch the tile again once its picture changes.
+                    put(JSONObject().put("key", a.key).put("label", a.label).put("custom", CustomIcons.has(a.key)).put("stamp", CustomIcons.stamp(a.key)))
+                }
+            })
+            .put("weather", JSONObject().apply {
+                put("place", Weather.place ?: "")
+                put("chosen", Weather.chosen)
+                Weather.now?.let { put("celsius", it.celsius); put("kind", it.kind.name.lowercase()); put("day", it.day) }
+            })
+    }
+
+    private fun installed(pkg: String) = CustomIcons.isValidKey(pkg) && AppCatalog.loaded.any { it.key == pkg }
+
+    private fun tile(pkg: String): Response {
+        val app = AppCatalog.loaded.firstOrNull { it.key == pkg } ?: return text(Response.Status.NOT_FOUND, "")
+        val bmp = TileArtFactory.flatten(app.art)
+        val out = ByteArrayOutputStream()
+        bmp.compress(Bitmap.CompressFormat.JPEG, 85, out)
+        bmp.recycle()
+        val bytes = out.toByteArray()
+        return newFixedLengthResponse(Response.Status.OK, "image/jpeg", ByteArrayInputStream(bytes), bytes.size.toLong()).apply {
+            addHeader("Cache-Control", "max-age=600")
+        }
+    }
+
+    private fun icon(session: IHTTPSession): Response {
+        val files = HashMap<String, String>()
+        session.parseBody(files)
+        val pkg = session.parameters["app"]?.firstOrNull().orEmpty()
+        if (!installed(pkg)) return text(Response.Status.BAD_REQUEST, "unknown app")
+        val f = files.values.map(::File).firstOrNull { it.exists() && it.length() > 0 }
+            ?: return text(Response.Status.BAD_REQUEST, "no picture")
+        val saved = f.inputStream().use { CustomIcons.save(pkg, it, context.cacheDir) }
+        if (saved) onMain { CustomIcons.changed() }
+        return json(state().put("saved", saved))
     }
 
     private fun thumb(id: String): Response {

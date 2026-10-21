@@ -82,6 +82,10 @@ object GuardSetup {
         val others = entries.filter { ComponentName.unflattenFromString(it)?.flattenToString() != me }
         if (others.size == entries.size) return // not enabled at all; ensureEnabled handles that
         runCatching {
+            // A guard that had to be bound again counts as revived: whatever is in front came up
+            // while it was not watching (MiTV-MFTR0, Android 11: woken from standby after Aerial's
+            // screensaver, PatchWall stayed in front once the guard was back, issue #47).
+            lastRevivedAt = SystemClock.elapsedRealtime()
             Settings.Secure.putString(resolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, others.joinToString(":"))
             // Two writes in a row are coalesced and Android sees no change; give it a moment between.
             Handler(Looper.getMainLooper()).postDelayed({

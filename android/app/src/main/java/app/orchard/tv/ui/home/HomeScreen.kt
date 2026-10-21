@@ -165,6 +165,10 @@ fun HomeScreen(
                 if (e.type != KeyEventType.KeyDown || moving != null) return@onPreviewKeyEvent false
                 when (e.nativeKeyEvent.keyCode) {
                     NativeKeyEvent.KEYCODE_MENU -> {
+                        // On an app tile, Menu opens that app's menu (AppTile): remotes whose held
+                        // OK never reads as held had no other way to it (issue #28). Control
+                        // Center stays one press up, on the status pill, where Menu still opens it.
+                        if (overlay == Overlay.None && !pillFocused && focusedIndex >= 0) return@onPreviewKeyEvent false
                         vm.overlay = if (overlay is Overlay.ControlCenter) Overlay.None else Overlay.ControlCenter()
                         true
                     }
@@ -328,6 +332,10 @@ fun HomeScreen(
             onUnpin = { key ->
                 vm.overlay = Overlay.None
                 apps.firstOrNull { it.key == key }?.source?.let { vm.setSourcePinned(it, false) }
+            },
+            onResetIcon = { key ->
+                vm.overlay = Overlay.None
+                vm.resetIcon(key)
             },
             onDismiss = { vm.overlay = Overlay.None },
         )

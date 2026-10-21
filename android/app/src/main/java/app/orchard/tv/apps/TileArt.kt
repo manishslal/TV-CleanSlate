@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import app.orchard.tv.ui.theme.Glyph
 import app.orchard.tv.ui.theme.drawGlyph
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.createBitmap
@@ -476,6 +477,20 @@ object TileArtFactory {
             tint = Color(tint),
             backdrop = backdrop.asImageBitmap(),
         )
+    }
+
+    /** The tile as one picture, as Home draws it at rest: for the phone page. */
+    fun flatten(art: TileArt): Bitmap {
+        val out = art.back.asAndroidBitmap().copy(Bitmap.Config.ARGB_8888, true)
+        art.fore?.let { f ->
+            val r = art.foreAt
+            Canvas(out).drawBitmap(
+                f.asAndroidBitmap(), null,
+                RectF(r.left * out.width, r.top * out.height, r.right * out.width, r.bottom * out.height),
+                Paint(Paint.FILTER_BITMAP_FLAG),
+            )
+        }
+        return out
     }
 
     private fun Canvas.drawCover(d: Drawable, w: Int, h: Int) {

@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import app.orchard.tv.R
 import app.orchard.tv.apps.AppEntry
+import app.orchard.tv.apps.CustomIcons
 import app.orchard.tv.ui.components.Pressable
 import app.orchard.tv.ui.theme.Glyph
 import app.orchard.tv.ui.theme.GlyphIcon
@@ -117,6 +118,7 @@ fun AppMenu(
     onInfo: (String) -> Unit,
     onUninstall: (String) -> Unit,
     onUnpin: (String) -> Unit,
+    onResetIcon: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val visible = app != null
@@ -170,6 +172,10 @@ fun AppMenu(
                     MenuRow(Glyph.EyeSlash, stringResource(R.string.menu_unpin_source), { onUnpin(shownApp.key) })
                 } else {
                     MenuRow(Glyph.EyeSlash, stringResource(R.string.menu_hide), { onHide(shownApp.key) })
+                    // A picture chosen on the phone page; changing it is done there.
+                    if (CustomIcons.has(shownApp.key)) {
+                        MenuRow(Glyph.Photo, stringResource(R.string.menu_reset_icon), { onResetIcon(shownApp.key) })
+                    }
                     MenuRow(Glyph.Info, stringResource(R.string.menu_info), { onInfo(shownApp.key) })
                 }
                 if (shownApp.removable) {

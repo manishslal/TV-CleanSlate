@@ -33,6 +33,7 @@
 
     <string name="menu_move">Move</string>
     <string name="menu_hide">Hide from Home</string>
+    <string name="menu_reset_icon">Restore Default Icon</string>
     <string name="menu_info">App Info</string>
     <string name="menu_uninstall">Uninstall</string>
     <string name="move_hint">Use the arrows to move · Press OK when done</string>
@@ -55,7 +56,7 @@
     <string name="ss_photos">Photos</string>
     <string name="ss_clock">Clock</string>
     <string name="wp_phone_title">Set up with your phone</string>
-    <string name="wp_phone_body">Scan to send photos and choose wallpapers. Phone and TV must be on the same network.</string>
+    <string name="wp_phone_body">Scan to send photos, choose wallpapers, change app icons and set the weather\'s city. Phone and TV must be on the same network.</string>
     <string name="wp_phone_offline">Connect the TV to a network to set up with your phone.</string>
     <string name="ss_start">Start Now</string>
     <string name="ss_back_hint">Tip: press Back on the top row of Home to start the screensaver.</string>
@@ -66,6 +67,9 @@
     <string name="st_focus_high_hint">A white frame around the selected app, easy to spot from across the room.</string>
     <string name="st_focus_standard_hint">As on Apple TV out of the box: the selected app only lifts.</string>
     <string name="cc_inputs_pin">Show on Home</string>
+    <string name="cc_inputs_boot">When the TV Turns On</string>
+    <string name="cc_inputs_boot_none">Nothing, stay on Aerial</string>
+    <string name="cc_inputs_boot_hint">Switch to this input when the TV is turned on or wakes from standby. Home still comes back to Aerial.</string>
     <string name="cc_inputs_pin_hint">Pinned inputs appear as tiles at the front of Home; select one to switch straight to it. Long-press a tile to move or remove it.</string>
     <string name="menu_unpin_source">Remove from Home</string>
 </resources>

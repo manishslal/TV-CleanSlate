@@ -144,6 +144,7 @@ private fun Labels(caption: String?, now: LocalDateTime) {
 }
 
 private const val TAG = "AerialScreensaver"
+private const val FIRST_FRAME_TIMEOUT_MS = 10_000L
 
 /** Set for the rest of the process once a film fails over HTTPS. */
 private var aerialsOverHttp by mutableStateOf(false)
@@ -184,6 +185,20 @@ private fun AerialSaver(now: LocalDateTime, steps: SharedFlow<Int>, onUnavailabl
     LaunchedEffect(failures) {
         if (failures >= 3) onUnavailable()
     }
+    // A film that never shows a frame raises no error: Apple's CDN slow or out of reach left the
+    // screen black for good (Sony A8G and X90J, TCL 65S515D, issue #20). Try plain HTTP once;
+    // if nothing has played at all this time, hand over to the photo screensaver.
+    var shownAny by remember { mutableStateOf(false) }
+    LaunchedEffect(url) {
+        delay(FIRST_FRAME_TIMEOUT_MS)
+        if (playing) return@LaunchedEffect
+        Log.w(TAG, "aerial film showed no frame in ${FIRST_FRAME_TIMEOUT_MS / 1000} s: $url")
+        when {
+            !aerialsOverHttp -> aerialsOverHttp = true
+            !shownAny -> onUnavailable()
+            else -> { failures++; index++ }
+        }
+    }
 
     AndroidView(
         modifier = Modifier.fillMaxSize(),
@@ -195,6 +210,7 @@ private fun AerialSaver(now: LocalDateTime, steps: SharedFlow<Int>, onUnavailabl
                         if (what == android.media.MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
                             if (currentUrl.startsWith("http://")) Log.i(TAG, "aerial films play over HTTP on this TV")
                             playing = true
+                            shownAny = true
                             failures = 0
                         }
                         false
