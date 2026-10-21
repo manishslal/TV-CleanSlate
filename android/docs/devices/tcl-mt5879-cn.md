@@ -39,6 +39,7 @@ TCL 手机 App 有一个「把手机里的 APK 推到电视」的功能。电视
   - 回复：`223>>INSTALL>>…>>confirm_pending|denied`；同意之后会连续收到 `223>>PROGRESS>>包名>>名字>>阶段>>百分比>>…`，阶段 1 是下载中，3 是安装中，5 是装好了，2 是失败。
 - 下载地址用的是 `adb reverse tcp:8765 tcp:8765` 加上 Mac 本机 `127.0.0.1` 的 HTTP 服务，电视下载的是 `http://127.0.0.1:8765/Aerial.apk`，所以不需要在局域网上开端口。
 - 用遥控器操作时：提示框出现后焦点在「拒绝」上，要先按「右」再按 OK。
+- 有 ADB 时不用人去点：提示框是多屏互动的悬浮窗，`uiautomator dump` 能看到「同意」按钮 `com.tcl.MultiScreenInteraction_TV:id/btn_positive`，对它的中心点 `input tap` 就会开始安装（2026-10-21 实测，按钮在 `[1650,240][1858,304]`）。
 - 同一个 versionCode 也可以覆盖安装。
 - 其他指令（发 Intent、截图、模拟按键、应用列表）和加密握手见 [../tcast-protocol.md](../tcast-protocol.md)。
 

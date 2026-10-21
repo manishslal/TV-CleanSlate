@@ -4,7 +4,7 @@
 
 ## 现状（2026-10-20）
 
-- 版本 **1.15（versionCode 17）**，2026-10-21 发布（[v1.15](https://github.com/pengchujin/aerial-tv/releases/tag/v1.15)）。小米 MiTV-MFTR0（`standard`）装的是正式版；TCL MT5879 国行（`guard`）装的还是发版前的开发版（versionCode 16，没有天气、自定义图标、开机信号源、菜单键、ExoPlayer 航拍、Direct Boot），下次在家时用 `install.sh guard` 推一次，电视上点「同意」。主要改动见 Release 说明和 ARCHITECTURE.md。
+- 版本 **1.15（versionCode 17）**，2026-10-21 发布（[v1.15](https://github.com/pengchujin/aerial-tv/releases/tag/v1.15)）。小米 MiTV-MFTR0（`standard`）和 TCL MT5879 国行（`guard`，2026-10-21 通过多屏互动推送，用 ADB 点的「同意」）装的都是正式版。主要改动见 Release 说明和 ARCHITECTURE.md。
 - 具体 IP、每台电视上改过的设置、户主自己的数据：见 **`local/TVS.md`**（不在版本库，需要单独私下拿到）。
 - 开源在 https://github.com/pengchujin/aerial-tv（MIT）。官网在 `site/`，已部署到 https://aerial.qust.me（Cloudflare Worker 静态资源）。还没有自动化测试，以下结论都来自真机操作和日志。
 
