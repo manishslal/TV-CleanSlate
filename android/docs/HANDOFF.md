@@ -4,7 +4,7 @@
 
 ## 现状（2026-10-20）
 
-- 版本 **1.16（versionCode 18）**，2026-10-21 发布（[v1.16](https://github.com/pengchujin/aerial-tv/releases/tag/v1.16)）。小米 MiTV-MFTR0（`standard`）装的是 1.16；TCL MT5879 国行（`guard`）还是 1.15（2026-10-21 通过多屏互动推送，用 ADB 点的「同意」），1.16 没推。海信 VIDAA 的主页键见 [devices/hisense-vidaa.md](devices/hisense-vidaa.md)。主要改动见 Release 说明和 ARCHITECTURE.md。
+- 版本 **1.17（versionCode 19）**，2026-10-21 发布（[v1.17](https://github.com/pengchujin/aerial-tv/releases/tag/v1.17)），主要是磁贴重绘（见 ARCHITECTURE「磁贴图」）。小米 MiTV-MFTR0（`standard`）装的是 1.17；TCL MT5879 国行（`guard`）还是 1.15（2026-10-21 通过多屏互动推送，用 ADB 点的「同意」），1.16、1.17 都没推。TCL 上的 32 个 App 的新磁贴只在小米上用 `TileSheet` 渲染看过，没在 TCL 真机上看过。海信 VIDAA 的主页键见 [devices/hisense-vidaa.md](devices/hisense-vidaa.md)。主要改动见 Release 说明和 ARCHITECTURE.md。
 - 具体 IP、每台电视上改过的设置、户主自己的数据：见 **`local/TVS.md`**（不在版本库，需要单独私下拿到）。
 - 开源在 https://github.com/pengchujin/aerial-tv（MIT）。官网在 `site/`，已部署到 https://aerial.qust.me（Cloudflare Worker 静态资源）。还没有自动化测试，以下结论都来自真机操作和日志。
 
