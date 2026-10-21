@@ -143,6 +143,12 @@ fun HomeScreen(
         // While moving, focus follows the app to its new slot.
         moving?.let { withFrameNanos { }; runCatching { requester(it).requestFocus() } }
     }
+    // Moving starts from the menu, which is still on screen for a frame: focus the app once it is gone.
+    LaunchedEffect(moving) {
+        val key = moving ?: return@LaunchedEffect
+        withFrameNanos { }
+        runCatching { requester(key).requestFocus() }
+    }
     val windowFocused = LocalWindowInfo.current.isWindowFocused
     LaunchedEffect(windowFocused, vm.homeResetPending, vm.loaded) {
         if (windowFocused && vm.homeResetPending && vm.loaded) {
@@ -162,7 +168,24 @@ fun HomeScreen(
         Modifier
             .fillMaxSize()
             .onPreviewKeyEvent { e ->
-                if (e.type != KeyEventType.KeyDown || moving != null) return@onPreviewKeyEvent false
+                // Moving takes the remote here rather than on the moving tile: the tile does not
+                // always get focus back when the menu closes, and focus then landed on the first
+                // tile, which moved focus instead of the app (#58).
+                if (moving != null) {
+                    val code = e.nativeKeyEvent.keyCode
+                    if (e.type != KeyEventType.KeyDown) return@onPreviewKeyEvent code != NativeKeyEvent.KEYCODE_HOME
+                    when (code) {
+                        NativeKeyEvent.KEYCODE_DPAD_LEFT -> vm.moveBy(-1)
+                        NativeKeyEvent.KEYCODE_DPAD_RIGHT -> vm.moveBy(1)
+                        NativeKeyEvent.KEYCODE_DPAD_UP -> vm.moveBy(-COLUMNS)
+                        NativeKeyEvent.KEYCODE_DPAD_DOWN -> vm.moveBy(COLUMNS)
+                        NativeKeyEvent.KEYCODE_BACK, NativeKeyEvent.KEYCODE_DPAD_CENTER,
+                        NativeKeyEvent.KEYCODE_ENTER, NativeKeyEvent.KEYCODE_NUMPAD_ENTER -> vm.endMove()
+                        else -> return@onPreviewKeyEvent false
+                    }
+                    return@onPreviewKeyEvent true
+                }
+                if (e.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                 when (e.nativeKeyEvent.keyCode) {
                     NativeKeyEvent.KEYCODE_MENU -> {
                         // On an app tile, Menu opens that app's menu (AppTile): remotes whose held
@@ -239,7 +262,6 @@ fun HomeScreen(
                             focusRequester = requester(app.key),
                             enabled = gridEnabled,
                             moving = moving == app.key,
-                            columns = COLUMNS,
                             appearDelayMs = (index * 28).coerceAtMost(320),
                             onFocused = {
                                 focusedKey = app.key
@@ -250,8 +272,6 @@ fun HomeScreen(
                             onLongPress = { bounds ->
                                 vm.overlay = Overlay.AppMenu(app.key, bounds ?: Rect.Zero)
                             },
-                            onMove = vm::moveBy,
-                            onMoveDone = vm::endMove,
                             modifier = Modifier.offset { slot.value },
                         )
                     }

@@ -91,13 +91,10 @@ fun AppTile(
     focusRequester: FocusRequester,
     enabled: Boolean,
     moving: Boolean,
-    columns: Int,
     appearDelayMs: Int,
     onFocused: () -> Unit,
     onClick: (Rect?) -> Unit,
     onLongPress: (Rect?) -> Unit,
-    onMove: (Int) -> Unit,
-    onMoveDone: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val reduced = LocalReducedMotion.current
@@ -208,19 +205,6 @@ fun AppTile(
                 .onKeyEvent { e ->
                     val code = e.nativeKeyEvent.keyCode
                     val down = e.type == KeyEventType.KeyDown
-                    if (moving) {
-                        if (!down) return@onKeyEvent code != NativeKeyEvent.KEYCODE_HOME
-                        when (code) {
-                            NativeKeyEvent.KEYCODE_DPAD_LEFT -> onMove(-1)
-                            NativeKeyEvent.KEYCODE_DPAD_RIGHT -> onMove(1)
-                            NativeKeyEvent.KEYCODE_DPAD_UP -> onMove(-columns)
-                            NativeKeyEvent.KEYCODE_DPAD_DOWN -> onMove(columns)
-                            NativeKeyEvent.KEYCODE_BACK, NativeKeyEvent.KEYCODE_DPAD_CENTER,
-                            NativeKeyEvent.KEYCODE_ENTER, NativeKeyEvent.KEYCODE_NUMPAD_ENTER -> onMoveDone()
-                            else -> return@onKeyEvent false
-                        }
-                        return@onKeyEvent true
-                    }
                     val dir = when (code) {
                         NativeKeyEvent.KEYCODE_DPAD_LEFT -> FocusDirection.Left
                         NativeKeyEvent.KEYCODE_DPAD_RIGHT -> FocusDirection.Right
