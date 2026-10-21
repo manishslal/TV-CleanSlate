@@ -98,8 +98,13 @@ object GuardSetup {
             lastRevivedAt = SystemClock.elapsedRealtime()
             Settings.Secure.putString(resolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, others.joinToString(":"))
             // Two writes in a row are coalesced and Android sees no change; give it a moment between.
+            // Read the list again then, so a service another app added meanwhile is kept (#57).
             Handler(Looper.getMainLooper()).postDelayed({
-                runCatching { Settings.Secure.putString(resolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, (others + me).joinToString(":")) }
+                runCatching {
+                    val now = Settings.Secure.getString(resolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES).orEmpty()
+                        .split(':').filter { it.isNotBlank() && ComponentName.unflattenFromString(it)?.flattenToString() != me }
+                    Settings.Secure.putString(resolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, (now + me).joinToString(":"))
+                }
             }, 1500)
             Log.i(TAG, "Home Guard was enabled but not running; asked Android to bind it again")
         }
