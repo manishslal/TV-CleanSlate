@@ -55,6 +55,29 @@ class HomeGuardService : AccessibilityService() {
     private var takeOverOnWake = false
     private val takeOver = Runnable { takeOverIfStockHomeInFront(takeOverReason, takeOverOnWake) }
 
+    /**
+     * Bound before unlock (Direct Boot), the guard takes over as soon as credential storage is
+     * available, from a process that is already running: on TCL 75S365C (Amlogic t982) starting a
+     * process right after unlock waits several seconds behind TCL's boot-time scheduling (PR #45:
+     * unlock to Aerial 7.6 s -> 0.9 s). It looks at what is in front first, like every take-over, so
+     * an input that HDMI-CEC switched to at power-on is left alone.
+     */
+    private val userUnlocked = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            // Before unlock only Direct Boot aware launchers resolve.
+            refreshStockHomes()
+            // The ADB and screensaver checks were skipped while locked.
+            GuardSetup.ensureEnabled(this@HomeGuardService)
+            val skipReason = when {
+                SystemClock.elapsedRealtime() >= BOOT_WINDOW_MS -> "outside boot window"
+                getSystemService<PowerManager>()?.isInteractive != true -> "screen off"
+                else -> null
+            }
+            if (skipReason == null) takeOverOnceSettled("user unlocked", woke = true)
+            else Log.i(TAG, "user unlocked; not taking over Home ($skipReason)")
+        }
+    }
+
     private val screenOn = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             // Firmwares put their own launcher back in front while the TV is in standby, and no
@@ -71,11 +94,19 @@ class HomeGuardService : AccessibilityService() {
 
     override fun onServiceConnected() {
         instance = this
+        // Register before querying homes or checking the state so an unlock cannot be missed.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            registerReceiver(userUnlocked, IntentFilter(Intent.ACTION_USER_UNLOCKED))
+        }
         refreshStockHomes()
         filterKeys(false)
         registerReceiver(screenOn, IntentFilter(Intent.ACTION_SCREEN_ON))
         contentResolver.registerContentObserver(Settings.Global.getUriFor(Settings.Global.ADB_ENABLED), false, adbObserver)
         GuardSetup.ensureAdb(this)
+        if (!GuardSetup.isUserUnlocked(this)) {
+            Log.i(TAG, "bound while user locked; deferred takeover until unlock")
+            return
+        }
         // Bound a little after boot, or brought back after the firmware killed Aerial: either way
         // the stock launcher is what's in front, and the window change that showed it is long gone.
         // Not after an update, though: installing over Aerial also kills it, and whoever is watching
@@ -87,7 +118,10 @@ class HomeGuardService : AccessibilityService() {
         val diedInFront = GuardSetup.wasHomeInFront(this) &&
             (Build.VERSION.SDK_INT < 24 || SystemClock.elapsedRealtime() - Process.getStartElapsedRealtime() < 60_000)
         // Revived with the screen off (standby): the screen-on check takes over at wake.
-        if ((SystemClock.elapsedRealtime() < BOOT_WINDOW_MS && !isDefaultHome() || revived || diedInFront) &&
+        // Not gated on being the default Home: Skyworth/Coolita (8R145, Android 11) starts its own
+        // launcher at boot whatever Home resolves to (issue #43). The take-over looks first, and
+        // bringing Aerial back over itself changes nothing.
+        if ((SystemClock.elapsedRealtime() < BOOT_WINDOW_MS || revived || diedInFront) &&
             getSystemService<PowerManager>()?.isInteractive == true
         ) {
             takeOverOnceSettled(
@@ -127,6 +161,7 @@ class HomeGuardService : AccessibilityService() {
      * task is simply uncovered and stays in front after wake (issue #6).
      */
     private fun takeOverIfStockHomeInFront(reason: String, woke: Boolean) {
+        if (!GuardSetup.isUserUnlocked(this)) return
         val last = lastWindow
         // Unknown means we were only just bound, which happens after a standby kill. Any screen of
         // the stock launcher counts: when Aerial is killed, whatever was on top of the launcher's
@@ -140,6 +175,9 @@ class HomeGuardService : AccessibilityService() {
 
     override fun onDestroy() {
         runCatching { unregisterReceiver(screenOn) }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            runCatching { unregisterReceiver(userUnlocked) }
+        }
         runCatching { contentResolver.unregisterContentObserver(adbObserver) }
         handler.removeCallbacksAndMessages(null)
         if (instance === this) instance = null
@@ -170,6 +208,7 @@ class HomeGuardService : AccessibilityService() {
     }
 
     override fun onKeyEvent(event: KeyEvent): Boolean {
+        if (!GuardSetup.isUserUnlocked(this)) return false
         if (event.keyCode != KeyEvent.KEYCODE_HOME) return false
         if (isDefaultHome()) return false
         if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) {
@@ -183,7 +222,11 @@ class HomeGuardService : AccessibilityService() {
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
         val pkg = event.packageName?.toString() ?: return
         val cls = event.className?.toString() ?: return
-        lastWindow = pkg to cls
+        // Only activities count as what is in front. Overlays and dialogs also raise this event:
+        // TCL's voice assistant (com.tcl.walleve) does at boot on TCL 75S365C, and taking it for
+        // an app the viewer chose kept the guard from taking over (PR #45).
+        if (isActivity(pkg, cls)) lastWindow = pkg to cls
+        if (!GuardSetup.isUserUnlocked(this)) return
         val allowed = SystemClock.uptimeMillis() < allowStockUntil
         if (pkg in stockHomes) {
             filterKeys(allowed)
@@ -197,6 +240,12 @@ class HomeGuardService : AccessibilityService() {
         filterKeys(false)
         // Leaving the stock launcher for a real app ends the visit: Home goes to Aerial again.
         if (allowed && pkg != packageName && isApp(pkg)) allowStockUntil = 0L
+    }
+
+    private val activityCache = HashMap<Pair<String, String>, Boolean>()
+
+    private fun isActivity(pkg: String, cls: String): Boolean = activityCache.getOrPut(pkg to cls) {
+        runCatching { packageManager.getActivityInfo(android.content.ComponentName(pkg, cls), 0) }.isSuccess
     }
 
     /** True for packages with a launcher entry, i.e. apps rather than system overlays and dialogs. */
@@ -226,7 +275,10 @@ class HomeGuardService : AccessibilityService() {
      * MainActivity every time, which lost the focused tile (Xiaomi MiTV-MFTR0, 1.11).
      */
     private fun goHome(woke: Boolean = false) {
-        startActivity(MainActivity.bringBackIntent(this).putExtra(MainActivity.EXTRA_WOKE, woke))
+        if (!GuardSetup.isUserUnlocked(this)) return
+        runCatching {
+            startActivity(MainActivity.bringBackIntent(this).putExtra(MainActivity.EXTRA_WOKE, woke))
+        }.onFailure { Log.w(TAG, "could not bring Aerial Home to the front", it) }
     }
 
     companion object {

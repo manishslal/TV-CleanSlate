@@ -3,7 +3,6 @@ package app.orchard.tv.guard
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import app.orchard.tv.MainActivity
 
 /**
@@ -14,11 +13,9 @@ import app.orchard.tv.MainActivity
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         GuardSetup.ensureEnabled(context)
-        val home = context.packageManager.resolveActivity(
-            Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME),
-            PackageManager.MATCH_DEFAULT_ONLY,
-        )?.activityInfo?.packageName
-        if (home == context.packageName) return
+        if (intent.action == Intent.ACTION_LOCKED_BOOT_COMPLETED) return
+        // Also when Aerial is the default Home: some firmwares start their own launcher at boot
+        // regardless (Skyworth/Coolita 8R145, issue #43).
         // The guard takes Home over itself once it can see what is in front: by the time this
         // arrives, an HDMI-CEC source may already have switched the TV to its input.
         if (HomeGuardService.isRunning) return
