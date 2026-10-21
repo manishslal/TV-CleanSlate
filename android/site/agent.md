@@ -112,6 +112,13 @@ curl -fsSL https://aerial.qust.me/install.sh | KEEP_ADB=1 TV=<IP> bash
    ```
    报错时改用 `adb shell cmd package set-home-activity --user 0 app.orchard.tv/.MainActivity`。小米、TCL 等固件会无视这一步，没关系，下一步的桌面守护会接管。
 
+   **海信 VIDAA**：先运行 `adb shell getprop persist.vt.use_home_pkg`。有输出（比如 `com.jamdeo.tv.vod`）且不是 `app.orchard.tv` 时，记下原值并改成 Aerial：
+   ```
+   adb shell settings put global aerial_vt_home_pkg <原值>
+   adb shell setprop persist.vt.use_home_pkg app.orchard.tv
+   ```
+   没有输出就跳过，其他电视没有这个属性。
+
 8. 桌面守护：Aerial 启动时会自己打开它。运行 `adb shell settings get secure enabled_accessibility_services`，结果里应该有 `app.orchard.tv/app.orchard.tv.guard.HomeGuardService`。没有时手动加上，**保留原来的内容**，用冒号连接：
    ```powershell
    adb shell "settings put secure enabled_accessibility_services '<原来的值>:app.orchard.tv/app.orchard.tv.guard.HomeGuardService'"
@@ -184,6 +191,7 @@ adb shell cmd role remove-role-holder --user 0 android.app.role.HOME app.orchard
 
 - `adb shell settings get secure screensaver_components` 是 `app.orchard.tv/...` 时，用 `adb shell settings get secure screensaver_default_component` 的结果写回去：`adb shell settings put secure screensaver_components <默认值>`。
 - `adb shell settings get secure enabled_accessibility_services`：从结果里去掉 `app.orchard.tv/app.orchard.tv.guard.HomeGuardService`（和它前后多余的冒号），其他服务原样保留写回；只剩它自己时运行 `adb shell settings delete secure enabled_accessibility_services`。
+- 海信 VIDAA：`adb shell settings get global aerial_vt_home_pkg` 有值（不是 `null`）时，运行 `adb shell setprop persist.vt.use_home_pkg <这个值>` 和 `adb shell settings delete global aerial_vt_home_pkg`。
 - 要卸载时 `adb uninstall app.orchard.tv`。
 - 最后 `adb shell input keyevent KEYCODE_HOME`，电视回到原来的桌面。
 
@@ -192,7 +200,8 @@ adb shell cmd role remove-role-holder --user 0 android.app.role.HOME app.orchard
 - **小米**：`resolve-activity` 仍然显示 PatchWall（`com.mitv.tvhome`）是正常的，由桌面守护接管。千万不要停用 `com.mitv.tvhome`。建议开 `KEEP_ADB`。
 - **TCL**：`adb install` 一定失败（`INSTALL_FAILED_VERIFICATION_FAILURE`），按「TCL 安装」走多屏互动。用户没看到电视上的提示时，重新运行一次。
 - **雷鸟 55S595C Ultra（MT9655）等只有「无线调试」的机型**：拿不到授权，能装但接管不了主页键。
-- **海信 / Vidda、OPPO K9、雷鸟鹤 6**：能装，但开机进不了 Aerial（固件只认自家桌面，除非删掉原桌面，这里不做）。可以把 Aerial 当普通 App 用。
+- **海信 VIDAA**：第 7 步改了 `persist.vt.use_home_pkg` 以后，主页键直接进 Aerial；但开机仍会先进聚好看（固件在开机完成前拦截第三方 App），按一次主页键即可。
+- **Vidda 其他系统、OPPO K9、雷鸟鹤 6**：能装，但开机进不了 Aerial（固件只认自家桌面，除非删掉原桌面，这里不做）。可以把 Aerial 当普通 App 用。
 - **验收第 3 条是 0**：有的固件拦截侧载的无障碍服务。请用户在电视的安全中心或权限管理里允许 Aerial 自启动、无障碍，然后重新运行 `adb shell am start -n app.orchard.tv/.MainActivity` 再验收。
 - **不支持**：LG webOS、三星 Tizen、华为智慧屏（鸿蒙）、Android 4.4 及更老的电视。
 

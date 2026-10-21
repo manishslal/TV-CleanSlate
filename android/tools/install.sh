@@ -188,6 +188,15 @@ resolve_home() {
 }
 
 if [ "$FLAVOR" = standard ]; then
+  # Hisense VIDAA (MT9653, Android 11, #40) starts the launcher named in this property by explicit
+  # component, past the HOME role and unseen by Home Guard. Only firmwares that have it; the old
+  # value is kept on the TV for restore.sh.
+  VT_HOME=$(adb shell getprop persist.vt.use_home_pkg | tr -d '\r')
+  if [ -n "$VT_HOME" ] && [ "$VT_HOME" != "$PKG" ]; then
+    adb shell settings put global aerial_vt_home_pkg "$VT_HOME"
+    adb shell setprop persist.vt.use_home_pkg "$PKG"
+    echo "Hisense: Home now opens Aerial instead of $VT_HOME."
+  fi
   adb shell cmd role add-role-holder --user 0 android.app.role.HOME "$PKG" >/dev/null 2>&1 \
     || adb shell cmd package set-home-activity --user 0 "$PKG/.MainActivity" >/dev/null 2>&1 || true
   HOME_NOW=$(resolve_home)

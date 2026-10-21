@@ -111,6 +111,13 @@ Run these in PowerShell, with the adb from step 1. Everything inside `adb shell 
    ```
    If that fails, use `adb shell cmd package set-home-activity --user 0 app.orchard.tv/.MainActivity`. Xiaomi, TCL and other firmwares ignore this; Home Guard in the next item takes over there.
 
+   **Hisense VIDAA**: first run `adb shell getprop persist.vt.use_home_pkg`. If it prints something (e.g. `com.jamdeo.tv.vod`) other than `app.orchard.tv`, keep the old value and point it at Aerial:
+   ```
+   adb shell settings put global aerial_vt_home_pkg <old value>
+   adb shell setprop persist.vt.use_home_pkg app.orchard.tv
+   ```
+   If it prints nothing, skip this; other TVs don't have the property.
+
 8. Home Guard: Aerial turns it on when it starts. Run `adb shell settings get secure enabled_accessibility_services`; the result should include `app.orchard.tv/app.orchard.tv.guard.HomeGuardService`. If it doesn't, add it, **keeping what is already there**, joined with a colon:
    ```powershell
    adb shell "settings put secure enabled_accessibility_services '<previous value>:app.orchard.tv/app.orchard.tv.guard.HomeGuardService'"
@@ -183,6 +190,7 @@ Then:
 
 - If `adb shell settings get secure screensaver_components` is `app.orchard.tv/...`, put back the default: `adb shell settings put secure screensaver_components <value of adb shell settings get secure screensaver_default_component>`.
 - `adb shell settings get secure enabled_accessibility_services`: remove `app.orchard.tv/app.orchard.tv.guard.HomeGuardService` (and the colon next to it) and write the rest back unchanged. If nothing else is left, run `adb shell settings delete secure enabled_accessibility_services`.
+- Hisense VIDAA: if `adb shell settings get global aerial_vt_home_pkg` prints a value (not `null`), run `adb shell setprop persist.vt.use_home_pkg <that value>` and `adb shell settings delete global aerial_vt_home_pkg`.
 - To uninstall: `adb uninstall app.orchard.tv`.
 - Finally `adb shell input keyevent KEYCODE_HOME`; the TV goes back to its own home screen.
 
@@ -191,7 +199,8 @@ Then:
 - **Xiaomi**: `resolve-activity` still names PatchWall (`com.mitv.tvhome`); that's expected, Home Guard takes over. Never disable `com.mitv.tvhome`. `KEEP_ADB` is recommended.
 - **TCL**: `adb install` always fails (`INSTALL_FAILED_VERIFICATION_FAILURE`); use 多屏互动 as in "TCL". If the user didn't see the prompt on the TV, run it again.
 - **TVs with only Wireless debugging** (FFALCON 55S595C Ultra, MT9655): adb can't be authorized there, so Aerial installs but can't take over Home.
-- **Hisense / Vidda, OPPO K9, FFALCON Crane 6**: Aerial installs but the TV doesn't start into it (the firmware only accepts its own launcher unless that is removed, which this install doesn't do). Aerial still works as an app.
+- **Hisense VIDAA**: once item 7 has changed `persist.vt.use_home_pkg`, Home goes straight to Aerial; the TV still starts into its own launcher after a reboot (the firmware holds third-party apps back until boot completes), so press Home once.
+- **Other Vidda systems, OPPO K9, FFALCON Crane 6**: Aerial installs but the TV doesn't start into it (the firmware only accepts its own launcher unless that is removed, which this install doesn't do). Aerial still works as an app.
 - **Check line 3 is 0**: some firmwares block sideloaded accessibility services. Ask the user to allow Aerial's autostart and accessibility in the TV's security or permissions app, then run `adb shell am start -n app.orchard.tv/.MainActivity` and check again.
 - **Not supported**: LG webOS, Samsung Tizen, Huawei Vision (HarmonyOS), and Android 4.4 or older.
 

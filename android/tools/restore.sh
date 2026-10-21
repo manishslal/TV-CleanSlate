@@ -31,6 +31,12 @@ if [ -z "$REST" ] || [ "$REST" = null ]; then
 else
   adb shell settings put secure enabled_accessibility_services "'$REST'"
 fi
+# Hisense VIDAA: put back the launcher install.sh replaced in persist.vt.use_home_pkg.
+VT_HOME=$(adb shell settings get global aerial_vt_home_pkg | tr -d '\r')
+if [ -n "$VT_HOME" ] && [ "$VT_HOME" != null ]; then
+  adb shell setprop persist.vt.use_home_pkg "$VT_HOME"
+  adb shell settings delete global aerial_vt_home_pkg >/dev/null
+fi
 adb shell cmd role remove-role-holder --user 0 android.app.role.HOME "$PKG" >/dev/null 2>&1 || true
 
 if [ "${1:-}" = --uninstall ]; then
