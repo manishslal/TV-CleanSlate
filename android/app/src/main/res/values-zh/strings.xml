@@ -276,4 +276,6 @@
     <string name="fk_plex_no_plextv">无法连接 plex.tv，请检查网络。</string>
     <string name="fk_plex_no_server">本网络中没有 Plex 服务器响应。</string>
     <string name="fk_plex_server_down">Plex 服务器没有响应，沿用上次的列表。</string>
+    <string name="fk_age_minutes">%1$d 分钟前</string>
+    <string name="fk_age_hours">%1$d 小时前</string>
 </resources>

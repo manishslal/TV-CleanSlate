@@ -277,4 +277,6 @@
     <string name="fk_plex_no_plextv">Could not reach plex.tv. Check the internet connection.</string>
     <string name="fk_plex_no_server">No Plex server answered on this network.</string>
     <string name="fk_plex_server_down">The Plex server did not answer; the last list is kept.</string>
+    <string name="fk_age_minutes">%1$d min ago</string>
+    <string name="fk_age_hours">%1$d h ago</string>
 </resources>

@@ -269,4 +269,6 @@
     <string name="fk_plex_no_plextv">plex.tv-ге қосылу мүмкін емес. Интернетті тексеріңіз.</string>
     <string name="fk_plex_no_server">Бұл желіде Plex сервері жауап бермеді.</string>
     <string name="fk_plex_server_down">Plex сервері жауап бермеді; соңғы тізім сақталды.</string>
+    <string name="fk_age_minutes">%1$d мин бұрын</string>
+    <string name="fk_age_hours">%1$d сағ бұрын</string>
 </resources>

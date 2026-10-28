@@ -269,4 +269,6 @@
     <string name="fk_plex_no_plextv">Нет связи с plex.tv. Проверьте интернет.</string>
     <string name="fk_plex_no_server">В этой сети не ответил ни один сервер Plex.</string>
     <string name="fk_plex_server_down">Сервер Plex не ответил; оставлен прежний список.</string>
+    <string name="fk_age_minutes">%1$d мин назад</string>
+    <string name="fk_age_hours">%1$d ч назад</string>
 </resources>
