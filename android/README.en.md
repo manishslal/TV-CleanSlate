@@ -1,3 +1,5 @@
+> **This is a personal fork** of [Aerial by pengchujin](https://github.com/pengchujin/aerial-tv) (MIT). All credit for the original app goes to its author and contributors. See [NOTICE.md](NOTICE.md) for credits and licenses, and [FORK.md](FORK.md) for what this fork changes.
+
 <div align="center">
 
 <img src="docs/brand/icon.png" width="96" alt="Aerial icon">
