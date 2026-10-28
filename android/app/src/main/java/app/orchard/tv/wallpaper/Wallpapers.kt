@@ -1,5 +1,6 @@
 package app.orchard.tv.wallpaper
 
+import app.orchard.tv.plex.Plex
 import android.content.Context
 import android.os.Build
 import android.graphics.Bitmap
@@ -101,6 +102,8 @@ object Wallpapers {
     private val prefs by lazy { app.getSharedPreferences("wallpaper", Context.MODE_PRIVATE) }
     private val dailyDir by lazy { File(app.filesDir, "daily").apply { mkdirs() } }
     private val photoDir by lazy { File(app.filesDir, "photos").apply { mkdirs() } }
+    /** Fork: where Plex keeps the photos it fetched (plex-<key>.jpg), beside the owner's. */
+    val photosFolder: File get() = photoDir
     private val liveFrame by lazy { File(app.filesDir, "live-frame.jpg") }
     private val videoFrame by lazy { File(app.filesDir, "video-frame.jpg") }
 
@@ -134,7 +137,7 @@ object Wallpapers {
 
     /** The films [id] plays behind Home: all the owner's videos, or the one chosen. Call off the main thread. */
     fun videoFilms(id: String = selectedId): List<ScreensaverVideo> {
-        val all = ScreensaverVideos.all(app)
+        val all = ScreensaverVideos.all(app) + Plex.videos
         return if (id.startsWith(VIDEO_PREFIX)) all.filter { it.id == id.removePrefix(VIDEO_PREFIX) } else all
     }
 
@@ -179,6 +182,7 @@ object Wallpapers {
         if (started) return
         started = true
         app = context.applicationContext
+        Plex.init(app)
         // Home drawn at the panel's size (UhdCanvas) gets pictures of that size.
         val scale = UhdCanvas.scale(context)
         context.resources.displayMetrics.let {
@@ -294,7 +298,7 @@ object Wallpapers {
         val film = videoFilms(id).firstOrNull() ?: return null
         val mmr = android.media.MediaMetadataRetriever()
         return try {
-            mmr.setDataSource(film.file.path)
+            film.file?.let { mmr.setDataSource(it.path) } ?: mmr.setDataSource(film.uri.toString(), emptyMap())
             mmr.getFrameAtTime(0)?.let { Images.cover(it, w, h) }
         } catch (_: Exception) { null } finally { runCatching { mmr.release() } }
     }
@@ -594,6 +598,9 @@ object Wallpapers {
         if (selectedId == LIVE && before != null) frosted = before
     }
 
+    /** Fork: Plex's films or photos changed; list them. Main thread. */
+    fun mediaChanged() { if (started) rebuildList() }
+
     private fun rebuildList() {
         val daily = readDailyIndex().map { Wallpaper("daily:${it.first}", WallpaperKind.Daily, it.second, it.third) }
         val zh = Locale.getDefault().language == "zh"
@@ -604,7 +611,7 @@ object Wallpapers {
         val auto = Wallpaper(AUTO, WallpaperKind.Auto, if (zh) "跟随 App" else "Follow App")
         val live = Wallpaper(LIVE, WallpaperKind.Live, if (zh) "航拍" else "Aerial")
         // All of them in turn, then each on its own (#762); the pickers show the first only for two or more.
-        val films = ScreensaverVideos.all(app)
+        val films = ScreensaverVideos.all(app) + Plex.videos
         val videos = if (films.isEmpty()) emptyList() else
             listOf(Wallpaper(VIDEOS, WallpaperKind.Video, if (zh) "我的视频 · 轮播" else "My Videos, In Turn")) +
                 films.map { Wallpaper(VIDEO_PREFIX + it.id, WallpaperKind.Video, it.name.substringBeforeLast('.').ifBlank { it.name }) }

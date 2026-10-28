@@ -1,5 +1,6 @@
 package app.orchard.tv.ui.home
 
+import app.orchard.tv.plex.Plex
 import android.view.SurfaceHolder
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
@@ -41,7 +42,7 @@ import kotlinx.coroutines.withContext
 internal fun VideoSaver(steps: SharedFlow<Int>, onUnavailable: () -> Unit) {
     val context = LocalContext.current
     val films by produceState<List<ScreensaverVideo>?>(null) {
-        value = withContext(Dispatchers.IO) { ScreensaverVideos.all(context).shuffled() }
+        value = withContext(Dispatchers.IO) { (ScreensaverVideos.all(context) + Plex.videos).shuffled() }
     }
     LocalFilms(films, steps, onUnavailable)
 }
@@ -55,8 +56,9 @@ private fun LocalFilms(films: List<ScreensaverVideo>?, steps: SharedFlow<Int>, o
         // under the dream, and would hold the decoder this film needs (TCL MT5879).
         LiveFilm.onHome?.letDecoderGo()
         ExoPlayer.Builder(context).setLoadControl(
-            DefaultLoadControl.Builder().setTargetBufferBytes(12 * 1024 * 1024)
-                .setBufferDurationsMs(5_000, 15_000, 500, 1_000).build(),
+            // Fork: room for 4K streamed from Plex over Wi-Fi, not only local files.
+            DefaultLoadControl.Builder().setTargetBufferBytes(48 * 1024 * 1024)
+                .setBufferDurationsMs(10_000, 30_000, 1_500, 3_000).build(),
         ).build().apply {
             volume = 0f
             trackSelectionParameters = trackSelectionParameters.buildUpon().setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, true).build()
@@ -119,7 +121,7 @@ private fun LocalFilms(films: List<ScreensaverVideo>?, steps: SharedFlow<Int>, o
         val list = films ?: return@LaunchedEffect
         DiagLog.i("local screensaver: ${list.size} films")
         if (list.isEmpty()) { onUnavailable(); return@LaunchedEffect }
-        player.setMediaItems(list.map { MediaItem.Builder().setUri(it.file.toUri()).setMediaId(it.id).build() })
+        player.setMediaItems(list.map { MediaItem.Builder().setUri(it.uri).setMediaId(it.id).build() })
         player.prepare()
         player.playWhenReady = true
     }

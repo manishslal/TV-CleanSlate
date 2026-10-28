@@ -253,4 +253,20 @@
     <string name="fk_tiles_color">Цветные</string>
     <string name="fk_headlines">Новости технологий</string>
     <string name="fk_headlines_hint">Главные новости технологий из Google News поверх заставки.</string>
+    <string name="fk_plex">Plex</string>
+    <string name="fk_plex_account">Сервер Plex</string>
+    <string name="fk_plex_link">Подключить</string>
+    <string name="fk_plex_linked">Подключено</string>
+    <string name="fk_plex_code">plex.tv/link · %1$s</string>
+    <string name="fk_plex_hint">Выберите «Подключить» и введите код на plex.tv/link с телефона. Видео и фото из Plex можно будет использовать как обои и заставку.</string>
+    <string name="fk_plex_linked_hint">Видео Plex добавляются к «Моим видео», фото — к «Моим фото». Выберите их в разделах «Обои» и «Заставка».</string>
+    <string name="fk_plex_videos">Медиатека видео</string>
+    <string name="fk_plex_photos">Медиатека фото</string>
+    <string name="fk_plex_none">Нет</string>
+    <string name="fk_plex_unlink">Аккаунт Plex</string>
+    <string name="fk_plex_unlink_action">Отключить</string>
+    <string name="fk_plex_expired">Код истёк. Выберите «Подключить» ещё раз.</string>
+    <string name="fk_plex_no_plextv">Нет связи с plex.tv. Проверьте интернет.</string>
+    <string name="fk_plex_no_server">В этой сети не ответил ни один сервер Plex.</string>
+    <string name="fk_plex_server_down">Сервер Plex не ответил; оставлен прежний список.</string>
 </resources>

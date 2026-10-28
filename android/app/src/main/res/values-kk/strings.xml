@@ -253,4 +253,20 @@
     <string name="fk_tiles_color">Түрлі-түсті</string>
     <string name="fk_headlines">Технология жаңалықтары</string>
     <string name="fk_headlines_hint">Google News технология жаңалықтары заставка үстінде.</string>
+    <string name="fk_plex">Plex</string>
+    <string name="fk_plex_account">Plex сервері</string>
+    <string name="fk_plex_link">Қосу</string>
+    <string name="fk_plex_linked">Қосылған</string>
+    <string name="fk_plex_code">plex.tv/link · %1$s</string>
+    <string name="fk_plex_hint">«Қосу» таңдап, телефонда plex.tv/link бетіне кодты енгізіңіз. Содан кейін Plex бейнелері мен фотолары тұсқағаз бен заставка бола алады.</string>
+    <string name="fk_plex_linked_hint">Plex бейнелері «Менің бейнелерім», фотолары «Менің фотоларым» қатарына қосылады.</string>
+    <string name="fk_plex_videos">Бейне кітапханасы</string>
+    <string name="fk_plex_photos">Фото кітапханасы</string>
+    <string name="fk_plex_none">Жоқ</string>
+    <string name="fk_plex_unlink">Plex аккаунты</string>
+    <string name="fk_plex_unlink_action">Ажырату</string>
+    <string name="fk_plex_expired">Кодтың мерзімі өтті. «Қосу» қайта таңдаңыз.</string>
+    <string name="fk_plex_no_plextv">plex.tv-ге қосылу мүмкін емес. Интернетті тексеріңіз.</string>
+    <string name="fk_plex_no_server">Бұл желіде Plex сервері жауап бермеді.</string>
+    <string name="fk_plex_server_down">Plex сервері жауап бермеді; соңғы тізім сақталды.</string>
 </resources>

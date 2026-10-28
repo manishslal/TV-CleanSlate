@@ -261,4 +261,20 @@
     <string name="fk_tiles_color">Color</string>
     <string name="fk_headlines">Tech headlines</string>
     <string name="fk_headlines_hint">Top technology stories from Google News, over the screensaver.</string>
+    <string name="fk_plex">Plex</string>
+    <string name="fk_plex_account">Plex server</string>
+    <string name="fk_plex_link">Link</string>
+    <string name="fk_plex_linked">Linked</string>
+    <string name="fk_plex_code">plex.tv/link · %1$s</string>
+    <string name="fk_plex_hint">Choose Link, then enter the code at plex.tv/link on your phone. Videos and photos from your Plex libraries can then be the wallpaper and screensaver.</string>
+    <string name="fk_plex_linked_hint">Plex videos join My Videos; Plex photos join My Photos. Choose them under Wallpaper and Screensaver.</string>
+    <string name="fk_plex_videos">Video library</string>
+    <string name="fk_plex_photos">Photo library</string>
+    <string name="fk_plex_none">None</string>
+    <string name="fk_plex_unlink">Plex account</string>
+    <string name="fk_plex_unlink_action">Unlink</string>
+    <string name="fk_plex_expired">The code expired. Choose Link for a new one.</string>
+    <string name="fk_plex_no_plextv">Could not reach plex.tv. Check the internet connection.</string>
+    <string name="fk_plex_no_server">No Plex server answered on this network.</string>
+    <string name="fk_plex_server_down">The Plex server did not answer; the last list is kept.</string>
 </resources>

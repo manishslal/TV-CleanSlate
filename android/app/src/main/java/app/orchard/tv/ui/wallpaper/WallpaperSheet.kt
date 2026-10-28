@@ -1,5 +1,6 @@
 package app.orchard.tv.ui.wallpaper
 
+import app.orchard.tv.plex.Plex
 import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -326,6 +327,39 @@ fun WallpaperSheet(
                             listOf(true to R.string.fk_units_f, false to R.string.fk_units_c),
                             AerialSettings.fahrenheit, AerialSettings::chooseFahrenheit,
                         )
+                    }
+
+                    // Fork: the owner's videos and photos from Plex on the home network (plex/Plex.kt).
+                    Spacer(Modifier.height(22.dp))
+                    SectionTitle(R.string.fk_plex)
+                    Group(Plex.problem?.let { stringResource(it) } ?: stringResource(if (Plex.linked) R.string.fk_plex_linked_hint else R.string.fk_plex_hint)) { note ->
+                        SettingRow(R.string.fk_plex_account, null, note, first = true) {
+                            val code = Plex.linkCode
+                            ActionChip(
+                                when {
+                                    code != null -> stringResource(R.string.fk_plex_code, code)
+                                    Plex.linked -> Plex.serverName ?: stringResource(R.string.fk_plex_linked)
+                                    else -> stringResource(R.string.fk_plex_link)
+                                },
+                                Glyph.ChevronRight,
+                            ) { if (Plex.linked) Plex.refresh(photosIfStale = false) else Plex.startLink() }
+                        }
+                        if (Plex.linked) {
+                            val none = "" to stringResource(R.string.fk_plex_none)
+                            Choices(
+                                R.string.fk_plex_videos, null, note,
+                                listOf<Pair<String, Any>>(none) + Plex.sections.filter { it.type == "movie" || it.type == "show" }.map { it.key to it.title },
+                                Plex.videoSection, Plex::chooseVideoSection,
+                            )
+                            Choices(
+                                R.string.fk_plex_photos, null, note,
+                                listOf<Pair<String, Any>>(none) + Plex.sections.filter { it.type == "photo" }.map { it.key to it.title },
+                                Plex.photoSection, Plex::choosePhotoSection,
+                            )
+                            SettingRow(R.string.fk_plex_unlink, null, note) {
+                                ActionChip(stringResource(R.string.fk_plex_unlink_action), Glyph.ChevronRight) { Plex.unlink() }
+                            }
+                        }
                     }
 
                     // One row says what it is; a title over it would only repeat it.

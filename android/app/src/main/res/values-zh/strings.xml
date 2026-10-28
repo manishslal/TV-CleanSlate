@@ -260,4 +260,20 @@
     <string name="fk_tiles_color">彩色</string>
     <string name="fk_headlines">科技头条</string>
     <string name="fk_headlines_hint">屏保上显示 Google 新闻的科技头条。</string>
+    <string name="fk_plex">Plex</string>
+    <string name="fk_plex_account">Plex 服务器</string>
+    <string name="fk_plex_link">关联</string>
+    <string name="fk_plex_linked">已关联</string>
+    <string name="fk_plex_code">plex.tv/link · %1$s</string>
+    <string name="fk_plex_hint">选择「关联」，然后在手机上打开 plex.tv/link 输入代码。之后 Plex 资料库里的视频和照片可以用作壁纸和屏保。</string>
+    <string name="fk_plex_linked_hint">Plex 视频加入「我的视频」，Plex 照片加入「我的照片」，在壁纸和屏保里选择。</string>
+    <string name="fk_plex_videos">视频资料库</string>
+    <string name="fk_plex_photos">照片资料库</string>
+    <string name="fk_plex_none">无</string>
+    <string name="fk_plex_unlink">Plex 账号</string>
+    <string name="fk_plex_unlink_action">取消关联</string>
+    <string name="fk_plex_expired">代码已过期，请重新选择「关联」。</string>
+    <string name="fk_plex_no_plextv">无法连接 plex.tv，请检查网络。</string>
+    <string name="fk_plex_no_server">本网络中没有 Plex 服务器响应。</string>
+    <string name="fk_plex_server_down">Plex 服务器没有响应，沿用上次的列表。</string>
 </resources>

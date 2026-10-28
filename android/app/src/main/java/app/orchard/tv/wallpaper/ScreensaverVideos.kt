@@ -7,7 +7,8 @@ import org.json.JSONObject
 import java.io.File
 import java.util.UUID
 
-data class ScreensaverVideo(val id: String, val name: String, val file: File)
+/** Fork: [file] is null for a film streamed from Plex; [uri] is what the players open. */
+data class ScreensaverVideo(val id: String, val name: String, val file: File?, val uri: android.net.Uri = android.net.Uri.fromFile(file!!))
 
 /** The owner's local films. No videos are bundled with Aerial or fetched from a third-party host. */
 object ScreensaverVideos {
@@ -40,7 +41,7 @@ object ScreensaverVideos {
         val size = upload.length()
         val films = all(context)
         if (size <= 0 || size > MAX_FILE_BYTES || films.size >= MAX_VIDEOS ||
-            films.sumOf { it.file.length() } + size > MAX_TOTAL_BYTES || root.usableSpace < size + 16L * 1024 * 1024) return null
+            films.sumOf { it.file?.length() ?: 0L } + size > MAX_TOTAL_BYTES || root.usableSpace < size + 16L * 1024 * 1024) return null
         val title = name.substringAfterLast('/').substringAfterLast('\\').take(120)
         if (title.substringAfterLast('.', "").lowercase() !in setOf("mp4", "mov")) return null
         val metadata = MediaMetadataRetriever()

@@ -1,5 +1,6 @@
 package app.orchard.tv.ui.home
 
+import app.orchard.tv.plex.Plex
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.view.SurfaceView
@@ -104,7 +105,7 @@ fun VideoWallpaper(
                 }
             })
             setMediaItems(
-                films.map { MediaItem.Builder().setUri(it.file.toUri()).setMediaId(it.id).build() },
+                films.map { MediaItem.Builder().setUri(it.uri).setMediaId(it.id).build() },
                 first.coerceAtLeast(0),
                 if (first >= 0) spot?.second ?: 0L else 0L,
             )
@@ -166,10 +167,10 @@ fun VideoWallpaper(
 
 /** Frame [atMs] of the owner's video [id], screen-sized and drawable on, or null. */
 private fun fileFrame(context: android.content.Context, id: String, atMs: Long, w: Int, h: Int): Bitmap? {
-    val film = ScreensaverVideos.all(context).firstOrNull { it.id == id } ?: return null
+    val film = (ScreensaverVideos.all(context) + Plex.videos).firstOrNull { it.id == id } ?: return null
     val mmr = MediaMetadataRetriever()
     return try {
-        mmr.setDataSource(film.file.path)
+        film.file?.let { mmr.setDataSource(it.path) } ?: mmr.setDataSource(film.uri.toString(), emptyMap())
         val frame = mmr.getFrameAtTime(atMs * 1000, MediaMetadataRetriever.OPTION_CLOSEST) ?: return null
         app.orchard.tv.wallpaper.Images.cover(frame, w, h).let {
             if (it.isMutable && it.config == Bitmap.Config.ARGB_8888) it else it.copy(Bitmap.Config.ARGB_8888, true)
