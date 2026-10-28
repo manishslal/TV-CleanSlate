@@ -272,7 +272,8 @@ private fun Labels(caption: String?, now: LocalDateTime, showTime: Boolean = tru
             BasicText(
                 text, maxLines = 2, overflow = TextOverflow.Ellipsis,
                 style = Type.Title.copy(color = Color.White.copy(alpha = 0.92f)),
-                modifier = Modifier.widthIn(max = 620.dp),
+                // Fork: the headline takes the right side (HeadlinesOverlay); the place name keeps clear of it.
+                modifier = Modifier.widthIn(max = if (AerialSettings.headlines) 460.dp else 620.dp),
             )
         }
     }

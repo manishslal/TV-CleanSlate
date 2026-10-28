@@ -40,7 +40,7 @@ object TileDiskCache {
     }
 
     /** Bumped when tiles are drawn differently, so a build with the same version code redraws them. */
-    private const val ART = 3
+    private const val ART = 3 + 103 // Fork: +100, bumped on every change to how fork tiles are drawn (1: dark tiles, 2: dark plates, 3: light logos from picture icons)
 
     fun key(stamp: Long): String =
         "$stamp|${TileArtFactory.W}|${TileArtFactory.unified}|${TileArtFactory.dark}|${Locale.getDefault().toLanguageTag()}|${BuildConfig.VERSION_CODE}|$ART"

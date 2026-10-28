@@ -79,7 +79,7 @@ internal fun HeadlinesOverlay(now: LocalDateTime) {
                 .graphicsLayer { translationX = -drift.x.toPx(); translationY = -drift.y.toPx() },
             label = "headline",
         ) { h ->
-            Column(Modifier.width(400.dp)) {
+            Column(Modifier.width(330.dp)) {
                 BasicText(
                     h.title, maxLines = 2, overflow = TextOverflow.Ellipsis,
                     style = Type.Title.copy(color = Color.White.copy(alpha = 0.94f), shadow = TextShade),

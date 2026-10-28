@@ -22,9 +22,13 @@ git merge upstream/main
 ## Changes from upstream
 | Date | Change |
 |---|---|
-| 2026-10-28 | Forked at `c3c0511` (v1.67). Added NOTICE.md and FORK.md, plus a fork notice at the top of the READMEs. No code changes yet. |
+| 2026-10-28 | Forked at `c3c0511` (v1.67). Added NOTICE.md and FORK.md, plus a fork notice at the top of the READMEs. |
+| 2026-10-28 | v1.67-mh1: app ID `io.manish.home` (label "Home"), own signing key, no calls to aerial.qust.me (`BuildConfig.UPSTREAM_SERVER`); revival account type follows the ID. |
+| 2026-10-28 | °F/°C (default °F), 12/24-hour clock (default "5:39 PM"); city is still chosen from the phone page. |
+| 2026-10-28 | Dark tiles (default): white logos on dark glass; many-colored logos keep their colors without their plate; picture icons give up a light logo. Tile cache `ART` +103. |
+| 2026-10-28 | Plex: PIN link (plex.tv/link), local server discovery, video library → My Videos (direct play), photo library → My Photos (1080p copies, plex-*.jpg). Screensaver buffer raised to 48 MB. |
+| 2026-10-28 | Tech headlines over the screensaver (Google News Technology RSS): one at a time, bottom right, no glass. Place caption narrows to 460dp while it is on. |
 
 ## Planned
-- [ ] New application ID and app name (side-by-side install with upstream Aerial)
-- [ ] Repoint or disable `Updates.kt`, `IconLibrary.kt` and the Control Center update/setup URLs
+- [ ] Final app name and icon; rename the strings that still say "Aerial" for the app (setup page, Home Guard)
 - [ ] Theme layer: colors, fonts, tile shape, focus effect, motion timings

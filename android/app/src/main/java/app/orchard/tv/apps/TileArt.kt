@@ -408,6 +408,11 @@ object TileArtFactory {
         if (unified && recipe?.keepColors != true && (recipe?.white == true || !multiColor(fore, logo, ColorUtils.blendARGB(top, bottom, 0.5f)))) {
             return unify(fore, logo, top, bottom)
         }
+        // Fork: a many-colored logo keeps its colors but leaves its plate behind on dark tiles.
+        if (dark) {
+            cutOut(fore, logo, top, bottom, white = false)
+            return finish(colorTile(top, bottom), fore)
+        }
         val back = layer {
             drawRect(0f, 0f, W.toFloat(), H.toFloat(), Paint().apply {
                 shader = LinearGradient(0f, 0f, 0f, H.toFloat(), top, bottom, Shader.TileMode.CLAMP)
@@ -513,7 +518,17 @@ object TileArtFactory {
         // as large as the others. When its edges are one color each, those colors are carried
         // across the tile and the picture fades into them, so it fills the tile instead of sitting
         // on it (HiFi音乐, 华数TV, 开唛K歌 from 当贝市场). A recipe's colors win.
-        if (recipe?.top == null) edgeColors(icon)?.let { (edgeTop, edgeBottom) ->
+        // Fork: on dark tiles a picture icon gives up its light logo (Disney+'s white mark on teal),
+        // as a recipe's white does; a light area that is most of the icon is a plate, not a logo.
+        if (dark && recipe?.keepColors != true && (square || edgeColors(icon) != null)) {
+            val light = lightPart(raster(icon, SAMPLE), SAMPLE)
+            if (light != null && light.width() * light.height() < 0.45f) placeLogo(icon, ::lightPart)?.let { (fore, _) ->
+                keepLight(fore)
+                return finish(colorTile(top, bottom), fore)
+            }
+        }
+        if (recipe?.top == null) edgeColors(icon)?.let { (edgeTop0, edgeBottom0) ->
+            val (edgeTop, edgeBottom) = if (dark) DARK_TOP to DARK_BOTTOM else edgeTop0 to edgeBottom0
             placeLogo(icon, ::visible, scale = 1.25f)?.let { (fore, at) ->
                 val side = at.width()
                 feather(fore, RectF(at.left + side * 0.18f, at.top + side * 0.18f, at.right - side * 0.18f, at.bottom - side * 0.18f), margin = 0f, fade = side * 0.18f)
