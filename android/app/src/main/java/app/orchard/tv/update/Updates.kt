@@ -87,7 +87,7 @@ object Updates {
      * release out an hour ago was not shown there for hours more (issue #301).
      */
     fun checkIfStale(force: Boolean = false, maxAgeMs: Long = CHECK_EVERY_MS) {
-        if (!started) return
+        if (!started || !BuildConfig.UPSTREAM_SERVER) return
         val now = System.currentTimeMillis()
         if (!force && (now - lastAttempt < RETRY_MS || now - prefs.getLong("checked_at", 0) < maxAgeMs)) return
         lastAttempt = now

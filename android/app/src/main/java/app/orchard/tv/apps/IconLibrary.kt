@@ -1,5 +1,6 @@
 package app.orchard.tv.apps
 
+import app.orchard.tv.BuildConfig
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Bitmap
@@ -114,6 +115,7 @@ object IconLibrary {
      * them, and can pick one for a single app.
      */
     suspend fun refresh(installed: Set<String>): Boolean = withContext(Dispatchers.IO) {
+        if (!BuildConfig.UPSTREAM_SERVER) return@withContext false
         if (!::dir.isInitialized) return@withContext false
         if (!refreshing.tryLock()) return@withContext false
         try {

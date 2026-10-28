@@ -12,16 +12,20 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "app.orchard.tv"
+        // Fork: its own ID, so it installs beside upstream Aerial (see FORK.md).
+        applicationId = "io.manish.home"
         // Android 5.0. Compose 1.10 and later need 6.0, so the Compose BOM below stays on 1.9.
         minSdk = 21
         targetSdk = 34
         versionCode = 81
-        versionName = "1.67"
+        versionName = "1.67-mh1"
         // `./gradlew -Pdiag ...`: a build for one reporter's TV whose logcat shows no app lines;
         // see system/DiagLog.kt.
         val diag = project.hasProperty("diag")
         buildConfigField("boolean", "DIAG", diag.toString())
+        // Fork: no calls to the upstream author's server (updates, icon library, setup page).
+        buildConfigField("boolean", "UPSTREAM_SERVER", "false")
+        resValue("string", "account_type", "io.manish.home")
         if (diag) versionNameSuffix = "-diag"
     }
 
@@ -71,6 +75,7 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        resValues = true
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true

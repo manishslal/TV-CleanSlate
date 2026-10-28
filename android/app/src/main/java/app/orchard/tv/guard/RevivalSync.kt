@@ -1,5 +1,6 @@
 package app.orchard.tv.guard
 
+import app.orchard.tv.BuildConfig
 import android.accounts.AbstractAccountAuthenticator
 import android.accounts.Account
 import android.accounts.AccountAuthenticatorResponse
@@ -33,7 +34,8 @@ import android.util.Log
  */
 object RevivalSync {
     const val TAG = "AerialGuard"
-    private const val ACCOUNT_TYPE = "app.orchard.tv"
+    // Fork: follows the application ID (res string account_type), so two builds never share an account type.
+    private val ACCOUNT_TYPE get() = BuildConfig.APPLICATION_ID
     private const val AUTHORITY = "settings"
 
     fun ensure(context: Context) {
