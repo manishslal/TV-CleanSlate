@@ -240,4 +240,17 @@
     <string name="st_play_hint">У спокої: через 10 секунд на верхньому ряду (у дворядному вигляді — на будь-якому з двох); будь-яка кнопка зупиняє. Завжди: кнопки не зупиняють, тло трохи затемнене; зупиняється, коли ви переходите до застосунків нижче.</string>
     <string name="ss_show_time">Час</string>
     <string name="ss_show_time_hint">Час на заставках з аерозйомкою і фото. Час і назва місця час від часу трохи зсуваються, щоб екран не вигорав.</string>
+    <!-- Fork additions (FORK.md) -->
+    <string name="fk_time_format">Час</string>
+    <string name="fk_time_12">12 годин</string>
+    <string name="fk_time_24">24 години</string>
+    <string name="fk_units">Температура</string>
+    <string name="fk_units_f">°F</string>
+    <string name="fk_units_c">°C</string>
+    <string name="fk_tiles">Плитки застосунків</string>
+    <string name="fk_tiles_hint">Темні: білий логотип на темному склі.</string>
+    <string name="fk_tiles_dark">Темні</string>
+    <string name="fk_tiles_color">Кольорові</string>
+    <string name="fk_headlines">Новини технологій</string>
+    <string name="fk_headlines_hint">Головні новини технологій з Google News поверх заставки.</string>
 </resources>

@@ -248,4 +248,17 @@
     <string name="st_play_hint">When still: after 10 seconds on the top row (either row in two rows); a key stops it. Always: keys do not stop it, and it is shaded a little; it stops when you go further down to the apps.</string>
     <string name="ss_show_time">Time</string>
     <string name="ss_show_time_hint">The time over the aerial and photo screensavers. The time and place name move a little now and then, so nothing stays on the same pixels.</string>
+    <!-- Fork additions (FORK.md) -->
+    <string name="fk_time_format">Time</string>
+    <string name="fk_time_12">12-hour</string>
+    <string name="fk_time_24">24-hour</string>
+    <string name="fk_units">Temperature</string>
+    <string name="fk_units_f">°F</string>
+    <string name="fk_units_c">°C</string>
+    <string name="fk_tiles">App tiles</string>
+    <string name="fk_tiles_hint">Dark draws each app as a white logo on dark glass.</string>
+    <string name="fk_tiles_dark">Dark</string>
+    <string name="fk_tiles_color">Color</string>
+    <string name="fk_headlines">Tech headlines</string>
+    <string name="fk_headlines_hint">Top technology stories from Google News, over the screensaver.</string>
 </resources>

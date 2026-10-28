@@ -240,4 +240,17 @@
     <string name="st_play_hint">Тыныштықта: жоғарғы қатарда (екі қатарлы көріністе — екеуінің кез келгенінде) 10 секундтан кейін; кез келген түйме тоқтатады. Әрдайым: түймелер тоқтатпайды, фон сәл күңгірттенеді; төмендегі қолданбаларға өткенде тоқтайды.</string>
     <string name="ss_show_time">Уақыт</string>
     <string name="ss_show_time_hint">Аэрожиын және фото экран қорғауыштарындағы уақыт. Экран күйіп қалмас үшін уақыт пен орын атауы анда-санда сәл жылжиды.</string>
+    <!-- Fork additions (FORK.md) -->
+    <string name="fk_time_format">Уақыт</string>
+    <string name="fk_time_12">12 сағат</string>
+    <string name="fk_time_24">24 сағат</string>
+    <string name="fk_units">Температура</string>
+    <string name="fk_units_f">°F</string>
+    <string name="fk_units_c">°C</string>
+    <string name="fk_tiles">Қолданба тақтайшалары</string>
+    <string name="fk_tiles_hint">Қараңғы: қараңғы шыныдағы ақ логотип.</string>
+    <string name="fk_tiles_dark">Қараңғы</string>
+    <string name="fk_tiles_color">Түрлі-түсті</string>
+    <string name="fk_headlines">Технология жаңалықтары</string>
+    <string name="fk_headlines_hint">Google News технология жаңалықтары заставка үстінде.</string>
 </resources>

@@ -124,6 +124,18 @@ object AerialSettings {
     /** The weather beside the clock; off for those who want the time alone (issue #472). */
     var showWeather by mutableStateOf(true); private set
 
+    /** Fork: temperatures in Fahrenheit (the default) or Celsius. Readings are stored in Celsius. */
+    var fahrenheit by mutableStateOf(true); private set
+
+    /** Fork: "5:39 PM" (the default) or "17:39", whatever Android's own 12/24-hour setting says. */
+    var clock12 by mutableStateOf(true); private set
+
+    /** Fork: tiles as dark glass with a white logo (the default) instead of each app's colors. */
+    var darkTiles by mutableStateOf(true); private set
+
+    /** Fork: a card of technology headlines over the screensaver. */
+    var headlines by mutableStateOf(true); private set
+
     /**
      * The time over Aerial's aerial and photo screensavers (issue #240: TCL's firmware puts its own
      * clock over the system screensaver). The clock screensaver is the clock and keeps it.
@@ -199,6 +211,10 @@ object AerialSettings {
         showAllNames = prefs.getBoolean("show_all_names", false)
         wallpaperAlwaysMoves = prefs.getBoolean("wallpaper_always_moves", false)
         showWeather = prefs.getBoolean("show_weather", true)
+        fahrenheit = prefs.getBoolean("fork_fahrenheit", true)
+        clock12 = prefs.getBoolean("fork_clock12", true)
+        darkTiles = prefs.getBoolean("fork_dark_tiles", true)
+        headlines = prefs.getBoolean("fork_headlines", true)
         screensaverClock = prefs.getBoolean("screensaver_clock", true)
         // Before 1.28 this was on or off; on meant whichever sounds Aerial played.
         uiSounds = UiSounds.of(prefs.getString("ui_sounds_kind", null)) ?: when {
@@ -301,6 +317,26 @@ object AerialSettings {
     fun chooseShowWeather(on: Boolean) {
         showWeather = on
         app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("show_weather", on) }
+    }
+
+    fun chooseFahrenheit(on: Boolean) {
+        fahrenheit = on
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("fork_fahrenheit", on) }
+    }
+
+    fun chooseClock12(on: Boolean) {
+        clock12 = on
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("fork_clock12", on) }
+    }
+
+    fun chooseDarkTiles(on: Boolean) {
+        darkTiles = on
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("fork_dark_tiles", on) }
+    }
+
+    fun chooseHeadlines(on: Boolean) {
+        headlines = on
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("fork_headlines", on) }
     }
 
     fun chooseScreensaverClock(on: Boolean) {

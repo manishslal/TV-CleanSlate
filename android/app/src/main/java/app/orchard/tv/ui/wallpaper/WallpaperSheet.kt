@@ -185,6 +185,11 @@ fun WallpaperSheet(
                             AerialSettings.homePlate, AerialSettings::chooseHomePlate,
                         )
                         Choices(
+                            R.string.fk_tiles, stringResource(R.string.fk_tiles_hint), note,
+                            listOf(true to R.string.fk_tiles_dark, false to R.string.fk_tiles_color),
+                            AerialSettings.darkTiles, AerialSettings::chooseDarkTiles,
+                        )
+                        Choices(
                             R.string.st_names, stringResource(R.string.st_names_hint), note,
                             listOf(false to R.string.st_names_focused, true to R.string.st_names_all),
                             AerialSettings.showAllNames, AerialSettings::chooseShowAllNames,
@@ -209,6 +214,11 @@ fun WallpaperSheet(
                             R.string.st_clock_size, stringResource(R.string.st_clock_size_hint), note,
                             listOf(false to R.string.st_clock_small, true to R.string.st_clock_large),
                             AerialSettings.largeClock, AerialSettings::chooseLargeClock,
+                        )
+                        Choices(
+                            R.string.fk_time_format, null, note,
+                            listOf(true to R.string.fk_time_12, false to R.string.fk_time_24),
+                            AerialSettings.clock12, AerialSettings::chooseClock12,
                         )
                         Choices(
                             R.string.wp_weather, null, note,
@@ -296,6 +306,11 @@ fun WallpaperSheet(
                             AerialSettings.screensaverMinutes, AerialSettings::chooseScreensaverMinutes,
                         )
                         Choices(
+                            R.string.fk_headlines, stringResource(R.string.fk_headlines_hint), note,
+                            listOf(true to R.string.st_on, false to R.string.st_off),
+                            AerialSettings.headlines, AerialSettings::chooseHeadlines,
+                        )
+                        Choices(
                             R.string.ss_back, stringResource(R.string.ss_back_choice_hint), note,
                             listOf(true to R.string.ss_back_on, false to R.string.ss_back_off),
                             AerialSettings.backStartsScreensaver, AerialSettings::chooseBackStartsScreensaver,
@@ -306,6 +321,11 @@ fun WallpaperSheet(
                     SectionTitle(R.string.wp_weather)
                     Group(stringResource(if (Weather.chosen) R.string.wp_weather_chosen else R.string.wp_weather_guessed)) { note ->
                         SettingRow(R.string.wp_weather_city, null, note, first = true) { WeatherValue() }
+                        Choices(
+                            R.string.fk_units, null, note,
+                            listOf(true to R.string.fk_units_f, false to R.string.fk_units_c),
+                            AerialSettings.fahrenheit, AerialSettings::chooseFahrenheit,
+                        )
                     }
 
                     // One row says what it is; a title over it would only repeat it.
@@ -545,7 +565,7 @@ private fun WeatherValue() {
         )
     }
     BasicText(
-        if (w != null) listOfNotNull(place, "${w.celsius}° $kind").joinToString(" · ") else stringResource(R.string.wp_weather_none),
+        if (w != null) listOfNotNull(place, "${w.degrees}° $kind").joinToString(" · ") else stringResource(R.string.wp_weather_none),
         style = Type.Body.copy(color = Palette.SecondaryLabel),
         modifier = Modifier.padding(end = 8.dp),
     )

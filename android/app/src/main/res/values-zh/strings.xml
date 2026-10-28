@@ -247,4 +247,17 @@
     <string name="st_play_hint">静止时：在第一排（双排时前两排）停 10 秒后播放，按键停下。一直：按键不停，背景压暗一点；再往下进入其余 App 时停下。</string>
     <string name="ss_show_time">时间</string>
     <string name="ss_show_time_hint">航拍和照片屏保上的时间。时间和地名会不时挪一点位置，避免烧屏。</string>
+    <!-- Fork additions (FORK.md) -->
+    <string name="fk_time_format">时间</string>
+    <string name="fk_time_12">12 小时制</string>
+    <string name="fk_time_24">24 小时制</string>
+    <string name="fk_units">温度</string>
+    <string name="fk_units_f">°F</string>
+    <string name="fk_units_c">°C</string>
+    <string name="fk_tiles">App 磁贴</string>
+    <string name="fk_tiles_hint">深色：每个 App 显示为深色玻璃上的白色标志。</string>
+    <string name="fk_tiles_dark">深色</string>
+    <string name="fk_tiles_color">彩色</string>
+    <string name="fk_headlines">科技头条</string>
+    <string name="fk_headlines_hint">屏保上显示 Google 新闻的科技头条。</string>
 </resources>

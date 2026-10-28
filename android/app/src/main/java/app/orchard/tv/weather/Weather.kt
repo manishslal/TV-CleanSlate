@@ -24,7 +24,14 @@ import kotlin.math.roundToInt
 enum class WeatherKind { Clear, PartlyCloudy, Cloudy, Fog, Rain, Snow, Thunder }
 
 /** [high] and [low] are today's, shown under the large clock; null in a reading saved by an older version. */
-data class WeatherNow(val celsius: Int, val kind: WeatherKind, val day: Boolean, val high: Int? = null, val low: Int? = null)
+data class WeatherNow(val celsius: Int, val kind: WeatherKind, val day: Boolean, val high: Int? = null, val low: Int? = null) {
+    /** Fork: the reading in the owner's unit (AerialSettings.fahrenheit). */
+    val degrees: Int get() = shown(celsius)
+    val highDegrees: Int? get() = high?.let(::shown)
+    val lowDegrees: Int? get() = low?.let(::shown)
+
+    private fun shown(c: Int) = if (app.orchard.tv.settings.AerialSettings.fahrenheit) Math.round(c * 9f / 5f + 32f) else c
+}
 
 /**
  * The weather beside the home clock, from Open-Meteo: no key, reachable from China. The place is

@@ -166,7 +166,12 @@ fun timeText(now: LocalDateTime): String {
     // 24-hour unless the owner chose 12-hour. With the setting unset, Android falls back to the
     // locale, and zh_CN means 12-hour, which TV clocks here never show (TCL 65S515D, issue #15).
     val twelve = runCatching { android.provider.Settings.System.getString(context.contentResolver, android.provider.Settings.System.TIME_12_24) }.getOrNull() == "12"
-    val pattern = if (twelve) "h:mm" else "H:mm"
+    // Fork: the owner's own choice wins, with AM/PM ("5:39 PM").
+    val pattern = when {
+        app.orchard.tv.settings.AerialSettings.clock12 -> "h:mm a"
+        twelve -> "h:mm"
+        else -> "H:mm"
+    }
     return now.format(DateTimeFormatter.ofPattern(pattern))
 }
 
@@ -638,13 +643,13 @@ fun ShelfClock(
         )
         Weather.now?.takeIf { AerialSettings.showWeather }?.let { w ->
             val place = Weather.place?.takeIf { it.length <= 12 }
-            val range = if (w.high != null && w.low != null) stringResource(R.string.weather_high_low, w.high, w.low) else null
+            val range = if (w.high != null && w.low != null) stringResource(R.string.weather_high_low, w.highDegrees!!, w.lowDegrees!!) else null
             val detail = listOfNotNull(place, stringResource(conditionName(w.kind)), range).joinToString(" · ")
             Row(aside.padding(top = 18.dp).capBox(Type.ClockDetail.fontSize), verticalAlignment = Alignment.CenterVertically) {
                 GlyphIcon(glyphFor(w), Color.White, 18.dp, Modifier.padding(end = 7.dp))
                 BasicText(
                     buildAnnotatedString {
-                        append("${w.celsius}°")
+                        append("${w.degrees}°")
                         withStyle(SpanStyle(color = dim, fontWeight = FontWeight.W500)) { append("  $detail") }
                     },
                     style = Type.ClockDetail.copy(shadow = shadow),
@@ -745,7 +750,7 @@ fun CornerClock(now: LocalDateTime, modifier: Modifier = Modifier, toSaver: () -
             }
             GlyphIcon(glyphFor(w), dim, 18.dp, aside.padding(start = 16.dp, end = 6.dp))
             val place = Weather.place?.takeIf { it.length <= 12 }
-            BasicText(listOfNotNull(place, "${w.celsius}°").joinToString(" "), style = Type.Headline.copy(color = dim, shadow = shadow), modifier = aside)
+            BasicText(listOfNotNull(place, "${w.degrees}°").joinToString(" "), style = Type.Headline.copy(color = dim, shadow = shadow), modifier = aside)
         }
     }
 }
