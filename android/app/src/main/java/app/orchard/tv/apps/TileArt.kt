@@ -112,6 +112,14 @@ object TileArtFactory {
      */
     @Volatile var unified = true
 
+    /**
+     * Fork: every plate Aerial draws is dark glass instead of the app's color, and apps with a
+     * banner are drawn from their icon so the logo can go on in white (AerialSettings.darkTiles).
+     */
+    @Volatile var dark = true
+    private const val DARK_TOP = 0xFF2C2C2E.toInt()
+    private const val DARK_BOTTOM = 0xFF141416.toInt()
+
     /** How large a logo is, as the side of the square of the same area, in tile heights. */
     private const val LOGO = 0.5f
 
@@ -298,11 +306,12 @@ object TileArtFactory {
 
     /** Aerial's own tile color: a diagonal gradient with soft light from the top left. */
     private fun colorTile(top: Int, bottom: Int): Bitmap = layer {
+        val (a, b) = if (dark) DARK_TOP to DARK_BOTTOM else top to bottom
         drawRect(0f, 0f, W.toFloat(), H.toFloat(), Paint().apply {
-            shader = LinearGradient(0f, 0f, W * 0.4f, H.toFloat(), top, bottom, Shader.TileMode.CLAMP)
+            shader = LinearGradient(0f, 0f, W * 0.4f, H.toFloat(), a, b, Shader.TileMode.CLAMP)
         })
         drawRect(0f, 0f, W.toFloat(), H.toFloat(), Paint().apply {
-            shader = android.graphics.RadialGradient(W * 0.25f, -H * 0.2f, W * 0.8f, 0x38FFFFFF, 0x00FFFFFF, Shader.TileMode.CLAMP)
+            shader = android.graphics.RadialGradient(W * 0.25f, -H * 0.2f, W * 0.8f, if (dark) 0x1FFFFFFF else 0x38FFFFFF, 0x00FFFFFF, Shader.TileMode.CLAMP)
         })
     }
 
@@ -327,6 +336,8 @@ object TileArtFactory {
         val (fore, at) = placeLogo(icon.foreground, ::visible) ?: return null
         val color = bgPx?.get(bgPx.size / 2)?.takeIf { it ushr 24 > 200 } ?: GRAPHITE_BOTTOM
         if (unified && !multiColor(fore, at, color)) return unify(fore, at, color, color)
+        // Fork: in dark mode a many-colored logo sits on the dark plate, not on its own background.
+        if (dark) return finish(colorTile(color, color), fore)
         val back = layer {
             drawColor(GRAPHITE_BOTTOM)
             bg?.let {

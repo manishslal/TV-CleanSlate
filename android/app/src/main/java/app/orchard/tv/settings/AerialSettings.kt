@@ -1,5 +1,6 @@
 package app.orchard.tv.settings
 
+import app.orchard.tv.apps.TileArtFactory
 import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -214,6 +215,7 @@ object AerialSettings {
         fahrenheit = prefs.getBoolean("fork_fahrenheit", true)
         clock12 = prefs.getBoolean("fork_clock12", true)
         darkTiles = prefs.getBoolean("fork_dark_tiles", true)
+        TileArtFactory.dark = darkTiles
         headlines = prefs.getBoolean("fork_headlines", true)
         screensaverClock = prefs.getBoolean("screensaver_clock", true)
         // Before 1.28 this was on or off; on meant whichever sounds Aerial played.
@@ -331,6 +333,7 @@ object AerialSettings {
 
     fun chooseDarkTiles(on: Boolean) {
         darkTiles = on
+        TileArtFactory.dark = on
         app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("fork_dark_tiles", on) }
     }
 

@@ -157,6 +157,8 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         }
         // A tile picture set or removed from the phone page.
         viewModelScope.launch { snapshotFlow { CustomIcons.version }.drop(1).collect { reload() } }
+        // Fork: the tile style is part of every tile's stamp, so a change redraws them all.
+        viewModelScope.launch { snapshotFlow { AerialSettings.darkTiles }.drop(1).collect { reload() } }
         // Library pictures that arrived, or the library turned on or off.
         viewModelScope.launch { snapshotFlow { IconLibrary.version }.drop(1).collect { reload() } }
         offerSetupOnce()

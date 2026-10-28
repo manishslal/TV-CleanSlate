@@ -354,7 +354,7 @@ object AppCatalog {
         val banner = drawable(bannerId)?.takeIf { it.intrinsicWidth >= it.intrinsicHeight * 4 / 3 }
         val recipe = TileRecipes.of(pi.packageName)
         val drawn = recipe?.glyph?.let { TileArtFactory.glyphTile(recipe.top ?: 0, recipe.bottom ?: 0, it) }
-        val art = drawn ?: if (banner != null && recipe?.useIcon != true) TileArtFactory.fromBanner(banner)
+        val art = drawn ?: if (banner != null && recipe?.useIcon != true && !TileArtFactory.dark) TileArtFactory.fromBanner(banner)
             else TileArtFactory.fromIcon(drawable(ai.icon) ?: return null, recipe)
         label to art
     }.getOrNull()
@@ -372,7 +372,8 @@ object AppCatalog {
     /** The tile drawn from the app's own art: its recipe's glyph, its banner, or its icon. */
     private fun fromApp(pm: PackageManager, info: ActivityInfo, banner: android.graphics.drawable.Drawable?, recipe: TileRecipe?): TileArt = when {
         recipe?.glyph != null -> TileArtFactory.glyphTile(recipe.top ?: 0, recipe.bottom ?: 0, recipe.glyph)
-        banner != null && recipe?.useIcon != true -> TileArtFactory.fromBanner(banner)
+        // Fork: dark tiles take the logo from the icon, which can go on in white; a banner is a picture.
+        banner != null && recipe?.useIcon != true && !TileArtFactory.dark -> TileArtFactory.fromBanner(banner)
         else -> TileArtFactory.fromIcon(densest(pm, info, info.iconResource) ?: info.loadIcon(pm), recipe)
     }
 
@@ -394,7 +395,7 @@ object AppCatalog {
         // A picture chosen on the phone page changes the tile as much as an update does.
         // Drawn as the stock launcher or not is part of it too: the same package can be either.
         val stamp = runCatching { pm.getPackageInfo(pkg, 0).lastUpdateTime }.getOrDefault(0L) + CustomIcons.stamp(pkg) +
-            IconLibrary.stamp(pkg) + if (stockHome) 1 else 0
+            IconLibrary.stamp(pkg) + (if (stockHome) 1 else 0) + (if (TileArtFactory.dark) 2 else 0)
         val system = (info.applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
         val inMemory = synchronized(cache) { cache[pkg] }?.takeIf { it.stamp == stamp && it.width == TileArtFactory.W }
         if (inMemory == null && later) {
