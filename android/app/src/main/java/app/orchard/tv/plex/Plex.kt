@@ -130,11 +130,17 @@ object Plex {
             if (!r.optString("provides").contains("server")) continue
             val conns = r.optJSONArray("connections") ?: continue
             val serverToken = r.optString("accessToken").ifBlank { accountToken }
-            for (j in 0 until conns.length()) {
-                val c = conns.getJSONObject(j)
-                if (!c.optBoolean("local") || c.optBoolean("relay")) continue
-                val uri = "http://${c.optString("address")}:${c.optInt("port", 32400)}"
-                if (runCatching { http("$uri/identity", token = serverToken) }.isSuccess) {
+            // The server's own HTTPS address on this network first (https://<ip>.<id>.plex.direct:32400,
+            // which resolves to the LAN address): Aerial allows no cleartext to arbitrary hosts, so a
+            // plain http://<ip> is only a last try.
+            val local = (0 until conns.length()).map { conns.getJSONObject(it) }.filter { it.optBoolean("local") && !it.optBoolean("relay") }
+            val candidates = local.filter { it.optString("protocol") == "https" }.map { it.optString("uri") } +
+                local.map { "http://${it.optString("address")}:${it.optInt("port", 32400)}" }
+            for (uri in candidates.filter { it.isNotBlank() }.distinct()) {
+                val ok = runCatching { http("$uri/identity", token = serverToken) }
+                    .onFailure { Log.w(TAG, "server not reached at ${uri.substringBefore("://")}://…:${uri.substringAfterLast(':')}: ${it.javaClass.simpleName}") }
+                    .isSuccess
+                if (ok) {
                     best = Triple(uri, r.optString("name", "Plex"), serverToken)
                     break
                 }
