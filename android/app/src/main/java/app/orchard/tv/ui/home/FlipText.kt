@@ -29,6 +29,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.sp
 import app.orchard.tv.settings.ClockStyle
 import app.orchard.tv.settings.AerialSettings
 import app.orchard.tv.ui.theme.LocalReducedMotion
@@ -61,7 +62,10 @@ fun FlipText(text: String, style: TextStyle, modifier: Modifier = Modifier, card
     val still = LocalReducedMotion.current
     // Tabular figures: every digit the same width, so a turning digit never nudges its neighbours.
     // On cards the text loses its shadow: the card is what stands out from the wallpaper.
-    val cellStyle = remember(style, onCards) { style.copy(fontFeatureSettings = "tnum", shadow = if (onCards) null else style.shadow) }
+    // Each card holds its glyph whole: the clock's tight tracking would push glyphs past their card's edge.
+    val cellStyle = remember(style, onCards) {
+        style.copy(fontFeatureSettings = "tnum", shadow = if (onCards) null else style.shadow, letterSpacing = if (onCards) 0.sp else style.letterSpacing)
+    }
     // The longest the text has been, so a cell keeps its key when "12:59" becomes "1:00".
     val longest = remember { IntArray(1) }
     longest[0] = max(longest[0], text.length)
@@ -214,9 +218,9 @@ private fun steps(from: Char, to: Char): List<Char> {
 private val CardTop = Color(0xF2242427)
 private val CardBottom = Color(0xF2141416)
 // A card's size follows the text's: in ems, so the screensaver's smaller clock has smaller cards.
-private const val CardPadH = 0.06f
-private const val CardPadV = 0.09f
-private const val CardGap = 0.02f
+private const val CardPadH = 0.08f
+private const val CardPadV = 0.11f
+private const val CardGap = 0.025f
 private const val CardCorner = 0.07f
 private const val SplitLine = 0.014f
 

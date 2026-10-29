@@ -632,6 +632,7 @@ fun ShelfClock(
         // as the fade ended (the owner, Xiaomi MiTV-MFTR0).
         compositingStrategy = CompositingStrategy.ModulateAlpha
     }
+    val cardsOn = AerialSettings.clockStyle == app.orchard.tv.settings.ClockStyle.Cards
     Column(modifier, horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start) {
         // On a TV set to Chinese, the Chinese calendar's date follows, as on the iPhone's lock screen.
         val lunar = if (Locale.getDefault().language == "zh") Lunar.text(now.toLocalDate()) else null
@@ -647,7 +648,8 @@ fun ShelfClock(
             timeText(now),
             style = Type.Clock.copy(shadow = shadow),
             cards = true,
-            modifier = Modifier.padding(top = 16.dp)
+            // Fork: cards reach past the digits, so the date and weather stand further off.
+            modifier = Modifier.padding(top = if (cardsOn) 26.dp else 16.dp)
                 .toSaverClock(toSaver, Type.Clock.fontSize, 0.dp, drift)
                 .capBox(Type.Clock.fontSize),
         )
@@ -655,7 +657,7 @@ fun ShelfClock(
             val place = Weather.place?.takeIf { it.length <= 12 }
             val range = if (w.high != null && w.low != null) stringResource(R.string.weather_high_low, w.highDegrees!!, w.lowDegrees!!) else null
             val detail = listOfNotNull(place, stringResource(conditionName(w.kind)), range).joinToString(" · ")
-            Row(aside.padding(top = 18.dp).capBox(Type.ClockDetail.fontSize), verticalAlignment = Alignment.CenterVertically) {
+            Row(aside.padding(top = if (cardsOn) 28.dp else 18.dp).capBox(Type.ClockDetail.fontSize), verticalAlignment = Alignment.CenterVertically) {
                 GlyphIcon(glyphFor(w), Color.White, 18.dp, Modifier.padding(end = 7.dp))
                 BasicText(
                     buildAnnotatedString {
