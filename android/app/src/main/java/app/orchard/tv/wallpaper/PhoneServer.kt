@@ -406,7 +406,8 @@ class PhoneServer private constructor(private val context: Context, private val 
     private fun text(status: Response.Status, msg: String) = newFixedLengthResponse(status, "text/plain; charset=utf-8", msg)
 
     companion object {
-        const val PORT = 8790
+        // Fork: 8791, so the fork and upstream Aerial can be installed side by side (only one app can hold a port).
+        const val PORT = 8791
         private const val TAG = "AerialPhone"
         /** Enough for a batch of phone photos at full size. */
         private const val MAX_UPLOAD = 200L * 1024 * 1024

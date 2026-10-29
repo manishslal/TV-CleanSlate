@@ -14,6 +14,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -349,12 +351,12 @@ fun WallpaperSheet(
                             Choices(
                                 R.string.fk_plex_videos, null, note,
                                 listOf<Pair<String, Any>>(none) + Plex.sections.filter { it.type == "movie" || it.type == "show" }.map { it.key to it.title },
-                                Plex.videoSection, Plex::chooseVideoSection,
+                                Plex.videoSection, Plex::chooseVideoSection, scrolls = true,
                             )
                             Choices(
                                 R.string.fk_plex_photos, null, note,
                                 listOf<Pair<String, Any>>(none) + Plex.sections.filter { it.type == "photo" }.map { it.key to it.title },
-                                Plex.photoSection, Plex::choosePhotoSection,
+                                Plex.photoSection, Plex::choosePhotoSection, scrolls = true,
                             )
                             SettingRow(R.string.fk_plex_unlink, null, note) {
                                 ActionChip(stringResource(R.string.fk_plex_unlink_action), Glyph.ChevronRight) { Plex.unlink() }
@@ -558,9 +560,12 @@ private fun <T> Choices(
     current: T,
     choose: (T) -> Unit,
     first: Boolean = false,
+    scrolls: Boolean = false,
 ) {
     SettingRow(label, hint, note, first) {
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        // Fork: a row with an open-ended list (Plex libraries) scrolls under focus instead of pushing the label out.
+        val fit = if (scrolls) Modifier.widthIn(max = 470.dp).horizontalScroll(rememberScrollState()).padding(horizontal = 4.dp) else Modifier
+        Row(fit, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             options.forEach { (value, text) ->
                 Chip(if (text is Int) stringResource(text) else text.toString(), on = current == value) { choose(value) }
             }

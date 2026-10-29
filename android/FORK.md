@@ -28,6 +28,7 @@ git merge upstream/main
 | 2026-10-28 | Dark tiles (default): white logos on dark glass; many-colored logos keep their colors without their plate; picture icons give up a light logo. Tile cache `ART` +103. |
 | 2026-10-28 | Plex: PIN link (plex.tv/link), local server discovery, video library → My Videos (direct play), photo library → My Photos (1080p copies, plex-*.jpg). Screensaver buffer raised to 48 MB. |
 | 2026-10-28 | Tech headlines over the screensaver (Google News Technology RSS): one at a time, bottom right, no glass. Place caption narrows to 460dp while it is on. |
+| 2026-10-28 | Plex finds the server by its HTTPS plex.direct address (cleartext to the LAN is blocked). Phone setup page on port 8791 so it can run beside upstream Aerial (8790). Plex library rows scroll instead of pushing the label out. |
 
 ## Planned
 - [ ] Final app name and icon; rename the strings that still say "Aerial" for the app (setup page, Home Guard)
