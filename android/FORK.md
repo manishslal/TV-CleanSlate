@@ -38,6 +38,7 @@ git merge upstream/main
 | 2026-10-29 | Dark: a glow in the focused app's brand color behind the grid (`TileArt.tint` from the icon; cache `ART` +109). Tiles rise into place in a diagonal wave. Screensaver row scrolls ("Styl" fix). Control Center footer and Home Guard say "Home". |
 | 2026-10-29 | Board clock: Cards are set as a departure board, in Barlow Condensed SemiBold (OFL, NOTICE.md) on cards of one width, warm-white ink, hinge pins, a split gap, smaller AM/PM cards; flaps fall and bounce. Date and weather as board lines. Optional flap sound (`res/raw/ui_flap.wav`, made for the fork). |
 | 2026-10-29 | Location chosen on the TV: Personalize → Weather → Change searches Open-Meteo's geocoder in the TV's language and lists each place with its region and country; Automatic goes back to the network's guess. |
+| 2026-10-29 | Headlines by topic: Tech (a Google News search for AI, open source, models, chips, startups and IPOs, games left out), AI, US, World, Business, Science, Sports, Gaming, Entertainment, Health; several at once, taking turns or shuffled. Each headline says its topic. |
 
 ## Planned
 - [ ] Final app name and icon; rename the strings that still say "Aerial" for the app (setup page, Home Guard)

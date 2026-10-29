@@ -7,6 +7,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.edit
+import app.orchard.tv.R
+import app.orchard.tv.settings.AerialSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -16,73 +18,122 @@ import org.json.JSONObject
 import org.xmlpull.v1.XmlPullParser
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 /**
- * Fork: technology headlines for the screensaver, from Google News' Technology feed (RSS, no key).
- * Read every 30 minutes at most; the last good list is kept for when the network is down. Only
- * stories from the last day are shown, newest first.
+ * Fork: what the screensaver's headlines are about, each one a Google News RSS feed (no key).
+ * Tech and AI are searches, not Google's Technology section, which is mostly games and gadgets:
+ * Tech asks for AI, open source, models, chips, startups and IPOs, with games left out.
+ */
+enum class NewsTopic(val key: String, val label: Int, private val section: String? = null, private val query: String? = null) {
+    Tech("tech", R.string.fk_news_tech, query = "(AI OR \"artificial intelligence\" OR \"open source\" OR \"AI model\" OR LLM OR OpenAI OR Anthropic OR Nvidia OR semiconductor OR startup OR IPO) -game -gaming -PlayStation -Xbox -Nintendo"),
+    Ai("ai", R.string.fk_news_ai, query = "(\"AI model\" OR LLM OR OpenAI OR Anthropic OR \"Google DeepMind\" OR \"open-source model\" OR \"generative AI\")"),
+    Us("us", R.string.fk_news_us, section = "NATION"),
+    World("world", R.string.fk_news_world, section = "WORLD"),
+    Business("business", R.string.fk_news_business, section = "BUSINESS"),
+    Science("science", R.string.fk_news_science, section = "SCIENCE"),
+    Sports("sports", R.string.fk_news_sports, section = "SPORTS"),
+    Gaming("gaming", R.string.fk_news_gaming, query = "(\"video game\" OR \"video games\" OR PlayStation OR Xbox OR Nintendo OR Steam)"),
+    Entertainment("entertainment", R.string.fk_news_entertainment, section = "ENTERTAINMENT"),
+    Health("health", R.string.fk_news_health, section = "HEALTH");
+
+    val feed: String get() = if (query != null) {
+        "https://news.google.com/rss/search?q=${URLEncoder.encode("$query when:1d", "UTF-8")}&hl=en-US&gl=US&ceid=US:en"
+    } else "https://news.google.com/rss/headlines/section/topic/$section?hl=en-US&gl=US&ceid=US:en"
+
+    companion object {
+        fun of(key: String) = entries.firstOrNull { it.key == key }
+    }
+}
+
+/**
+ * Fork: headlines for the screensaver, from the topics chosen in Personalize (AerialSettings.newsTopics).
+ * Each topic is read every 30 minutes at most; the last good list is kept for when the network is
+ * down. Only stories from the last day are shown: the topics take turns, newest first, or in a
+ * random order with Shuffle on.
  */
 object Headlines {
     private const val TAG = "AerialNews"
-    private const val FEED = "https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=en-US&gl=US&ceid=US:en"
     private const val EVERY_MS = 30 * 60_000L
     private const val MAX_AGE_MS = 24 * 3600_000L
     private const val KEEP = 8
 
-    data class Headline(val title: String, val source: String, val published: Long)
+    data class Headline(val title: String, val source: String, val published: Long, val topic: NewsTopic)
 
     private lateinit var app: Context
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val prefs by lazy { app.getSharedPreferences("headlines", Context.MODE_PRIVATE) }
     @Volatile private var lastAttempt = 0L
 
+    /** Every topic's last good read, newest first within each. */
+    @Volatile private var read: Map<NewsTopic, List<Headline>> = emptyMap()
+
     var items by mutableStateOf<List<Headline>>(emptyList()); private set
 
     fun init(context: Context) {
         if (::app.isInitialized) return
         app = context.applicationContext
-        items = fresh(parseCache(prefs.getString("items", null)))
+        read = NewsTopic.entries.associateWith { parseCache(prefs.getString("items_${it.key}", null), it) }
+        rebuild()
     }
 
-    /** Reads the feed when the last read is older than 30 minutes. Safe to call often. */
+    /** The topics or the order changed in Personalize: shown again at once, and read if not read lately. */
+    fun topicsChanged() {
+        if (!::app.isInitialized) return
+        rebuild()
+        lastAttempt = 0L
+        refreshIfStale()
+    }
+
+    /** Reads each chosen topic not read in the last 30 minutes. Safe to call often. */
     fun refreshIfStale() {
         if (!::app.isInitialized) return
         val now = System.currentTimeMillis()
-        if (now - lastAttempt < 5 * 60_000L || now - prefs.getLong("read_at", 0) < EVERY_MS) {
-            items = fresh(items)
+        val due = AerialSettings.newsTopics.filter { now - prefs.getLong("read_at_${it.key}", 0) >= EVERY_MS }
+        if (due.isEmpty() || now - lastAttempt < 5 * 60_000L) {
+            rebuild()
             return
         }
         lastAttempt = now
         scope.launch {
-            runCatching {
-                val read = parse(fetch())
-                if (read.isNotEmpty()) {
+            for (topic in due) runCatching {
+                val list = parse(fetch(topic.feed), topic)
+                if (list.isNotEmpty()) {
                     prefs.edit {
-                        putLong("read_at", System.currentTimeMillis())
-                        putString("items", JSONArray(read.map { JSONObject().put("t", it.title).put("s", it.source).put("p", it.published) }).toString())
+                        putLong("read_at_${topic.key}", System.currentTimeMillis())
+                        putString("items_${topic.key}", JSONArray(list.map { JSONObject().put("t", it.title).put("s", it.source).put("p", it.published) }).toString())
                     }
-                    items = fresh(read)
+                    read = read + (topic to list)
                 }
-            }.onFailure { Log.w(TAG, "headlines not read", it) }
+            }.onFailure { Log.w(TAG, "${topic.key} headlines not read", it) }
+            rebuild()
         }
     }
 
-    private fun fresh(list: List<Headline>): List<Headline> {
+    /** The list shown: the chosen topics' fresh stories, taking turns newest first, or shuffled. */
+    private fun rebuild() {
         val now = System.currentTimeMillis()
-        return list.filter { now - it.published in 0..MAX_AGE_MS }.sortedByDescending { it.published }.take(KEEP)
+        val lists = AerialSettings.newsTopics.map { topic ->
+            read[topic].orEmpty().filter { now - it.published in 0..MAX_AGE_MS }.sortedByDescending { it.published }.take(KEEP)
+        }
+        val out = ArrayList<Headline>()
+        for (i in 0 until (lists.maxOfOrNull { it.size } ?: 0)) lists.forEach { l -> l.getOrNull(i)?.let(out::add) }
+        // Rebuilt only when what is shown would change, so a shuffled list keeps its order between reads.
+        val next = if (AerialSettings.newsShuffle) out.shuffled() else out
+        if (next.toSet() != items.toSet() || (!AerialSettings.newsShuffle && next != items)) items = next
     }
 
-    private fun fetch(): String {
-        val c = (URL(FEED).openConnection() as HttpURLConnection).apply { connectTimeout = 6_000; readTimeout = 10_000 }
+    private fun fetch(feed: String): String {
+        val c = (URL(feed).openConnection() as HttpURLConnection).apply { connectTimeout = 6_000; readTimeout = 10_000 }
         try {
             if (c.responseCode !in 200..299) throw java.io.IOException("HTTP ${c.responseCode}")
             return c.inputStream.bufferedReader().use { it.readText() }
         } finally { c.disconnect() }
     }
 
-    private fun parse(xml: String): List<Headline> {
+    private fun parse(xml: String, topic: NewsTopic): List<Headline> {
         val out = ArrayList<Headline>()
         val dates = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US)
         val p = Xml.newPullParser().apply { setInput(xml.reader()) }
@@ -103,17 +154,17 @@ object Headlines {
                         val published = runCatching { dates.parse(date.trim())?.time }.getOrNull() ?: continue
                         // Google News titles end in " - Source"; the source is shown on its own line.
                         val clean = title.trim().let { t -> if (source.isNotBlank() && t.endsWith(" - ${source.trim()}")) t.removeSuffix(" - ${source.trim()}") else t }
-                        if (clean.isNotBlank()) out += Headline(clean, source.trim(), published)
+                        if (clean.isNotBlank()) out += Headline(clean, source.trim(), published, topic)
                     }
                     tag = ""
                 }
             }
         }
-        return out
+        return out.sortedByDescending { it.published }.take(KEEP * 2)
     }
 
-    private fun parseCache(json: String?): List<Headline> = runCatching {
+    private fun parseCache(json: String?, topic: NewsTopic): List<Headline> = runCatching {
         val a = JSONArray(json ?: return emptyList())
-        (0 until a.length()).map { a.getJSONObject(it).let { o -> Headline(o.getString("t"), o.getString("s"), o.getLong("p")) } }
+        (0 until a.length()).map { a.getJSONObject(it).let { o -> Headline(o.getString("t"), o.getString("s"), o.getLong("p"), topic) } }
     }.getOrDefault(emptyList())
 }

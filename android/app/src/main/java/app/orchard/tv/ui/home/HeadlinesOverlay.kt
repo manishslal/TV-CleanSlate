@@ -45,7 +45,7 @@ private const val FIRST_AFTER_MS = 20_000L
 private const val EACH_MS = 20_000L
 
 /**
- * Fork: one technology headline at a time, bottom right, opposite the place name. No card and no
+ * Fork: one headline at a time (from the chosen topics, news/Headlines.kt), bottom right, opposite the place name. No card and no
  * blur (a blur over moving video is a full-screen draw every frame): white text on a neutral shade,
  * like the place name. It appears 20 s in, changes every 20 s, and does not move between changes
  * apart from the screensaver's slow drift against burn-in.
@@ -86,7 +86,8 @@ internal fun HeadlinesOverlay(now: LocalDateTime) {
                 )
                 Spacer(Modifier.height(6.dp))
                 BasicText(
-                    listOf(h.source, age(h.published)).filter { it.isNotBlank() }.joinToString(" · "),
+                    // Fork: the topic first, so a mixed list says what each story is about.
+                    listOf(stringResource(h.topic.label).uppercase(), h.source, age(h.published)).filter { it.isNotBlank() }.joinToString(" · "),
                     maxLines = 1,
                     style = Type.Callout.copy(color = Color.White.copy(alpha = 0.62f), shadow = TextShade),
                 )

@@ -72,6 +72,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import app.orchard.tv.R
 import app.orchard.tv.settings.AerialSettings
+import app.orchard.tv.news.NewsTopic
 import app.orchard.tv.settings.Appearance
 import app.orchard.tv.settings.ClockStyle
 import app.orchard.tv.settings.FocusStyle
@@ -333,6 +334,24 @@ fun WallpaperSheet(
                             listOf(true to R.string.st_on, false to R.string.st_off),
                             AerialSettings.headlines, AerialSettings::chooseHeadlines,
                         )
+                        // Fork: what the headlines are about, several at once, and their order.
+                        if (AerialSettings.headlines) {
+                            SettingRow(R.string.fk_news_topics, stringResource(R.string.fk_news_topics_hint), note) {
+                                Row(
+                                    Modifier.widthIn(max = 470.dp).horizontalScroll(rememberScrollState()).padding(horizontal = 4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                ) {
+                                    NewsTopic.entries.forEach { topic ->
+                                        Chip(stringResource(topic.label), on = topic in AerialSettings.newsTopics) { AerialSettings.toggleNewsTopic(topic) }
+                                    }
+                                }
+                            }
+                            Choices(
+                                R.string.fk_news_order, stringResource(R.string.fk_news_order_hint), note,
+                                listOf(false to R.string.fk_news_by_topic, true to R.string.fk_news_shuffle),
+                                AerialSettings.newsShuffle, AerialSettings::chooseNewsShuffle,
+                            )
+                        }
                         Choices(
                             R.string.ss_back, stringResource(R.string.ss_back_choice_hint), note,
                             listOf(true to R.string.ss_back_on, false to R.string.ss_back_off),

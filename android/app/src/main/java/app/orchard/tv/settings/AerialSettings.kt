@@ -1,5 +1,7 @@
 package app.orchard.tv.settings
 
+import app.orchard.tv.news.Headlines
+import app.orchard.tv.news.NewsTopic
 import app.orchard.tv.apps.TileArtFactory
 import android.content.Context
 import androidx.compose.runtime.getValue
@@ -184,6 +186,12 @@ object AerialSettings {
     /** Fork: a card of technology headlines over the screensaver. */
     var headlines by mutableStateOf(true); private set
 
+    /** Fork: what the headlines are about; at least one. Tech alone unless chosen otherwise. */
+    var newsTopics by mutableStateOf<Set<NewsTopic>>(setOf(NewsTopic.Tech)); private set
+
+    /** Fork: headlines in a random order instead of taking turns by topic, newest first. */
+    var newsShuffle by mutableStateOf(false); private set
+
     /**
      * The time over Aerial's aerial and photo screensavers (issue #240: TCL's firmware puts its own
      * clock over the system screensaver). The clock screensaver is the clock and keeps it.
@@ -269,6 +277,9 @@ object AerialSettings {
         darkTiles = appearance.darkNow()
         TileArtFactory.dark = darkTiles
         headlines = prefs.getBoolean("fork_headlines", true)
+        newsTopics = prefs.getString("fork_news_topics", null)?.split(',')?.mapNotNull { NewsTopic.of(it) }?.toSet()?.takeIf { it.isNotEmpty() }
+            ?: setOf(NewsTopic.Tech)
+        newsShuffle = prefs.getBoolean("fork_news_shuffle", false)
         screensaverClock = prefs.getBoolean("screensaver_clock", true)
         // Before 1.28 this was on or off; on meant whichever sounds Aerial played.
         uiSounds = UiSounds.of(prefs.getString("ui_sounds_kind", null)) ?: when {
@@ -405,6 +416,21 @@ object AerialSettings {
         if (dark == darkTiles) return
         darkTiles = dark
         TileArtFactory.dark = dark
+    }
+
+    /** Fork: a topic on or off; the last one stays on. */
+    fun toggleNewsTopic(topic: NewsTopic) {
+        val next = if (topic in newsTopics) newsTopics - topic else newsTopics + topic
+        if (next.isEmpty()) return
+        newsTopics = next
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString("fork_news_topics", next.joinToString(",") { it.key }) }
+        Headlines.topicsChanged()
+    }
+
+    fun chooseNewsShuffle(on: Boolean) {
+        newsShuffle = on
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("fork_news_shuffle", on) }
+        Headlines.topicsChanged()
     }
 
     fun chooseHeadlines(on: Boolean) {
