@@ -1,5 +1,6 @@
 package app.orchard.tv
 
+import app.orchard.tv.system.MemoryTrim
 import android.app.Application
 import android.os.Build
 import android.os.SystemClock
@@ -159,6 +160,15 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { snapshotFlow { CustomIcons.version }.drop(1).collect { reload() } }
         // Fork: the tile style is part of every tile's stamp, so a change redraws them all.
         viewModelScope.launch { snapshotFlow { AerialSettings.darkTiles }.drop(1).collect { reload() } }
+        // Fork: once the screensaver or a panel has closed (and faded out), what it held goes back.
+        viewModelScope.launch {
+            snapshotFlow { screensaverVisible || overlay != Overlay.None }.drop(1).collect { busy ->
+                if (!busy) {
+                    kotlinx.coroutines.delay(1_500)
+                    if (!screensaverVisible && overlay == Overlay.None) MemoryTrim.release("screensaver or panel")
+                }
+            }
+        }
         // Fork: Appearance's Auto turns dark at sunset and light at sunrise; checked once a minute.
         viewModelScope.launch {
             while (true) {

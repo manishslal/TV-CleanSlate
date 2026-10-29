@@ -40,6 +40,7 @@ git merge upstream/main
 | 2026-10-29 | Location chosen on the TV: Personalize → Weather → Change searches Open-Meteo's geocoder in the TV's language and lists each place with its region and country; Automatic goes back to the network's guess. |
 | 2026-10-29 | Headlines by topic: Tech (a Google News search for AI, open source, models, chips, startups and IPOs, games left out), AI, US, World, Business, Science, Sports, Gaming, Entertainment, Health; several at once, taking turns or shuffled. Each headline says its topic. |
 | 2026-10-29 | Liquid Glass (Android 13+, AGSL, `ui/components/LiquidLens.kt`): panels bend the sharp wallpaper at their rim, part red and blue there, and catch light; frosted inside so type reads. Personalize → Glass: Liquid / Frosted; frosted elsewhere and in Lite. |
+| 2026-10-29 | Memory: after the screensaver or a panel closes, Home gives back what they held (`system/MemoryTrim.kt`; `--ez trim true` from a computer). The screensaver's video buffer is 32 MB with Plex videos, the player's default otherwise (was 48 MB). |
 
 ## Planned
 - [ ] Final app name and icon; rename the strings that still say "Aerial" for the app (setup page, Home Guard)

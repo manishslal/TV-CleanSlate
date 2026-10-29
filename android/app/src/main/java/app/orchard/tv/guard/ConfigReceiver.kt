@@ -38,6 +38,13 @@ class ConfigReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         // ... --es export_tiles <name>   (every tile on one picture; see TileSheet)
         // Runs on past the broadcast's time limit; Home keeps the process alive. Look for the file.
+        // Fork: ... --ez trim true   (gives back what closed screens held, as Home does after them; for measuring)
+        if (intent.getBooleanExtra("trim", false)) {
+            val level = intent.getIntExtra("trim_level", -1)
+            if (level >= 0) app.orchard.tv.system.MemoryTrim.release("a request", level) else app.orchard.tv.system.MemoryTrim.release("a request")
+            resultData = "trimmed"
+            return
+        }
         intent.getStringExtra("export_tiles")?.takeIf { Regex("^[A-Za-z0-9_-]+$").matches(it) }?.let { name ->
             val app = context.applicationContext
             @OptIn(kotlinx.coroutines.DelicateCoroutinesApi::class)

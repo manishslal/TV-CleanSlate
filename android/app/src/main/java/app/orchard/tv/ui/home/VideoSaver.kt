@@ -56,9 +56,11 @@ private fun LocalFilms(films: List<ScreensaverVideo>?, steps: SharedFlow<Int>, o
         // under the dream, and would hold the decoder this film needs (TCL MT5879).
         LiveFilm.onHome?.letDecoderGo()
         ExoPlayer.Builder(context).setLoadControl(
-            // Fork: room for 4K streamed from Plex over Wi-Fi, not only local files.
-            DefaultLoadControl.Builder().setTargetBufferBytes(48 * 1024 * 1024)
-                .setBufferDurationsMs(10_000, 30_000, 1_500, 3_000).build(),
+            // Fork: room for 4K streamed from Plex over Wi-Fi; files on the TV need no more than the
+            // default, and 48 MB held for them was memory a 2 GB TV went short of.
+            if (Plex.videos.isNotEmpty()) DefaultLoadControl.Builder().setTargetBufferBytes(32 * 1024 * 1024)
+                .setBufferDurationsMs(10_000, 30_000, 1_500, 3_000).build()
+            else DefaultLoadControl(),
         ).build().apply {
             volume = 0f
             trackSelectionParameters = trackSelectionParameters.buildUpon().setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, true).build()
