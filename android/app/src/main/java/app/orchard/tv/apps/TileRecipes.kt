@@ -42,6 +42,8 @@ object TileRecipes {
         "com.ucmobile.yun.tv" to TileRecipe(keepColors = true), // UC网盘: a shaded logo that turns to mist in white
         "com.zmg.ott" to TileRecipe(top = 0xFF3FA9FF.toInt(), bottom = 0xFF1747E0.toInt(), white = true), // Z视介: its white Z, without the facets behind it
         "com.sohuott.tv.vod" to TileRecipe(keepColors = true), // 云视听悦厅TV: a shaded logo that turns to mist in white
+        // Fork: checked on the onn. 4K Streaming Box. Its icon is a white screen on a grey rounded square.
+        "io.freemytv" to TileRecipe(top = 0xFFFFA48A.toInt(), bottom = 0xFFB08CFF.toInt(), white = true), // Free My TV: the white screen alone
     )
 
     fun of(pkg: String): TileRecipe? = byPackage[pkg]

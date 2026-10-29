@@ -224,6 +224,11 @@ fun WallpaperSheet(
                             AerialSettings.clock12, AerialSettings::chooseClock12,
                         )
                         Choices(
+                            R.string.fk_flip, stringResource(R.string.fk_flip_hint), note,
+                            listOf(true to R.string.fk_flip_on, false to R.string.fk_flip_off),
+                            AerialSettings.flipClock, AerialSettings::chooseFlipClock,
+                        )
+                        Choices(
                             R.string.wp_weather, null, note,
                             listOf(true to R.string.st_on, false to R.string.st_off),
                             AerialSettings.showWeather, AerialSettings::chooseShowWeather,

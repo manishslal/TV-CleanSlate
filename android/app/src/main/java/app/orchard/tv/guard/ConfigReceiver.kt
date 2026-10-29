@@ -3,6 +3,7 @@ package app.orchard.tv.guard
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import app.orchard.tv.apps.TileArtFactory
 import app.orchard.tv.apps.TileSheet
 import app.orchard.tv.settings.AerialSettings
 import app.orchard.tv.system.DeviceProfile
@@ -41,7 +42,14 @@ class ConfigReceiver : BroadcastReceiver() {
             val app = context.applicationContext
             @OptIn(kotlinx.coroutines.DelicateCoroutinesApi::class)
             kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Default) {
-                runCatching { TileSheet.export(app, name) }.onFailure { android.util.Log.e("AerialTiles", "Export failed", it) }
+                // Fork: ... --es tiles_look dark|light draws the sheet in that appearance, whatever Home shows.
+                val chosen = TileArtFactory.dark
+                intent.getStringExtra("tiles_look")?.let { TileArtFactory.dark = it == "dark" }
+                try {
+                    runCatching { TileSheet.export(app, name) }.onFailure { android.util.Log.e("AerialTiles", "Export failed", it) }
+                } finally {
+                    TileArtFactory.dark = chosen
+                }
             }
             resultData = "exporting $name"
             return

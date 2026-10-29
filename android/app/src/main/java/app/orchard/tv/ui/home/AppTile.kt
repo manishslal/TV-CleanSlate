@@ -3,7 +3,6 @@ package app.orchard.tv.ui.home
 import android.graphics.BitmapShader
 import android.graphics.BlurMaskFilter
 import android.graphics.ComposeShader
-import android.graphics.LinearGradient
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.PorterDuff
@@ -128,10 +127,11 @@ private val Corner = 12.dp
 private const val RIM_AT_REST = 0.07f
 
 // High-contrast focus frame: a white ring this far outside the tile, as tvOS draws it.
-private val RingGap = 5.dp
+// Fork: a little closer and thinner, so it reads as one line.
+private val RingGap = 4.dp
 private val ShadowBlur = 14.dp
 private val ShadowDrop = 12.dp
-private val RingWidth = 3.dp
+private val RingWidth = 2.5.dp
 
 /**
  * One app on the home screen, drawn the tvOS way: it lifts toward you when focused, a soft light
@@ -318,7 +318,7 @@ fun AppTile(
                         // A held key repeats: the wall is told once, on the first press, or the tile
                         // stayed pushed and leaning and the limit sound ran on while the key was held.
                         if (down && !focusManager.moveFocus(dir) && e.nativeKeyEvent.repeatCount == 0) {
-                            Sounds.limit()
+                            // Fork: the grid's edge is silent; the tile's nudge alone says there is no more.
                             when (dir) {
                                 FocusDirection.Left -> nudge(-1f, 0f)
                                 FocusDirection.Right -> nudge(1f, 0f)
@@ -683,8 +683,7 @@ private class RingFrame(val image: ImageBitmap, val ext: Float)
 private fun ringFrame(w: Int, h: Int, corner: Float, gap: Float, width: Float, dp: Float): RingFrame =
     baked(listOf("ring", w, h, corner, gap, width, dp)) {
         val out = gap + width / 2
-        val halo = gap + width + dp
-        val ext = ceil(halo + dp + 1f)
+        val ext = ceil(gap + width + 4 * dp)
         val bitmap = createBitmap(w + 2 * ext.toInt(), h + 2 * ext.toInt())
         val canvas = android.graphics.Canvas(bitmap).apply { translate(ext, ext) }
         // Each line follows the tile's continuous corner, centred [d] outside its edge.
@@ -694,19 +693,11 @@ private fun ringFrame(w: Int, h: Int, corner: Float, gap: Float, width: Float, d
             strokeWidth = lineWidth
             this.color = color.toArgb()
         }
-        // A faint dark edge outside the white one keeps the frame visible over bright sky or snow.
-        canvas.drawPath(around(halo), line(2 * dp, Color.Black.copy(alpha = 0.3f)))
-        // Lit like the glass it sits on: brightest where light falls from the top left and at the
-        // far corner, still near white everywhere so it reads from across the room.
-        canvas.drawPath(around(out), line(width, Color.White).apply {
-            shader = LinearGradient(
-                -out, -out, w + out, h + out,
-                intArrayOf(Color.White.toArgb(), Color.White.copy(alpha = 0.78f).toArgb(), Color.White.copy(alpha = 0.94f).toArgb()),
-                floatArrayOf(0f, 0.45f, 1f),
-                Shader.TileMode.CLAMP,
-            )
+        // Fork: one clean line. A soft shadow under it, not a hard dark edge, keeps it visible over
+        // bright sky or snow; the gradient and the inner line of light read as a double frame.
+        canvas.drawPath(around(out), line(width + dp, Color.Black.copy(alpha = 0.28f)).apply {
+            maskFilter = BlurMaskFilter(2.5f * dp, BlurMaskFilter.Blur.NORMAL)
         })
-        // A thin inner line of light, the glass's thickness.
-        canvas.drawPath(around(out - width / 2 - 0.75f * dp), line(dp, Color.White.copy(alpha = 0.35f)))
+        canvas.drawPath(around(out), line(width, Color.White.copy(alpha = 0.96f)))
         RingFrame(bitmap.frozen().asImageBitmap(), ext)
     }

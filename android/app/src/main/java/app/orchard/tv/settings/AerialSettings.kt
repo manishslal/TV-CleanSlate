@@ -131,6 +131,9 @@ object AerialSettings {
     /** Fork: "5:39 PM" (the default) or "17:39", whatever Android's own 12/24-hour setting says. */
     var clock12 by mutableStateOf(true); private set
 
+    /** Fork: the time turns over like a departure board's flaps (the default), or just changes. */
+    var flipClock by mutableStateOf(true); private set
+
     /** Fork: tiles as dark glass with a white logo (the default) instead of each app's colors. */
     var darkTiles by mutableStateOf(true); private set
 
@@ -214,6 +217,7 @@ object AerialSettings {
         showWeather = prefs.getBoolean("show_weather", true)
         fahrenheit = prefs.getBoolean("fork_fahrenheit", true)
         clock12 = prefs.getBoolean("fork_clock12", true)
+        flipClock = prefs.getBoolean("fork_flip_clock", true)
         darkTiles = prefs.getBoolean("fork_dark_tiles", true)
         TileArtFactory.dark = darkTiles
         headlines = prefs.getBoolean("fork_headlines", true)
@@ -329,6 +333,11 @@ object AerialSettings {
     fun chooseClock12(on: Boolean) {
         clock12 = on
         app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("fork_clock12", on) }
+    }
+
+    fun chooseFlipClock(on: Boolean) {
+        flipClock = on
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("fork_flip_clock", on) }
     }
 
     fun chooseDarkTiles(on: Boolean) {

@@ -118,6 +118,10 @@ object TileArtFactory {
      */
     @Volatile var dark = true
     private const val DARK_TOP = 0xFF2C2C2E.toInt()
+
+    // Fork: logo lightness (0 to 1) below which a dark tile drops it ([knockOutDark]), and above which it keeps it whole.
+    private const val DARK_GONE = 0.14f
+    private const val DARK_KEPT = 0.3f
     private const val DARK_BOTTOM = 0xFF141416.toInt()
 
     /** How large a logo is, as the side of the square of the same area, in tile heights. */
@@ -332,6 +336,13 @@ object TileArtFactory {
         if (max(logo.width(), logo.height()) > 0.7f) return null
         val bg = icon.background
         val bgPx = bg?.let { raster(it, 32) }
+        // Fork: on dark tiles the background layer is the icon's plate whatever it shows (Peacock's
+        // black, HBO Max's navy, Free My TV's grey), so it is left out and the logo alone goes on.
+        if (dark && bgPx != null && !isFlat(bgPx)) {
+            val (fore, at) = placeLogo(icon.foreground, ::visible) ?: return null
+            if (!multiColor(fore, at, 0)) whiten(fore)
+            return finish(colorTile(GRAPHITE_BOTTOM, GRAPHITE_BOTTOM), fore)
+        }
         if (bgPx != null && !isFlat(bgPx)) return null
         val (fore, at) = placeLogo(icon.foreground, ::visible) ?: return null
         val color = bgPx?.get(bgPx.size / 2)?.takeIf { it ushr 24 > 200 } ?: GRAPHITE_BOTTOM
@@ -497,9 +508,11 @@ object TileArtFactory {
         val (top, bottom) = if (recipe?.top != null && recipe.bottom != null) recipe.top to recipe.bottom else tileFromTint(tint)
         // A white logo on a picture (Z视介's Z on blue facets): a recipe can ask for just the logo,
         // taken by its lightness, on the recipe's colors.
-        if (recipe?.white == true && (square || edgeColors(icon) != null)) {
+        // Fork: on dark tiles any icon a recipe marks white gives up its plate (Free My TV's grey square with its sheen).
+        if (recipe?.white == true && (square || dark || edgeColors(icon) != null)) {
             placeLogo(icon, ::lightPart)?.let { (fore, _) ->
-                keepLight(fore)
+                // Fork: on a dark tile only the near-white glyph stays; a grey plate's sheen came through as a ghost square.
+                keepLight(fore, from = if (dark) 200 else 115)
                 return finish(colorTile(top, bottom), fore)
             }
         }
@@ -530,6 +543,12 @@ object TileArtFactory {
         if (recipe?.top == null) edgeColors(icon)?.let { (edgeTop0, edgeBottom0) ->
             val (edgeTop, edgeBottom) = if (dark) DARK_TOP to DARK_BOTTOM else edgeTop0 to edgeBottom0
             placeLogo(icon, ::visible, scale = 1.25f)?.let { (fore, at) ->
+                // Fork: on dark tiles the icon's own plate is cut away, not faded at its edges, so
+                // the logo sits on the tile with no square behind it (Peacock, HBO Max, Free My TV).
+                if (dark) {
+                    cutOut(fore, at, edgeTop0, edgeBottom0, white = false)
+                    return finish(colorTile(edgeTop0, edgeBottom0), fore)
+                }
                 val side = at.width()
                 feather(fore, RectF(at.left + side * 0.18f, at.top + side * 0.18f, at.right - side * 0.18f, at.bottom - side * 0.18f), margin = 0f, fade = side * 0.18f)
                 val back = layer {
@@ -663,13 +682,13 @@ object TileArtFactory {
     private fun lightPart(px: IntArray, n: Int): RectF? = bounds(px, n) { _, c -> solid(c) && minOf((c shr 16) and 0xFF, (c shr 8) and 0xFF, c and 0xFF) > 200 }
 
     /** Only the near-white pixels of a logo layer kept, in white, their edges eased. */
-    private fun keepLight(layer: Bitmap) {
+    private fun keepLight(layer: Bitmap, from: Int = 115) {
         val px = IntArray(W * H).also { layer.getPixels(it, 0, W, 0, 0, W, H) }
         for (i in px.indices) {
             val c = px[i]
             val low = minOf((c shr 16) and 0xFF, (c shr 8) and 0xFF, c and 0xFF)
             // From about 45% to 90% white on a dark picture; a narrower ramp stepped the curves (#640).
-            val keep = ((low - 115) / 115f).coerceIn(0f, 1f)
+            val keep = ((low - from) / (230f - from)).coerceIn(0f, 1f)
             px[i] = (((c ushr 24) * keep).roundToInt() shl 24) or 0xFFFFFF
         }
         layer.setPixels(px, 0, W, 0, 0, W, H)
@@ -815,7 +834,26 @@ object TileArtFactory {
     }
 
     /** [back] and [fore] are both tile-sized; the foreground is trimmed here. */
+    /** Makes [layer]'s near-black pixels clear, fully below [DARK_GONE] lightness, fading in up to [DARK_KEPT]. */
+    private fun knockOutDark(layer: Bitmap) {
+        val px = IntArray(W * H).also { layer.getPixels(it, 0, W, 0, 0, W, H) }
+        for (i in px.indices) {
+            val c = px[i]
+            val a = c ushr 24
+            if (a == 0) continue
+            val l = (0.2126f * ((c shr 16) and 0xFF) + 0.7152f * ((c shr 8) and 0xFF) + 0.0722f * (c and 0xFF)) / 255f
+            if (l >= DARK_KEPT) continue
+            val keep = ((l - DARK_GONE) / (DARK_KEPT - DARK_GONE)).coerceIn(0f, 1f)
+            px[i] = ((a * keep).toInt() shl 24) or (c and 0xFFFFFF)
+        }
+        layer.setPixels(px, 0, W, 0, 0, W, H)
+    }
+
     private fun finish(back: Bitmap, fore: Bitmap?): TileArt {
+        // Fork: on a dark tile, what is near black in a logo is the icon's own dark plate (Peacock's
+        // square, HBO Max's navy) and would show as a box: it goes, fading out by its lightness.
+        // A dark part of a logo would not read on the dark tile anyway.
+        if (dark && fore != null) knockOutDark(fore)
         val composed = if (fore == null) back else back.copy(Bitmap.Config.ARGB_8888, true).also {
             Canvas(it).drawBitmap(fore, 0f, 0f, null)
         }

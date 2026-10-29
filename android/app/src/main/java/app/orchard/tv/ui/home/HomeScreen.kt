@@ -51,6 +51,7 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
@@ -101,6 +102,9 @@ import kotlin.math.roundToInt
 
 /** The plate's distance from the bottom edge with no second row peeking: as from the sides. */
 private val PlateMarginBottom = 30.dp
+
+/** Fork: how far the shade behind the pill reaches down into the scrolled grid. */
+private val TopShade = 120.dp
 
 /**
  * The gap between the two rows on one plate in two-row mode, with no names under them there: the
@@ -822,6 +826,22 @@ fun HomeScreen(
                     }
                 }
             }
+        }
+
+        // Fork: once the grid scrolls under the pill, a shade comes down from the top edge, so the
+        // pill's time and glyphs never sit straight on a tile of their own color. Gone on the shelf.
+        Canvas(Modifier.fillMaxWidth().height(TopShade)) {
+            val a = ((scroll.value - collapsePx * 0.5f) / (collapsePx * 0.6f)).coerceIn(0f, 1f) * (1f - toSaver.value)
+            if (a < 0.01f) return@Canvas
+            val top = if (AerialSettings.darkTiles) 0.82f else 0.72f
+            drawRect(
+                Brush.verticalGradient(
+                    0f to Color.Black.copy(alpha = top),
+                    0.5f to Color.Black.copy(alpha = top * 0.6f),
+                    1f to Color.Transparent,
+                ),
+                alpha = a,
+            )
         }
 
         homeShot?.let { shot -> Canvas(Modifier.fillMaxSize()) { drawImage(shot) } }

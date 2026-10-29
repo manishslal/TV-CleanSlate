@@ -30,6 +30,9 @@ git merge upstream/main
 | 2026-10-28 | Tech headlines over the screensaver (Google News Technology RSS): one at a time, bottom right, no glass. Place caption narrows to 460dp while it is on. |
 | 2026-10-28 | Plex finds the server by its HTTPS plex.direct address (cleartext to the LAN is blocked). Phone setup page on port 8791 so it can run beside upstream Aerial (8790). Plex library rows scroll instead of pushing the label out. |
 | 2026-10-28 | `tools/install.sh` / `restore.sh`: `PKG=io.manish.home` installs or removes the fork; component names use the class namespace (`NS=app.orchard.tv`) instead of the package. |
+| 2026-10-28 | Appearance (was "App tiles"): Dark also dims the wallpaper 30%. In Dark, adaptive icons drop their background layer, picture icons lose their plate, near-black in a logo goes; Free My TV recipe. Tile cache `ART` +108. `export_tiles` takes `tiles_look dark|light`. |
+| 2026-10-28 | Flip clock (default on, Personalize → Clock): the Home clocks turn digit by digit like a departure board (`ui/home/FlipText.kt`); plain under reduced motion. |
+| 2026-10-28 | A dark shade behind the status pill once the grid scrolls; a single-line focus frame with a soft shadow (no dark edge or inner line); no sound at the grid's edge. |
 
 ## Planned
 - [ ] Final app name and icon; rename the strings that still say "Aerial" for the app (setup page, Home Guard)

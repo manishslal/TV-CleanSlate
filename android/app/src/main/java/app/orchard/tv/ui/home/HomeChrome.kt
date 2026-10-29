@@ -264,8 +264,17 @@ fun HomeBackground(
             if (a > 0.01f) drawDrawingIn(saverImage, saverPush(), a)
         }
         Plate(frosted ?: backdrop, filmGlass, plate, scroll, collapse, cover, filmStopped, toSaver, lift)
+        // Fork: Dark appearance dims the wallpaper, as iOS does in dark mode, so the dark tiles and
+        // white type sit on a deeper room. The screensaver it hands over to is shown undimmed.
+        val dim by animateFloatAsState(if (AerialSettings.darkTiles) DARK_DIM else 0f, tween(400, easing = Motion.EaseInOut), label = "appearance-dim")
+        if (dim > 0.005f) Canvas(Modifier.fillMaxSize()) {
+            drawRect(Color.Black, alpha = dim * (1f - toSaver()))
+        }
     }
 }
+
+/** How much Dark appearance darkens the wallpaper. */
+private const val DARK_DIM = 0.3f
 
 /**
  * The sharp picture and the grid's glass. A new wallpaper fades in over the old, which stays whole
@@ -634,7 +643,7 @@ fun ShelfClock(
             style = Type.ClockDate.copy(shadow = shadow),
             modifier = aside.capBox(Type.ClockDate.fontSize),
         )
-        BasicText(
+        FlipText(
             timeText(now),
             style = Type.Clock.copy(shadow = shadow),
             modifier = Modifier.padding(top = 16.dp)
@@ -739,7 +748,7 @@ fun CornerClock(now: LocalDateTime, modifier: Modifier = Modifier, toSaver: () -
     val dim = Color.White.copy(alpha = 0.92f)
     val shadow = Shadow(Color.Black.copy(alpha = 0.5f), blurRadius = 8f)
     Row(modifier.height(34.dp), verticalAlignment = Alignment.CenterVertically) {
-        BasicText(
+        FlipText(
             timeText(now), style = Type.SmallClock.copy(fontSize = Type.Title.fontSize, color = dim, shadow = shadow),
             modifier = Modifier.toSaverClock(toSaver, Type.Title.fontSize, Type.Title.fontSize.value.dp * CAP_TOP, drift),
         )
@@ -822,7 +831,7 @@ fun StatusPill(
             GlyphIcon(glyph, fg, 17.dp, level = network.level)
             if (network.vpn) VpnBadge(fg)
             if (showTime) {
-                BasicText(timeText(now), style = Type.Headline.copy(color = fg))
+                FlipText(timeText(now), style = Type.Headline.copy(color = fg))
             }
             GlyphIcon(Glyph.Switches, fg, 17.dp)
         }
