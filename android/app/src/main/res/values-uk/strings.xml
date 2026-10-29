@@ -281,6 +281,10 @@
     <string name="fk_news_order_hint">За темами: теми по черзі, спершу нові. Вперемішку: все змішано.</string>
     <string name="fk_news_by_topic">За темами</string>
     <string name="fk_news_shuffle">Вперемішку</string>
+    <string name="fk_glass">Скло</string>
+    <string name="fk_glass_liquid">Рідке</string>
+    <string name="fk_glass_frosted">Матове</string>
+    <string name="fk_glass_hint">Рідке заломлює шпалери на краях панелей і ловить світло, як Liquid Glass. Матове — попереднє скло.</string>
     <string name="fk_headlines">Заголовки</string>
     <string name="fk_headlines_hint">Головні новини Google News на вибрані теми поверх заставки.</string>
     <string name="fk_plex">Plex</string>

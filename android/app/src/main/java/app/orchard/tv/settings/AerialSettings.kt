@@ -177,6 +177,9 @@ object AerialSettings {
     /** Fork: Dark, Light, or Auto (dark from sunset to sunrise where the weather is). */
     var appearance by mutableStateOf(Appearance.Dark); private set
 
+    /** Fork: panels as Liquid Glass (Android 13 and later), or the frosted glass of before. */
+    var liquidGlass by mutableStateOf(true); private set
+
     /**
      * Fork: whether Home is dark right now, from [appearance]: tiles as dark glass with the logo
      * alone, the wallpaper dimmed. Auto changes it at sunset and sunrise ([followSun]).
@@ -270,6 +273,7 @@ object AerialSettings {
         fahrenheit = prefs.getBoolean("fork_fahrenheit", true)
         clock12 = prefs.getBoolean("fork_clock12", true)
         flapSound = prefs.getBoolean("fork_flap_sound", false)
+        liquidGlass = prefs.getBoolean("fork_liquid_glass", true)
         // Before Cards it was a switch: off meant Plain.
         clockStyle = ClockStyle.of(prefs.getString("fork_clock_style", null) ?: if (prefs.getBoolean("fork_flip_clock", true)) null else ClockStyle.Plain.key)
         // Before Auto it was a switch.
@@ -392,6 +396,11 @@ object AerialSettings {
     fun chooseClock12(on: Boolean) {
         clock12 = on
         app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("fork_clock12", on) }
+    }
+
+    fun chooseLiquidGlass(on: Boolean) {
+        liquidGlass = on
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("fork_liquid_glass", on) }
     }
 
     fun chooseFlapSound(on: Boolean) {

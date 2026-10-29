@@ -289,6 +289,10 @@
     <string name="fk_news_order_hint">By topic takes turns between your topics, newest first. Shuffle mixes them.</string>
     <string name="fk_news_by_topic">By topic</string>
     <string name="fk_news_shuffle">Shuffle</string>
+    <string name="fk_glass">Glass</string>
+    <string name="fk_glass_liquid">Liquid</string>
+    <string name="fk_glass_frosted">Frosted</string>
+    <string name="fk_glass_hint">Liquid bends the wallpaper at the edges of panels and catches the light, as Liquid Glass does. Frosted is the plain glass of before.</string>
     <string name="fk_headlines">Headlines</string>
     <string name="fk_headlines_hint">Top stories from Google News on the topics you choose, over the screensaver.</string>
     <string name="fk_plex">Plex</string>

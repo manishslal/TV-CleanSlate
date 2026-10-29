@@ -281,6 +281,10 @@
     <string name="fk_news_order_hint">По темам: темы по очереди, сначала новые. Вперемешку: всё смешано.</string>
     <string name="fk_news_by_topic">По темам</string>
     <string name="fk_news_shuffle">Вперемешку</string>
+    <string name="fk_glass">Стекло</string>
+    <string name="fk_glass_liquid">Жидкое</string>
+    <string name="fk_glass_frosted">Матовое</string>
+    <string name="fk_glass_hint">Жидкое преломляет обои по краям панелей и ловит свет, как Liquid Glass. Матовое — прежнее стекло.</string>
     <string name="fk_headlines">Заголовки</string>
     <string name="fk_headlines_hint">Главные новости Google News по выбранным темам поверх заставки.</string>
     <string name="fk_plex">Plex</string>

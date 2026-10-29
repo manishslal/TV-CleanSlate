@@ -78,8 +78,9 @@ fun Modifier.liquidGlass(corner: Dp, bottomCorners: Boolean = true): Modifier = 
         }
         .clip(shape)
         .drawWithCache {
-            // Read here so the glass is made again when the appearance changes.
+            // Read here so the glass is made again when the appearance or the glass changes.
             val tint = tint
+            val lens = AerialSettings.liquidGlass && LiquidLens.supported
             val shader = frost?.let { BitmapShader(it.asAndroidBitmap(), Shader.TileMode.CLAMP, Shader.TileMode.CLAMP) }
             val underShader = under?.let { BitmapShader(it.asAndroidBitmap(), Shader.TileMode.CLAMP, Shader.TileMode.CLAMP) }
             val radius = corner.toPx()
@@ -128,10 +129,13 @@ fun Modifier.liquidGlass(corner: Dp, bottomCorners: Boolean = true): Modifier = 
                                 place(underShader, under)
                                 drawRect(ShaderBrush(underShader), colorFilter = tint, blendMode = BlendMode.SrcIn)
                                 drawRect(brush, alpha = t, colorFilter = tint, blendMode = BlendMode.SrcAtop)
+                            } else if (lens) {
+                                // Fork: Liquid Glass: the lens shader brings its own rim and light.
+                                drawRect(ShaderBrush(LiquidLens.shader(frost, Wallpapers.backdrop, IntSize(w, h), radius, !bottomCorners, at, root, light, density)), blendMode = BlendMode.SrcIn)
                             } else {
                                 drawRect(brush, colorFilter = tint, blendMode = BlendMode.SrcIn)
                             }
-                            drawGlassEdge(size, radius, bottomCorners)
+                            if (!lens || t < 1f) drawGlassEdge(size, radius, bottomCorners)
                         }
                     }
                     drawLayer(glass)

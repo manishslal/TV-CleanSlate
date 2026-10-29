@@ -281,6 +281,10 @@
     <string name="fk_news_order_hint">Тақырып бойынша: тақырыптар кезекпен, жаңалары алдымен. Аралас: бәрі араласады.</string>
     <string name="fk_news_by_topic">Тақырып бойынша</string>
     <string name="fk_news_shuffle">Аралас</string>
+    <string name="fk_glass">Шыны</string>
+    <string name="fk_glass_liquid">Сұйық</string>
+    <string name="fk_glass_frosted">Күңгірт</string>
+    <string name="fk_glass_hint">Сұйық панель шеттерінде тұсқағазды сындырып, жарықты шағылыстырады, Liquid Glass сияқты. Күңгірт — бұрынғы шыны.</string>
     <string name="fk_headlines">Тақырыптар жаңалықтары</string>
     <string name="fk_headlines_hint">Таңдалған тақырыптар бойынша Google News басты жаңалықтары заставка үстінде.</string>
     <string name="fk_plex">Plex</string>

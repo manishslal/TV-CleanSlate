@@ -203,6 +203,12 @@ fun WallpaperSheet(
                             listOf(Appearance.Dark to R.string.fk_tiles_dark, Appearance.Light to R.string.fk_tiles_color, Appearance.Auto to R.string.fk_tiles_auto),
                             AerialSettings.appearance, AerialSettings::chooseAppearance,
                         )
+                        // Fork: only where the TV can draw Liquid Glass (Android 13 and later).
+                        if (app.orchard.tv.ui.components.LiquidLens.supported && !AerialSettings.lite) Choices(
+                            R.string.fk_glass, stringResource(R.string.fk_glass_hint), note,
+                            listOf(true to R.string.fk_glass_liquid, false to R.string.fk_glass_frosted),
+                            AerialSettings.liquidGlass, AerialSettings::chooseLiquidGlass,
+                        )
                         Choices(
                             R.string.st_names, stringResource(R.string.st_names_hint), note,
                             listOf(false to R.string.st_names_focused, true to R.string.st_names_all),

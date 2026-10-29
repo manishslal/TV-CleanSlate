@@ -288,6 +288,10 @@
     <string name="fk_news_order_hint">按主题：各主题轮流，最新的在前。随机：混在一起。</string>
     <string name="fk_news_by_topic">按主题</string>
     <string name="fk_news_shuffle">随机</string>
+    <string name="fk_glass">玻璃</string>
+    <string name="fk_glass_liquid">液态</string>
+    <string name="fk_glass_frosted">磨砂</string>
+    <string name="fk_glass_hint">液态：面板边缘折射壁纸并反光，像 Liquid Glass。磨砂：以前的普通玻璃。</string>
     <string name="fk_headlines">新闻标题</string>
     <string name="fk_headlines_hint">屏保上显示 Google 新闻中你所选主题的头条。</string>
     <string name="fk_plex">Plex</string>
