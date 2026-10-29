@@ -24,7 +24,11 @@ import kotlin.math.roundToInt
 enum class WeatherKind { Clear, PartlyCloudy, Cloudy, Fog, Rain, Snow, Thunder }
 
 /** [high] and [low] are today's, shown under the large clock; null in a reading saved by an older version. */
-data class WeatherNow(val celsius: Int, val kind: WeatherKind, val day: Boolean, val high: Int? = null, val low: Int? = null) {
+/** Fork: [sunrise] and [sunset] are today's, local time, for Appearance's Auto; null in an older reading. */
+data class WeatherNow(
+    val celsius: Int, val kind: WeatherKind, val day: Boolean, val high: Int? = null, val low: Int? = null,
+    val sunrise: java.time.LocalTime? = null, val sunset: java.time.LocalTime? = null,
+) {
     /** Fork: the reading in the owner's unit (AerialSettings.fahrenheit). */
     val degrees: Int get() = shown(celsius)
     val highDegrees: Int? get() = high?.let(::shown)
@@ -81,6 +85,8 @@ object Weather {
                 prefs.getInt("celsius", 0), kind, prefs.getBoolean("day", true),
                 high = prefs.getInt("high", NONE).takeIf { it != NONE },
                 low = prefs.getInt("low", NONE).takeIf { it != NONE },
+                sunrise = prefs.getString("sunrise", null)?.let { runCatching { java.time.LocalTime.parse(it) }.getOrNull() },
+                sunset = prefs.getString("sunset", null)?.let { runCatching { java.time.LocalTime.parse(it) }.getOrNull() },
             )
         }
     }
@@ -112,6 +118,8 @@ object Weather {
                     putBoolean("day", reading.day)
                     putInt("high", reading.high ?: NONE)
                     putInt("low", reading.low ?: NONE)
+                    putString("sunrise", reading.sunrise?.toString())
+                    putString("sunset", reading.sunset?.toString())
                 }
             }
         }
@@ -141,7 +149,7 @@ object Weather {
                 putLong("located_at", System.currentTimeMillis())
             }
         }
-        val json = JSONObject(get("https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current=temperature_2m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=auto"))
+        val json = JSONObject(get("https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current=temperature_2m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&forecast_days=1&timezone=auto"))
         val current = json.getJSONObject("current")
         val daily = json.optJSONObject("daily")
         fun today(key: String) = daily?.optJSONArray(key)?.optDouble(0)?.takeIf { !it.isNaN() }?.roundToInt()
@@ -151,8 +159,14 @@ object Weather {
             day = current.optInt("is_day", 1) == 1,
             high = today("temperature_2m_max"),
             low = today("temperature_2m_min"),
+            sunrise = sunTime(daily, "sunrise"),
+            sunset = sunTime(daily, "sunset"),
         )
     }
+
+    /** Fork: today's [key] ("sunrise" or "sunset") from Open-Meteo's daily block, "2026-10-29T06:41" in the place's time. */
+    private fun sunTime(daily: JSONObject?, key: String): java.time.LocalTime? =
+        daily?.optJSONArray(key)?.optString(0)?.let { runCatching { java.time.LocalDateTime.parse(it).toLocalTime() }.getOrNull() }
 
     /**
      * A place chosen before 1.29 came from Open-Meteo's geocoder, which took 安庆 for a village in

@@ -248,13 +248,15 @@
     <string name="fk_units_f">°F</string>
     <string name="fk_units_c">°C</string>
     <string name="fk_tiles">Оформление</string>
-    <string name="fk_tiles_hint">Тёмное: обои темнее, приложения на тёмном стекле. Светлое: у каждого приложения свои цвета.</string>
+    <string name="fk_tiles_hint">Тёмное: обои темнее, приложения на тёмном стекле. Светлое: у каждого приложения свои цвета. Авто: тёмное с заката до восхода.</string>
     <string name="fk_tiles_dark">Тёмное</string>
+    <string name="fk_tiles_auto">Авто</string>
     <string name="fk_tiles_color">Светлое</string>
     <string name="fk_flip">Часы</string>
+    <string name="fk_flip_cards">Карточки</string>
     <string name="fk_flip_on">Перекидные</string>
     <string name="fk_flip_off">Обычные</string>
-    <string name="fk_flip_hint">Цифры перелистываются по одной, как на табло вылетов.</string>
+    <string name="fk_flip_hint">Цифры перелистываются по одной, как на табло вылетов; «Карточки» — каждая цифра на своей пластине.</string>
     <string name="fk_headlines">Новости технологий</string>
     <string name="fk_headlines_hint">Главные новости технологий из Google News поверх заставки.</string>
     <string name="fk_plex">Plex</string>

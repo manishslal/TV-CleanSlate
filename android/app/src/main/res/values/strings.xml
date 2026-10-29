@@ -256,13 +256,15 @@
     <string name="fk_units_f">°F</string>
     <string name="fk_units_c">°C</string>
     <string name="fk_tiles">Appearance</string>
-    <string name="fk_tiles_hint">Dark dims the wallpaper and puts each app on dark glass. Light keeps each app in its own colors.</string>
+    <string name="fk_tiles_hint">Dark dims the wallpaper and puts each app on dark glass. Light keeps each app in its own colors. Auto turns dark at sunset and light at sunrise.</string>
     <string name="fk_tiles_dark">Dark</string>
+    <string name="fk_tiles_auto">Auto</string>
     <string name="fk_tiles_color">Light</string>
     <string name="fk_flip">Clock</string>
+    <string name="fk_flip_cards">Cards</string>
     <string name="fk_flip_on">Flip</string>
     <string name="fk_flip_off">Plain</string>
-    <string name="fk_flip_hint">The time turns over digit by digit, like a departure board.</string>
+    <string name="fk_flip_hint">The time turns over digit by digit, like a departure board; Cards puts each digit on its own flap.</string>
     <string name="fk_headlines">Tech headlines</string>
     <string name="fk_headlines_hint">Top technology stories from Google News, over the screensaver.</string>
     <string name="fk_plex">Plex</string>

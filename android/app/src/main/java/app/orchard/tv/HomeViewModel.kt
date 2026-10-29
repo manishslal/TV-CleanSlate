@@ -159,6 +159,13 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { snapshotFlow { CustomIcons.version }.drop(1).collect { reload() } }
         // Fork: the tile style is part of every tile's stamp, so a change redraws them all.
         viewModelScope.launch { snapshotFlow { AerialSettings.darkTiles }.drop(1).collect { reload() } }
+        // Fork: Appearance's Auto turns dark at sunset and light at sunrise; checked once a minute.
+        viewModelScope.launch {
+            while (true) {
+                AerialSettings.followSun()
+                kotlinx.coroutines.delay(60_000)
+            }
+        }
         // Library pictures that arrived, or the library turned on or off.
         viewModelScope.launch { snapshotFlow { IconLibrary.version }.drop(1).collect { reload() } }
         offerSetupOnce()

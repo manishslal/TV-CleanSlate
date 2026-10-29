@@ -646,6 +646,7 @@ fun ShelfClock(
         FlipText(
             timeText(now),
             style = Type.Clock.copy(shadow = shadow),
+            cards = true,
             modifier = Modifier.padding(top = 16.dp)
                 .toSaverClock(toSaver, Type.Clock.fontSize, 0.dp, drift)
                 .capBox(Type.Clock.fontSize),

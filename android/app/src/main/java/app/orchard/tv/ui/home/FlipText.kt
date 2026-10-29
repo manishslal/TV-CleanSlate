@@ -10,12 +10,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
@@ -23,6 +28,8 @@ import androidx.compose.ui.layout.FirstBaseline
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.platform.LocalDensity
+import app.orchard.tv.settings.ClockStyle
 import app.orchard.tv.settings.AerialSettings
 import app.orchard.tv.ui.theme.LocalReducedMotion
 import kotlinx.coroutines.delay
@@ -34,18 +41,27 @@ import kotlin.math.roundToInt
  * its top half down over the new one, and the new bottom half swings up into place; a digit that
  * has further to go (back from sleep, the hour rolling over) runs through the ones between, fast.
  *
- * Nothing moves at rest: a character animates only when it changes. With the flip clock off, or
+ * With [cards] (and Clock set to Cards) each letter and digit sits on its own dark flap card with
+ * the board's split across it, and the card's halves turn with it.
+ *
+ * Nothing moves at rest: a character animates only when it changes. With Clock set to Plain, or
  * the TV's animations removed, the text simply changes. Characters line up from the right, so
  * "12:59 PM" to "1:00 PM" turns the hour's last digit and lets the first one fall away.
  */
 @Composable
-fun FlipText(text: String, style: TextStyle, modifier: Modifier = Modifier) {
-    if (!AerialSettings.flipClock || LocalReducedMotion.current) {
+fun FlipText(text: String, style: TextStyle, modifier: Modifier = Modifier, cards: Boolean = false) {
+    val clockStyle = AerialSettings.clockStyle
+    if (clockStyle == ClockStyle.Plain) {
         BasicText(text, style = style, modifier = modifier)
         return
     }
+    // Cards only where the clock is large enough to carry them; the small clocks just turn.
+    val onCards = cards && clockStyle == ClockStyle.Cards
+    // Removed animations: the cards stay, and a changed character is simply there.
+    val still = LocalReducedMotion.current
     // Tabular figures: every digit the same width, so a turning digit never nudges its neighbours.
-    val cellStyle = remember(style) { style.copy(fontFeatureSettings = "tnum") }
+    // On cards the text loses its shadow: the card is what stands out from the wallpaper.
+    val cellStyle = remember(style, onCards) { style.copy(fontFeatureSettings = "tnum", shadow = if (onCards) null else style.shadow) }
     // The longest the text has been, so a cell keeps its key when "12:59" becomes "1:00".
     val longest = remember { IntArray(1) }
     longest[0] = max(longest[0], text.length)
@@ -60,19 +76,22 @@ fun FlipText(text: String, style: TextStyle, modifier: Modifier = Modifier) {
     }) {
         padded.forEachIndexed { i, c ->
             // Keyed from the right, so a cell keeps its place as the string grows or shrinks.
-            key(padded.length - i) { Flap(c, cellStyle, delayMs = i * STAGGER_MS, leading = i < padded.length - text.length) }
+            key(padded.length - i) {
+                Flap(c, cellStyle, delayMs = i * STAGGER_MS, leading = i < padded.length - text.length, card = onCards && c.isLetterOrDigit(), cardSpace = onCards, still = still)
+            }
         }
     }
 }
 
 @Composable
-private fun Flap(target: Char, style: TextStyle, delayMs: Int, leading: Boolean) {
+private fun Flap(target: Char, style: TextStyle, delayMs: Int, leading: Boolean, card: Boolean, cardSpace: Boolean, still: Boolean) {
     // [shown] is the character at rest; [next] the one the current flap turns to.
     var shown by remember { mutableStateOf(target) }
     var next by remember { mutableStateOf(target) }
     val turn = remember { Animatable(1f) }
     LaunchedEffect(target) {
         if (target == shown && turn.value >= 1f) return@LaunchedEffect
+        if (still) { shown = target; next = target; return@LaunchedEffect }
         val steps = steps(shown, target)
         delay(delayMs.toLong())
         for (c in steps) {
@@ -84,57 +103,95 @@ private fun Flap(target: Char, style: TextStyle, delayMs: Int, leading: Boolean)
     }
     // A leading space at rest takes no room: the hour's first digit falls away rather than leave a gap.
     if (leading && shown == ' ' && next == ' ') return
-    var split by remember { mutableFloatStateOf(0f) }
+    var lines by remember { mutableStateOf(Lines(0f, 0f)) }
     val p = turn.value
     val flipping = shown != next
-    Box {
-        // Behind: the new top half, coming up as the old one falls away from it, and the old
-        // bottom half until the new one lands over it. Without the cards of a real board the halves
-        // behind fade, so two characters never show at once.
-        Half(next, style, top = true, split = { split }, alpha = if (flipping) p * 2f else 1f) { split = it }
-        Half(shown, style, top = false, split = { split }, alpha = if (flipping) 2f - p * 2f else 1f)
+    // Each card stands a little apart from the next, as a board's flaps do; the colon and the
+    // space between the time and AM/PM sit between cards, without one.
+    val em = with(LocalDensity.current) { style.fontSize.toDp() }
+    val gap = if (cardSpace) Modifier.padding(horizontal = em * CardGap) else Modifier
+    Box(gap) {
+        // On cards the flap hides what is behind it, as on a real board. Bare, the halves behind
+        // fade, so two characters never show at once.
+        val fade = flipping && !card
+        // Behind: the new top half, and the old bottom half until the new one lands over it.
+        Half(next, style, top = true, card = card, lines = { lines }, alpha = if (fade) p * 2f else 1f) { lines = it }
+        Half(shown, style, top = false, card = card, lines = { lines }, alpha = if (fade) 2f - p * 2f else 1f)
         if (flipping && p < 0.5f) {
-            // The old top half falls toward the viewer, folding on the split.
-            Half(shown, style, top = true, split = { split }, alpha = 1f - p * 1.2f, rotation = -180f * p)
+            // The old top half falls toward the viewer, folding on the split, darkening as it turns away from the light.
+            Half(shown, style, top = true, card = card, lines = { lines }, alpha = if (card) 1f else 1f - p * 1.2f, rotation = -180f * p, shade = p * 2f)
         } else if (flipping) {
-            // The new bottom half swings up from flat into place.
-            Half(next, style, top = false, split = { split }, alpha = 0.4f + 0.6f * (p - 0.5f) * 2f, rotation = 90f * (1f - (p - 0.5f) * 2f))
+            // The new bottom half swings up from flat into place, lit as it comes up.
+            Half(next, style, top = false, card = card, lines = { lines }, alpha = if (card) 1f else 0.4f + 0.6f * (p - 0.5f) * 2f, rotation = 90f * (1f - (p - 0.5f) * 2f), shade = 1f - (p - 0.5f) * 2f)
         }
     }
 }
 
-/** The top or bottom half of [c], cut at the middle of a digit's height, turned [rotation] degrees about that line. */
+/** Where a character's digit sits in its box: [baseline], and [split], the middle of a digit's height. */
+@androidx.compose.runtime.Immutable
+private class Lines(val baseline: Float, val split: Float)
+
+/**
+ * The top or bottom half of [c], cut at the middle of a digit's height, turned [rotation] degrees
+ * about that line; on a [card] when asked, its half of the card turning with it. [shade] (0 to 1)
+ * darkens a half turned away from the light.
+ */
 @Composable
 private fun Half(
     c: Char,
     style: TextStyle,
     top: Boolean,
-    split: () -> Float,
+    card: Boolean,
+    lines: () -> Lines,
     alpha: Float,
     rotation: Float = 0f,
-    onSplit: ((Float) -> Unit)? = null,
+    shade: Float = 0f,
+    onLines: ((Lines) -> Unit)? = null,
 ) {
     BasicText(
         c.toString(),
         style = style,
         onTextLayout = { layout ->
-            // The middle of a digit: half the cap height above the baseline.
-            onSplit?.invoke(layout.firstBaseline - with(layout.layoutInput.density) { style.fontSize.toPx() } * CAP_HALF)
+            val size = with(layout.layoutInput.density) { style.fontSize.toPx() }
+            onLines?.invoke(Lines(layout.firstBaseline, layout.firstBaseline - size * CAP_HALF))
         },
         modifier = Modifier
             .graphicsLayer {
                 this.alpha = alpha.coerceIn(0f, 1f)
                 rotationX = rotation
                 cameraDistance = 10f * density
-                val s = split()
+                val s = lines().split
                 transformOrigin = TransformOrigin(0.5f, if (size.height > 0f) s / size.height else 0.5f)
             }
+            .then(if (card) Modifier.padding(horizontal = with(LocalDensity.current) { style.fontSize.toDp() } * CardPadH) else Modifier)
             .drawWithContent {
-                val s = split()
+                val l = lines()
+                val s = l.split
                 // Generous on the other three sides: the text's shadow reaches past its box.
                 val far = size.height * 2f
-                if (top) clipRect(-far, -far, size.width + far, s) { this@drawWithContent.drawContent() }
-                else clipRect(-far, s, size.width + far, size.height + far) { this@drawWithContent.drawContent() }
+                val (y0, y1) = if (top) -far to s else s to size.height + far
+                clipRect(-far, y0, size.width + far, y1) {
+                    if (card) {
+                        val em = style.fontSize.toPx()
+                        val padV = em * CardPadV
+                        val cap = (l.baseline - s) * 2f
+                        val cardTop = l.baseline - cap - padV
+                        val cardBottom = l.baseline + padV
+                        val r = CornerRadius(em * CardCorner)
+                        drawRoundRect(
+                            Brush.verticalGradient(0f to CardTop, 1f to CardBottom, startY = cardTop, endY = cardBottom),
+                            topLeft = Offset(0f, cardTop), size = Size(size.width, cardBottom - cardTop), cornerRadius = r,
+                        )
+                        this@drawWithContent.drawContent()
+                        // The board's split: a dark hairline where the two halves meet.
+                        val h = (em * SplitLine).coerceAtLeast(1f)
+                        drawRect(Color.Black.copy(alpha = 0.55f), Offset(0f, s - h / 2f), Size(size.width, h))
+                        if (shade > 0.01f) drawRoundRect(
+                            Color.Black.copy(alpha = 0.45f * shade),
+                            topLeft = Offset(0f, cardTop), size = Size(size.width, cardBottom - cardTop), cornerRadius = r,
+                        )
+                    } else this@drawWithContent.drawContent()
+                }
             },
     )
 }
@@ -152,6 +209,16 @@ private fun steps(from: Char, to: Char): List<Char> {
     }
     return out
 }
+
+/** A card's dark face, lit a touch from above. */
+private val CardTop = Color(0xF2242427)
+private val CardBottom = Color(0xF2141416)
+// A card's size follows the text's: in ems, so the screensaver's smaller clock has smaller cards.
+private const val CardPadH = 0.06f
+private const val CardPadV = 0.09f
+private const val CardGap = 0.02f
+private const val CardCorner = 0.07f
+private const val SplitLine = 0.014f
 
 /** Half Inter's cap height, in ems: where a digit's middle is. */
 private const val CAP_HALF = 0.727f / 2f

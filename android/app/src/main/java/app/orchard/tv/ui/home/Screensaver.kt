@@ -249,9 +249,11 @@ private fun Labels(caption: String?, now: LocalDateTime, showTime: Boolean = tru
             drawRect(Brush.verticalGradient(0f to Color.Black.copy(alpha = 0.3f), 0.18f to Color.Transparent))
         }
         val drift = saverDrift(now)
-        if (time > 0f && AerialSettings.screensaverClock) BasicText(
+        // Fork: the screensaver's time turns on cards as Home's large clock does.
+        if (time > 0f && AerialSettings.screensaverClock) FlipText(
             timeText(now),
             style = SaverClockStyle,
+            cards = true,
             modifier = Modifier
                 .align(if (AerialSettings.clockRight) Alignment.TopEnd else Alignment.TopStart)
                 .padding(top = SaverClockTop, start = SaverClockSide, end = SaverClockSide)

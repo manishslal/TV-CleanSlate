@@ -22,6 +22,41 @@ import java.security.MessageDigest
  * that motion is what the eye follows. With the D-pad remotes these TVs ship with, the icon only
  * grows, and owners lost track of it. High Contrast adds a white frame and is the default here.
  */
+/** Fork: how Home looks ([AerialSettings.appearance]). */
+enum class Appearance(val key: String) {
+    Dark("dark"), Light("light"), Auto("auto");
+
+    /** Dark right now: Auto is dark from today's sunset to sunrise, else at night by the weather, else from 7 pm to 7 am. */
+    fun darkNow(): Boolean = when (this) {
+        Dark -> true
+        Light -> false
+        Auto -> {
+            val w = app.orchard.tv.weather.Weather.now
+            val t = java.time.LocalTime.now()
+            val rise = w?.sunrise
+            val set = w?.sunset
+            when {
+                rise != null && set != null -> t < rise || t >= set
+                w != null -> !w.day
+                else -> t.hour < 7 || t.hour >= 19
+            }
+        }
+    }
+
+    companion object {
+        fun of(key: String?) = entries.firstOrNull { it.key == key } ?: Dark
+    }
+}
+
+/** Fork: how the Home and screensaver clocks change ([AerialSettings.clockStyle]). */
+enum class ClockStyle(val key: String) {
+    Cards("cards"), Flip("flip"), Plain("plain");
+
+    companion object {
+        fun of(key: String?) = entries.firstOrNull { it.key == key } ?: Cards
+    }
+}
+
 enum class FocusStyle(val key: String) {
     Standard("standard"), HighContrast("high_contrast");
 
@@ -131,10 +166,16 @@ object AerialSettings {
     /** Fork: "5:39 PM" (the default) or "17:39", whatever Android's own 12/24-hour setting says. */
     var clock12 by mutableStateOf(true); private set
 
-    /** Fork: the time turns over like a departure board's flaps (the default), or just changes. */
-    var flipClock by mutableStateOf(true); private set
+    /** Fork: the time on a departure board's flap cards (the default), turning bare, or just changing. */
+    var clockStyle by mutableStateOf(ClockStyle.Cards); private set
 
-    /** Fork: tiles as dark glass with a white logo (the default) instead of each app's colors. */
+    /** Fork: Dark, Light, or Auto (dark from sunset to sunrise where the weather is). */
+    var appearance by mutableStateOf(Appearance.Dark); private set
+
+    /**
+     * Fork: whether Home is dark right now, from [appearance]: tiles as dark glass with the logo
+     * alone, the wallpaper dimmed. Auto changes it at sunset and sunrise ([followSun]).
+     */
     var darkTiles by mutableStateOf(true); private set
 
     /** Fork: a card of technology headlines over the screensaver. */
@@ -217,8 +258,11 @@ object AerialSettings {
         showWeather = prefs.getBoolean("show_weather", true)
         fahrenheit = prefs.getBoolean("fork_fahrenheit", true)
         clock12 = prefs.getBoolean("fork_clock12", true)
-        flipClock = prefs.getBoolean("fork_flip_clock", true)
-        darkTiles = prefs.getBoolean("fork_dark_tiles", true)
+        // Before Cards it was a switch: off meant Plain.
+        clockStyle = ClockStyle.of(prefs.getString("fork_clock_style", null) ?: if (prefs.getBoolean("fork_flip_clock", true)) null else ClockStyle.Plain.key)
+        // Before Auto it was a switch.
+        appearance = Appearance.of(prefs.getString("fork_appearance", null) ?: if (prefs.getBoolean("fork_dark_tiles", true)) null else Appearance.Light.key)
+        darkTiles = appearance.darkNow()
         TileArtFactory.dark = darkTiles
         headlines = prefs.getBoolean("fork_headlines", true)
         screensaverClock = prefs.getBoolean("screensaver_clock", true)
@@ -335,15 +379,23 @@ object AerialSettings {
         app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("fork_clock12", on) }
     }
 
-    fun chooseFlipClock(on: Boolean) {
-        flipClock = on
-        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("fork_flip_clock", on) }
+    fun chooseClockStyle(style: ClockStyle) {
+        clockStyle = style
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString("fork_clock_style", style.key) }
     }
 
-    fun chooseDarkTiles(on: Boolean) {
-        darkTiles = on
-        TileArtFactory.dark = on
-        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("fork_dark_tiles", on) }
+    fun chooseAppearance(choice: Appearance) {
+        appearance = choice
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString("fork_appearance", choice.key) }
+        followSun()
+    }
+
+    /** Fork: brings [darkTiles] in line with [appearance] now: on a choice, and each minute for Auto. */
+    fun followSun() {
+        val dark = appearance.darkNow()
+        if (dark == darkTiles) return
+        darkTiles = dark
+        TileArtFactory.dark = dark
     }
 
     fun chooseHeadlines(on: Boolean) {

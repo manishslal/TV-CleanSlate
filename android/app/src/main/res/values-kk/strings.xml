@@ -248,13 +248,15 @@
     <string name="fk_units_f">°F</string>
     <string name="fk_units_c">°C</string>
     <string name="fk_tiles">Көрініс</string>
-    <string name="fk_tiles_hint">Қараңғы: тұсқағаз күңгірт, қолданбалар қараңғы шыныда. Ашық: әр қолданба өз түсінде.</string>
+    <string name="fk_tiles_hint">Қараңғы: тұсқағаз күңгірт, қолданбалар қараңғы шыныда. Ашық: әр қолданба өз түсінде. Авто: күн батқаннан шыққанға дейін қараңғы.</string>
     <string name="fk_tiles_dark">Қараңғы</string>
+    <string name="fk_tiles_auto">Авто</string>
     <string name="fk_tiles_color">Ашық</string>
     <string name="fk_flip">Сағат</string>
+    <string name="fk_flip_cards">Карталар</string>
     <string name="fk_flip_on">Аударылмалы</string>
     <string name="fk_flip_off">Қарапайым</string>
-    <string name="fk_flip_hint">Сандар ұшу кестесіндегідей бір-бірлеп аударылады.</string>
+    <string name="fk_flip_hint">Сандар ұшу кестесіндегідей бір-бірлеп аударылады; «Карталар» — әр сан өз тақтайшасында.</string>
     <string name="fk_headlines">Технология жаңалықтары</string>
     <string name="fk_headlines_hint">Google News технология жаңалықтары заставка үстінде.</string>
     <string name="fk_plex">Plex</string>

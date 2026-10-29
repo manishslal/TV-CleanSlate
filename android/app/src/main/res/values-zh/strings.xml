@@ -255,13 +255,15 @@
     <string name="fk_units_f">°F</string>
     <string name="fk_units_c">°C</string>
     <string name="fk_tiles">外观</string>
-    <string name="fk_tiles_hint">深色：壁纸变暗，每个 App 放在深色玻璃上。浅色：每个 App 保持自己的颜色。</string>
+    <string name="fk_tiles_hint">深色：壁纸变暗，每个 App 放在深色玻璃上。浅色：每个 App 保持自己的颜色。自动：日落变深色，日出变浅色。</string>
     <string name="fk_tiles_dark">深色</string>
+    <string name="fk_tiles_auto">自动</string>
     <string name="fk_tiles_color">浅色</string>
     <string name="fk_flip">时钟</string>
+    <string name="fk_flip_cards">翻牌</string>
     <string name="fk_flip_on">翻页</string>
     <string name="fk_flip_off">普通</string>
-    <string name="fk_flip_hint">时间像机场航班牌一样逐位翻动。</string>
+    <string name="fk_flip_hint">时间像机场航班牌一样逐位翻动；翻牌让每个数字有自己的翻片。</string>
     <string name="fk_headlines">科技头条</string>
     <string name="fk_headlines_hint">屏保上显示 Google 新闻的科技头条。</string>
     <string name="fk_plex">Plex</string>

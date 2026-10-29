@@ -64,6 +64,8 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import app.orchard.tv.R
 import app.orchard.tv.settings.AerialSettings
+import app.orchard.tv.settings.Appearance
+import app.orchard.tv.settings.ClockStyle
 import app.orchard.tv.settings.FocusStyle
 import app.orchard.tv.settings.UiSounds
 import app.orchard.tv.settings.Effects
@@ -189,8 +191,8 @@ fun WallpaperSheet(
                         )
                         Choices(
                             R.string.fk_tiles, stringResource(R.string.fk_tiles_hint), note,
-                            listOf(true to R.string.fk_tiles_dark, false to R.string.fk_tiles_color),
-                            AerialSettings.darkTiles, AerialSettings::chooseDarkTiles,
+                            listOf(Appearance.Dark to R.string.fk_tiles_dark, Appearance.Light to R.string.fk_tiles_color, Appearance.Auto to R.string.fk_tiles_auto),
+                            AerialSettings.appearance, AerialSettings::chooseAppearance,
                         )
                         Choices(
                             R.string.st_names, stringResource(R.string.st_names_hint), note,
@@ -225,8 +227,8 @@ fun WallpaperSheet(
                         )
                         Choices(
                             R.string.fk_flip, stringResource(R.string.fk_flip_hint), note,
-                            listOf(true to R.string.fk_flip_on, false to R.string.fk_flip_off),
-                            AerialSettings.flipClock, AerialSettings::chooseFlipClock,
+                            listOf(ClockStyle.Cards to R.string.fk_flip_cards, ClockStyle.Flip to R.string.fk_flip_on, ClockStyle.Plain to R.string.fk_flip_off),
+                            AerialSettings.clockStyle, AerialSettings::chooseClockStyle,
                         )
                         Choices(
                             R.string.wp_weather, null, note,
