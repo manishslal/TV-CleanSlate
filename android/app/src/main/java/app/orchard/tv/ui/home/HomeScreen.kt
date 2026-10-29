@@ -52,6 +52,8 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
@@ -104,6 +106,10 @@ import kotlin.math.roundToInt
 
 /** The plate's distance from the bottom edge with no second row peeking: as from the sides. */
 private val PlateMarginBottom = 30.dp
+
+/** Fork: how strong the focused app's glow behind the grid is (Dark only), and how long it takes to change color. */
+private const val GLOW_ALPHA = 0.32f
+private const val GLOW_MS = 600
 
 /** Fork: how far the shade behind the pill reaches down into the scrolled grid. */
 private val TopShade = 120.dp
@@ -701,6 +707,24 @@ fun HomeScreen(
                 gridGlass = clipGlass,
             )
 
+            // Fork: in Dark, a faint light in the focused app's own color rises behind the tiles,
+            // as if the tile lit the room; it moves to the next app's color as focus moves.
+            val glowTint = apps.getOrNull(focusedIndex)?.art?.tint?.takeIf { AerialSettings.darkTiles && !pillFocused && it.alpha > 0f } ?: Color.Transparent
+            val glow by animateColorAsState(glowTint, tween(GLOW_MS, easing = Motion.EaseInOut), label = "app-glow")
+            if (glow.alpha > 0.01f) Canvas(Modifier.fillMaxSize()) {
+                val a = 1f - toSaver.value
+                if (a < 0.01f) return@Canvas
+                drawRect(
+                    Brush.radialGradient(
+                        0f to glow.copy(alpha = glow.alpha * GLOW_ALPHA),
+                        1f to Color.Transparent,
+                        center = Offset(size.width / 2f, size.height * 1.05f),
+                        radius = size.width * 0.75f,
+                    ),
+                    alpha = a,
+                )
+            }
+
             // Before Android 7 there is no picture of Home under Control Center (issue #466), so the
             // GPU draws every tile again under the panel each frame. Lite there once let the clock and
             // tiles fade out under the veil; Home looked gone behind the panel (issue #823), so they stay.
@@ -767,7 +791,8 @@ fun HomeScreen(
                             focusRequester = requester(app.key),
                             enabled = gridEnabled,
                             moving = moving == app.key,
-                            appearDelayMs = (index * 28).coerceAtMost(320),
+                            // Fork: a wave from the top left, along the diagonals, not one tile after another.
+                            appearDelayMs = ((index / columns + index % columns) * 45).coerceAtMost(360),
                             onFocused = {
                                 focusedKey = app.key
                                 lastFocusedIndex = index

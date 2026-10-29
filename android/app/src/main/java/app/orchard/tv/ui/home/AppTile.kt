@@ -226,7 +226,7 @@ fun AppTile(
     LaunchedEffect(Unit) {
         if (appear.value < 1f && appearDelayMs != null) {
             delay(appearDelayMs.toLong())
-            appear.animateTo(1f, tween(420, easing = Motion.EaseOut))
+            appear.animateTo(1f, tween(480, easing = Motion.EaseOut))
         }
     }
 
@@ -253,6 +253,8 @@ fun AppTile(
             .graphicsLayer {
                 alpha = appear.value
                 translationY = (1f - appear.value) * 18.dp.toPx()
+                // Fork: and grows the last few percent into place as it rises.
+                if (appear.value < 1f) { scaleX *= 0.94f + 0.06f * appear.value; scaleY *= 0.94f + 0.06f * appear.value }
             },
     ) {
         if (lift > 0.01f && !AerialSettings.lite) {

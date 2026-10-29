@@ -54,7 +54,9 @@ class TileArt(
     val backdrop: ImageBitmap,
     /** A stand-in in the app's color while its picture is still being read (see AppCatalog.load). */
     val placeholder: Boolean = false,
-)
+) {
+    fun withTint(tint: Color) = TileArt(back, fore, foreAt, tint, backdrop, placeholder)
+}
 
 /** Firmware apps Aerial draws its own tile for, each in the color that tells the kind apart. */
 enum class SystemTile(top: Long, bottom: Long, val glyph: Glyph) {
@@ -320,8 +322,24 @@ object TileArtFactory {
     }
 
     fun fromIcon(icon: Drawable, recipe: TileRecipe? = null): TileArt {
-        if (recipe?.top == null && Build.VERSION.SDK_INT >= 26 && icon is AdaptiveIconDrawable && icon.foreground != null) adaptive(icon)?.let { return it }
-        return plate(icon, recipe) ?: legacy(icon, recipe)
+        val art = if (recipe?.top == null && Build.VERSION.SDK_INT >= 26 && icon is AdaptiveIconDrawable && icon.foreground != null) adaptive(icon) else null
+        val made = art ?: plate(icon, recipe) ?: legacy(icon, recipe)
+        // Fork: a dark tile is grey whatever the app, so its tint is taken from the icon as drawn
+        // by the app: the brand color Home's glow behind the grid shows (HomeScreen).
+        return if (dark) made.withTint(Color(brandTint(icon))) else made
+    }
+
+    /** Fork: the icon's own color, saturated parts weighing most; transparent for a grey or black-and-white icon. */
+    private fun brandTint(icon: Drawable): Int {
+        val n = 48
+        val b = createBitmap(n, n)
+        icon.setBounds(0, 0, n, n)
+        icon.draw(Canvas(b))
+        val c = dominant(b)
+        b.recycle()
+        val hsv = FloatArray(3)
+        android.graphics.Color.colorToHSV(c, hsv)
+        return if (hsv[1] < 0.3f || hsv[2] < 0.25f) 0 else c
     }
 
     /**

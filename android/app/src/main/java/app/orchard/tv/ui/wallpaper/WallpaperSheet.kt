@@ -661,8 +661,9 @@ private fun ActionChip(label: String, glyph: Glyph, onClick: () -> Unit) {
 
 @Composable
 private fun ScreensaverChoice(onStart: () -> Unit) {
-    // The choice first, then the action that tries it.
-    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+    // The choice first, then the action that tries it. Fork: with Videos added the row outgrew the
+    // sheet and squeezed "Style" to "Styl"; it scrolls under focus instead, as the Plex rows do.
+    Row(Modifier.widthIn(max = 470.dp).horizontalScroll(rememberScrollState()).padding(horizontal = 4.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         listOf(
             ScreensaverMode.Aerial to R.string.ss_aerial,
             ScreensaverMode.Photos to R.string.ss_photos,

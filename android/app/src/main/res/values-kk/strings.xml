@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="guard_name">Aerial Home Guard</string>
+    <string name="guard_name">Home Home Guard</string>
     <string name="guard_description">Басты экранды өзгертуге болмайтын теледидарларда Aerial-ді басты экран ретінде сақтайды. Экран мазмұнын оқымайды.</string>
     <string name="greeting_morning">Қайырлы таң</string>
     <string name="greeting_afternoon">Қайырлы күн</string>
@@ -11,7 +11,7 @@
     <string name="cc_settings">Параметрлер</string>
     <string name="cc_volume">Дыбыс деңгейі</string>
     <string name="cc_muted">Дыбыс өшірулі</string>
-    <string name="cc_home_default">Aerial — сіздің басты экраныңыз</string>
+    <string name="cc_home_default">Басты экран ретінде орнатылған</string>
     <string name="cc_home_guarded">Home Guard қосулы</string>
     <string name="cc_home_not_default">Әдепкі басты экран емес</string>
     <string name="cc_setup_title">Aerial-ді басты экран жасаңыз</string>
@@ -174,8 +174,8 @@
     <string name="device_set_top_box">ТД қосымша қорабы</string>
     <string name="device_speaker">Саундбар</string>
     <string name="cc_update_available">Жаңа нұсқа: %s</string>
-    <string name="cc_update_title">Aerial %s</string>
-    <string name="cc_update_current">Бұл теледидарда Aerial %s орнатылған.</string>
+    <string name="cc_update_title">Home %s</string>
+    <string name="cc_update_current">Бұл теледидарда Home %s орнатылған.</string>
     <string name="cc_update_keeps">Қолданбаларыңыз, орналасуыңыз, түсқағазыңыз және параметрлеріңіз сол күйінде қалады.</string>
     <string name="cc_update_scan">Қалай жаңартуды көру үшін телефонмен сканерлеңіз (орнату пәрменін көшіру немесе оны жасанды интеллект агентіне беру).</string>
     <string name="cc_update_scan_else">Орната алмай жатсыз ба? Жаңартудың басқа тәсілдерін көру үшін телефонмен сканерлеңіз.</string>

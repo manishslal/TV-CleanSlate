@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Home</string>
-    <string name="guard_name">Aerial Home Guard</string>
+    <string name="guard_name">Home Home Guard</string>
     <string name="guard_description">Keeps Aerial as your home screen on TVs that do not let you change it. Reads no screen content.</string>
 
     <string name="greeting_morning">Good morning</string>
@@ -14,7 +14,7 @@
     <string name="cc_settings">Settings</string>
     <string name="cc_volume">Volume</string>
     <string name="cc_muted">Muted</string>
-    <string name="cc_home_default">Aerial is your home screen</string>
+    <string name="cc_home_default">Set as your home screen</string>
     <string name="cc_home_guarded">Home Guard is on</string>
     <string name="cc_home_not_default">Not the default home screen</string>
     <string name="cc_setup_title">Make Aerial Your Home Screen</string>
@@ -182,8 +182,8 @@
     <string name="device_set_top_box">Set-top Box</string>
     <string name="device_speaker">Soundbar</string>
     <string name="cc_update_available">New Version: %s</string>
-    <string name="cc_update_title">Aerial %s</string>
-    <string name="cc_update_current">This TV has Aerial %s.</string>
+    <string name="cc_update_title">Home %s</string>
+    <string name="cc_update_current">This TV has Home %s.</string>
     <string name="cc_update_keeps">Your apps, layout, wallpaper and settings stay as they are.</string>
     <string name="cc_update_scan">Scan with a phone to see how to update (copy the install command, or hand it to an AI agent).</string>
     <string name="cc_update_scan_else">Cannot install? Scan with a phone for other ways to update.</string>

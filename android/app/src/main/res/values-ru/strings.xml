@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="guard_name">Aerial Home Guard</string>
+    <string name="guard_name">Home Home Guard</string>
     <string name="guard_description">Оставляет Aerial главным экраном на телевизорах, где его нельзя сменить. Не читает содержимое экрана.</string>
     <string name="greeting_morning">Доброе утро</string>
     <string name="greeting_afternoon">Добрый день</string>
@@ -11,7 +11,7 @@
     <string name="cc_settings">Настройки</string>
     <string name="cc_volume">Громкость</string>
     <string name="cc_muted">Звук выключен</string>
-    <string name="cc_home_default">Aerial — ваш главный экран</string>
+    <string name="cc_home_default">Установлен как главный экран</string>
     <string name="cc_home_guarded">Home Guard включён</string>
     <string name="cc_home_not_default">Не главный экран по умолчанию</string>
     <string name="cc_setup_title">Сделайте Aerial главным экраном</string>
@@ -174,8 +174,8 @@
     <string name="device_set_top_box">ТВ-приставка</string>
     <string name="device_speaker">Саундбар</string>
     <string name="cc_update_available">Новая версия: %s</string>
-    <string name="cc_update_title">Aerial %s</string>
-    <string name="cc_update_current">На этом телевизоре установлен Aerial %s.</string>
+    <string name="cc_update_title">Home %s</string>
+    <string name="cc_update_current">На этом телевизоре установлен Home %s.</string>
     <string name="cc_update_keeps">Ваши приложения, раскладка, обои и настройки останутся без изменений.</string>
     <string name="cc_update_scan">Отсканируйте телефоном, чтобы узнать, как обновиться (скопировать команду установки или передать её ИИ-агенту).</string>
     <string name="cc_update_scan_else">Не получается установить? Отсканируйте телефоном, чтобы увидеть другие способы обновления.</string>
