@@ -219,6 +219,46 @@ object Weather {
         return true
     }
 
+    /** Fork: a place found by [search], with what tells it from others of its name ("Ontario, Canada"). */
+    class Place(val name: String, val detail: String, val lat: Double, val lon: Double)
+
+    /**
+     * Fork: places of that name, for choosing on the TV: Open-Meteo's geocoder in the TV's
+     * language, towns first. Empty when there is none or the lookup failed.
+     */
+    suspend fun search(name: String): List<Place> = withContext(Dispatchers.IO) {
+        runCatching {
+            val q = URLEncoder.encode(name.trim(), "UTF-8")
+            val lang = java.util.Locale.getDefault().language.ifBlank { "en" }
+            val results = JSONObject(get("https://geocoding-api.open-meteo.com/v1/search?name=$q&count=10&language=$lang&format=json"))
+                .optJSONArray("results")
+            (0 until (results?.length() ?: 0)).map { results!!.getJSONObject(it) }
+                .sortedBy { if (it.optString("feature_code").let { c -> c == "PPLC" || c.startsWith("PPLA") }) 0 else 1 }
+                .map { r ->
+                    Place(
+                        r.optString("name").ifBlank { name.trim() },
+                        listOf(r.optString("admin1"), r.optString("country")).filter { it.isNotBlank() }.distinct().joinToString(", "),
+                        r.getDouble("latitude"), r.getDouble("longitude"),
+                    )
+                }
+                .take(6)
+        }.onFailure { Log.w(TAG, "could not look up $name", it) }.getOrDefault(emptyList())
+    }
+
+    /** Fork: the place chosen from [search]; its weather is fetched at once. */
+    fun choose(place: Place) {
+        prefs.edit {
+            putFloat("lat", place.lat.toFloat())
+            putFloat("lon", place.lon.toFloat())
+            putString("place", place.name)
+            putBoolean("chosen", true)
+            putBoolean("checked_against_cities", true)
+        }
+        chosen = true
+        this.place = place.name
+        refresh()
+    }
+
     /** Back to guessing the place from the network. */
     fun useNetworkLocation() {
         prefs.edit { putBoolean("chosen", false); remove("lat"); remove("lon"); remove("located_at") }

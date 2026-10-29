@@ -169,6 +169,9 @@ object AerialSettings {
     /** Fork: the time on a departure board's flap cards (the default), turning bare, or just changing. */
     var clockStyle by mutableStateOf(ClockStyle.Cards); private set
 
+    /** Fork: a quiet clack as the clock's cards turn; off unless chosen. */
+    var flapSound by mutableStateOf(false); private set
+
     /** Fork: Dark, Light, or Auto (dark from sunset to sunrise where the weather is). */
     var appearance by mutableStateOf(Appearance.Dark); private set
 
@@ -258,6 +261,7 @@ object AerialSettings {
         showWeather = prefs.getBoolean("show_weather", true)
         fahrenheit = prefs.getBoolean("fork_fahrenheit", true)
         clock12 = prefs.getBoolean("fork_clock12", true)
+        flapSound = prefs.getBoolean("fork_flap_sound", false)
         // Before Cards it was a switch: off meant Plain.
         clockStyle = ClockStyle.of(prefs.getString("fork_clock_style", null) ?: if (prefs.getBoolean("fork_flip_clock", true)) null else ClockStyle.Plain.key)
         // Before Auto it was a switch.
@@ -377,6 +381,11 @@ object AerialSettings {
     fun chooseClock12(on: Boolean) {
         clock12 = on
         app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("fork_clock12", on) }
+    }
+
+    fun chooseFlapSound(on: Boolean) {
+        flapSound = on
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("fork_flap_sound", on) }
     }
 
     fun chooseClockStyle(style: ClockStyle) {

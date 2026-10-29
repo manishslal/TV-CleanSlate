@@ -1,5 +1,6 @@
 package app.orchard.tv.ui.home
 
+import androidx.compose.ui.text.TextStyle
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -272,6 +273,10 @@ fun HomeBackground(
         }
     }
 }
+
+/** Fork: the board's date and weather lines, in its type, wide-set, in its ink. */
+private val BoardDate = TextStyle(fontFamily = BoardFont, fontSize = 22.sp, letterSpacing = 0.16.em, color = BoardInk)
+private val BoardDetail = TextStyle(fontFamily = BoardFont, fontSize = 19.sp, letterSpacing = 0.1.em, color = BoardInk)
 
 /** How much Dark appearance darkens the wallpaper. */
 private const val DARK_DIM = 0.3f
@@ -636,7 +641,14 @@ fun ShelfClock(
     Column(modifier, horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start) {
         // On a TV set to Chinese, the Chinese calendar's date follows, as on the iPhone's lock screen.
         val lunar = if (Locale.getDefault().language == "zh") Lunar.text(now.toLocalDate()) else null
-        BasicText(
+        // Fork: with the board's cards, the date is set as a board line: "THU 29 OCT", wide and
+        // in the board's type. A TV in Chinese keeps its own date, with the lunar one.
+        val boardLines = cardsOn && lunar == null
+        if (boardLines) BasicText(
+            now.format(DateTimeFormatter.ofPattern("EEE d MMM", Locale.getDefault())).uppercase(Locale.getDefault()).replace(".", ""),
+            style = BoardDate.copy(shadow = shadow),
+            modifier = aside.capBox(BoardDate.fontSize),
+        ) else BasicText(
             buildAnnotatedString {
                 append(dateText(now))
                 if (lunar != null) withStyle(SpanStyle(color = dim, fontWeight = FontWeight.W500)) { append("  $lunar") }
@@ -648,6 +660,7 @@ fun ShelfClock(
             timeText(now),
             style = Type.Clock.copy(shadow = shadow),
             cards = true,
+            sound = !saving,
             // Fork: cards reach past the digits, so the date and weather stand further off.
             modifier = Modifier.padding(top = if (cardsOn) 26.dp else 16.dp)
                 .toSaverClock(toSaver, Type.Clock.fontSize, 0.dp, drift)
@@ -657,14 +670,18 @@ fun ShelfClock(
             val place = Weather.place?.takeIf { it.length <= 12 }
             val range = if (w.high != null && w.low != null) stringResource(R.string.weather_high_low, w.highDegrees!!, w.lowDegrees!!) else null
             val detail = listOfNotNull(place, stringResource(conditionName(w.kind)), range).joinToString(" · ")
-            Row(aside.padding(top = if (cardsOn) 28.dp else 18.dp).capBox(Type.ClockDetail.fontSize), verticalAlignment = Alignment.CenterVertically) {
-                GlyphIcon(glyphFor(w), Color.White, 18.dp, Modifier.padding(end = 7.dp))
+            // Fork: on the board, the weather is a departure line too: "72°  PARIS · CLEAR · H:72° L:50°".
+            val detailStyle = if (boardLines) BoardDetail else Type.ClockDetail
+            Row(aside.padding(top = if (cardsOn) 28.dp else 18.dp).capBox(detailStyle.fontSize), verticalAlignment = Alignment.CenterVertically) {
+                GlyphIcon(glyphFor(w), if (boardLines) BoardInk else Color.White, 18.dp, Modifier.padding(end = 7.dp))
                 BasicText(
                     buildAnnotatedString {
                         append("${w.degrees}°")
-                        withStyle(SpanStyle(color = dim, fontWeight = FontWeight.W500)) { append("  $detail") }
+                        withStyle(SpanStyle(color = if (boardLines) BoardInk.copy(alpha = 0.72f) else dim, fontWeight = if (boardLines) null else FontWeight.W500)) {
+                            append("  " + if (boardLines) detail.uppercase(Locale.getDefault()) else detail)
+                        }
                     },
-                    style = Type.ClockDetail.copy(shadow = shadow),
+                    style = detailStyle.copy(shadow = shadow),
                 )
             }
         }

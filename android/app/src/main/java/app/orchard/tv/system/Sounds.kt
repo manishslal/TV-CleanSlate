@@ -33,6 +33,8 @@ object Sounds {
     private var select = 0
     private var back = 0
     private var limit = 0
+    private var flap = 0
+    private var lastFlapAt = 0L
     private var lastDpadAt = 0L
     private var lastMove = AudioManager.FX_FOCUS_NAVIGATION_DOWN
     private var tickedFor = -1L
@@ -61,6 +63,7 @@ object Sounds {
             select = it.load(context, R.raw.ui_select, 1)
             back = it.load(context, R.raw.ui_back, 1)
             limit = it.load(context, R.raw.ui_limit, 1)
+            flap = it.load(context, R.raw.ui_flap, 1)
             pool = it
         }
     }
@@ -98,6 +101,19 @@ object Sounds {
     }
 
     fun select() = play(AudioManager.FX_KEY_CLICK, Kind.Select)
+
+    /**
+     * Fork: one flap of the clock's cards turning, when the flap sound is on. The TV has no such
+     * effect, so it is always this app's own, quiet; a run of flaps clacks no faster than every 50 ms.
+     */
+    fun flap() {
+        if (!AerialSettings.flapSound || AerialSettings.uiSounds == UiSounds.Off) return
+        val now = SystemClock.uptimeMillis()
+        if (now - lastFlapAt < 50) return
+        lastFlapAt = now
+        val p = ownPool() ?: return
+        if (flap != 0) p.play(flap, 0.35f, 0.35f, 1, 0, 1f)
+    }
 
     /** A slider moved one step (volume, brightness). */
     fun step() = play(lastMove, Kind.Move)

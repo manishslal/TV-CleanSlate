@@ -257,6 +257,14 @@
     <string name="fk_flip_on">Аударылмалы</string>
     <string name="fk_flip_off">Қарапайым</string>
     <string name="fk_flip_hint">Сандар ұшу кестесіндегідей бір-бірлеп аударылады; «Карталар» — әр сан өз тақтайшасында.</string>
+    <string name="fk_loc_change">Өзгерту</string>
+    <string name="fk_loc_hint">Қала атауы</string>
+    <string name="fk_loc_auto">Автоматты</string>
+    <string name="fk_loc_searching">Іздеу…</string>
+    <string name="fk_loc_none">Мұндай орын жоқ</string>
+    <string name="fk_weather_guessed">Желі бойынша анықталды. Қаланы таңдау үшін «Өзгерту» түймесін басыңыз.</string>
+    <string name="fk_weather_chosen">Теледидарда немесе телефонда таңдалған. Басқа қаланы таңдау үшін «Өзгерту» түймесін басыңыз.</string>
+    <string name="fk_flap_sound">Тақтайша дыбысы</string>
     <string name="fk_headlines">Технология жаңалықтары</string>
     <string name="fk_headlines_hint">Google News технология жаңалықтары заставка үстінде.</string>
     <string name="fk_plex">Plex</string>

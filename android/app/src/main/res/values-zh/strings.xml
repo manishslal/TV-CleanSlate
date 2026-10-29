@@ -264,6 +264,14 @@
     <string name="fk_flip_on">翻页</string>
     <string name="fk_flip_off">普通</string>
     <string name="fk_flip_hint">时间像机场航班牌一样逐位翻动；翻牌让每个数字有自己的翻片。</string>
+    <string name="fk_loc_change">更改</string>
+    <string name="fk_loc_hint">城市名称</string>
+    <string name="fk_loc_auto">自动</string>
+    <string name="fk_loc_searching">正在搜索…</string>
+    <string name="fk_loc_none">没有找到这个地方</string>
+    <string name="fk_weather_guessed">根据网络定位。选择「更改」来选城市。</string>
+    <string name="fk_weather_chosen">已在电视或手机上选定。选择「更改」换一个城市。</string>
+    <string name="fk_flap_sound">翻牌声</string>
     <string name="fk_headlines">科技头条</string>
     <string name="fk_headlines_hint">屏保上显示 Google 新闻的科技头条。</string>
     <string name="fk_plex">Plex</string>

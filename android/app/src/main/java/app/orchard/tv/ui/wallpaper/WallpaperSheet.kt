@@ -1,5 +1,13 @@
 package app.orchard.tv.ui.wallpaper
 
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
+import kotlinx.coroutines.delay
 import app.orchard.tv.plex.Plex
 import android.os.Build
 import androidx.activity.compose.BackHandler
@@ -230,6 +238,11 @@ fun WallpaperSheet(
                             listOf(ClockStyle.Cards to R.string.fk_flip_cards, ClockStyle.Flip to R.string.fk_flip_on, ClockStyle.Plain to R.string.fk_flip_off),
                             AerialSettings.clockStyle, AerialSettings::chooseClockStyle,
                         )
+                        if (AerialSettings.clockStyle == ClockStyle.Cards) Choices(
+                            R.string.fk_flap_sound, null, note,
+                            listOf(true to R.string.st_on, false to R.string.st_off),
+                            AerialSettings.flapSound, AerialSettings::chooseFlapSound,
+                        )
                         Choices(
                             R.string.wp_weather, null, note,
                             listOf(true to R.string.st_on, false to R.string.st_off),
@@ -329,8 +342,14 @@ fun WallpaperSheet(
 
                     Spacer(Modifier.height(22.dp))
                     SectionTitle(R.string.wp_weather)
-                    Group(stringResource(if (Weather.chosen) R.string.wp_weather_chosen else R.string.wp_weather_guessed)) { note ->
-                        SettingRow(R.string.wp_weather_city, null, note, first = true) { WeatherValue() }
+                    // Fork: the city is chosen here too, not only from the phone page.
+                    var pickingPlace by remember { mutableStateOf(false) }
+                    Group(stringResource(if (Weather.chosen) R.string.fk_weather_chosen else R.string.fk_weather_guessed)) { note ->
+                        SettingRow(R.string.wp_weather_city, null, note, first = true) {
+                            WeatherValue()
+                            ActionChip(stringResource(R.string.fk_loc_change), Glyph.ChevronRight) { pickingPlace = !pickingPlace }
+                        }
+                        if (pickingPlace) LocationPicker { pickingPlace = false }
                         Choices(
                             R.string.fk_units, null, note,
                             listOf(true to R.string.fk_units_f, false to R.string.fk_units_c),
@@ -615,6 +634,103 @@ private fun WeatherValue() {
         style = Type.Body.copy(color = Palette.SecondaryLabel),
         modifier = Modifier.padding(end = 8.dp),
     )
+}
+
+/**
+ * Fork: the weather's city chosen on the TV. A name typed with the TV's keyboard is looked up
+ * (Weather.search) as typing pauses or on Search; each place found says its region and country,
+ * so a city name shared by two countries resolves to the right one. Automatic goes back to the network's guess.
+ */
+@Composable
+private fun LocationPicker(onDone: () -> Unit) {
+    var query by remember { mutableStateOf("") }
+    var results by remember { mutableStateOf<List<Weather.Place>?>(null) }
+    var searching by remember { mutableStateOf(false) }
+    var fieldFocused by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val field = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+    fun search() {
+        val q = query.trim()
+        if (q.length < 2) return
+        searching = true
+        scope.launch {
+            results = Weather.search(q)
+            searching = false
+        }
+    }
+    LaunchedEffect(Unit) { runCatching { field.requestFocus() } }
+    LaunchedEffect(query) {
+        if (query.trim().length < 3) return@LaunchedEffect
+        delay(700)
+        search()
+    }
+    Column(
+        Modifier.fillMaxWidth().padding(start = 18.dp, end = 10.dp, bottom = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            val label = Palette.Label
+            BasicTextField(
+                value = query,
+                onValueChange = { query = it },
+                singleLine = true,
+                textStyle = Type.Body.copy(color = label),
+                cursorBrush = SolidColor(label),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { keyboard?.hide(); search() }),
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(field)
+                    .onFocusChanged {
+                        fieldFocused = it.isFocused
+                        if (it.isFocused) keyboard?.show()
+                    }
+                    .clip(RoundedCornerShape(50))
+                    .background(if (fieldFocused) Palette.FillStrong else Palette.Fill)
+                    .border(if (fieldFocused) 2.dp else 0.dp, if (fieldFocused) Palette.Focus else Color.Transparent, RoundedCornerShape(50))
+                    .height(40.dp)
+                    .padding(horizontal = 18.dp, vertical = 10.dp),
+                decorationBox = { inner ->
+                    Box {
+                        if (query.isEmpty()) BasicText(stringResource(R.string.fk_loc_hint), style = Type.Body.copy(color = Palette.TertiaryLabel))
+                        inner()
+                    }
+                },
+            )
+            Chip(stringResource(R.string.fk_loc_auto), on = !Weather.chosen) {
+                Weather.useNetworkLocation()
+                onDone()
+            }
+        }
+        when {
+            searching -> BasicText(stringResource(R.string.fk_loc_searching), style = Type.Callout)
+            results?.isEmpty() == true -> BasicText(stringResource(R.string.fk_loc_none), style = Type.Callout)
+        }
+        results?.forEach { place ->
+            PlaceRow(place) {
+                Weather.choose(place)
+                onDone()
+            }
+        }
+    }
+}
+
+/** Fork: one place [LocationPicker] found: its name, then its region and country. */
+@Composable
+private fun PlaceRow(place: Weather.Place, onClick: () -> Unit) {
+    Pressable(onClick = onClick, focusedScale = 1.02f, modifier = Modifier.fillMaxWidth()) { state ->
+        val bg by animateColorAsState(if (state.focused) Palette.Focus else Palette.Fill, tween(140, easing = Motion.EaseOut), label = "place-bg")
+        val fg = if (state.focused) Palette.OnFocus else Palette.Label
+        Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(bg).height(44.dp).padding(horizontal = 18.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            BasicText(place.name, style = Type.Body.copy(color = fg))
+            BasicText(place.detail, style = Type.Callout.copy(color = fg.copy(alpha = 0.6f)), maxLines = 1)
+        }
+    }
 }
 
 /** A pill to pick one of a few options: a check on the chosen one, white when focused. */

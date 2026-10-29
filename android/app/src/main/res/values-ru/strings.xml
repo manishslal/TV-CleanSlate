@@ -257,6 +257,14 @@
     <string name="fk_flip_on">Перекидные</string>
     <string name="fk_flip_off">Обычные</string>
     <string name="fk_flip_hint">Цифры перелистываются по одной, как на табло вылетов; «Карточки» — каждая цифра на своей пластине.</string>
+    <string name="fk_loc_change">Изменить</string>
+    <string name="fk_loc_hint">Название города</string>
+    <string name="fk_loc_auto">Автоматически</string>
+    <string name="fk_loc_searching">Поиск…</string>
+    <string name="fk_loc_none">Такого места нет</string>
+    <string name="fk_weather_guessed">Определено по сети. Выберите «Изменить», чтобы указать город.</string>
+    <string name="fk_weather_chosen">Выбрано на телевизоре или телефоне. Выберите «Изменить», чтобы выбрать другой город.</string>
+    <string name="fk_flap_sound">Звук пластин</string>
     <string name="fk_headlines">Новости технологий</string>
     <string name="fk_headlines_hint">Главные новости технологий из Google News поверх заставки.</string>
     <string name="fk_plex">Plex</string>

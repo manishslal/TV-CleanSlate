@@ -265,6 +265,14 @@
     <string name="fk_flip_on">Flip</string>
     <string name="fk_flip_off">Plain</string>
     <string name="fk_flip_hint">The time turns over digit by digit, like a departure board; Cards puts each digit on its own flap.</string>
+    <string name="fk_loc_change">Change</string>
+    <string name="fk_loc_hint">City name</string>
+    <string name="fk_loc_auto">Automatic</string>
+    <string name="fk_loc_searching">Searching…</string>
+    <string name="fk_loc_none">No place by that name</string>
+    <string name="fk_weather_guessed">Located from the network. Choose Change to pick your city.</string>
+    <string name="fk_weather_chosen">Chosen on this TV or your phone. Choose Change to pick another city.</string>
+    <string name="fk_flap_sound">Flap sound</string>
     <string name="fk_headlines">Tech headlines</string>
     <string name="fk_headlines_hint">Top technology stories from Google News, over the screensaver.</string>
     <string name="fk_plex">Plex</string>
