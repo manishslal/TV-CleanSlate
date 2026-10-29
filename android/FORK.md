@@ -29,6 +29,7 @@ git merge upstream/main
 | 2026-10-28 | Plex: PIN link (plex.tv/link), local server discovery, video library → My Videos (direct play), photo library → My Photos (1080p copies, plex-*.jpg). Screensaver buffer raised to 48 MB. |
 | 2026-10-28 | Tech headlines over the screensaver (Google News Technology RSS): one at a time, bottom right, no glass. Place caption narrows to 460dp while it is on. |
 | 2026-10-28 | Plex finds the server by its HTTPS plex.direct address (cleartext to the LAN is blocked). Phone setup page on port 8791 so it can run beside upstream Aerial (8790). Plex library rows scroll instead of pushing the label out. |
+| 2026-10-28 | `tools/install.sh` / `restore.sh`: `PKG=io.manish.home` installs or removes the fork; component names use the class namespace (`NS=app.orchard.tv`) instead of the package. |
 
 ## Planned
 - [ ] Final app name and icon; rename the strings that still say "Aerial" for the app (setup page, Home Guard)

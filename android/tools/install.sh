@@ -35,8 +35,10 @@ REPO=pengchujin/aerial-tv
 command -v adb >/dev/null || { echo "adb not found. macOS: brew install android-platform-tools; Linux: install android-tools / adb." >&2; exit 1; }
 FLAVOR="${1:-standard}"
 case "$FLAVOR" in standard|guard|repair|lite) ;; *) echo "flavor must be standard, guard or lite (or repair)" >&2; exit 1 ;; esac
-PKG=app.orchard.tv
-GUARD="$PKG/$PKG.guard.HomeGuardService"
+# Fork: PKG=io.manish.home for the fork build; its classes keep the app.orchard.tv namespace (NS).
+PKG="${PKG:-app.orchard.tv}"
+NS=app.orchard.tv
+GUARD="$PKG/$NS.guard.HomeGuardService"
 
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
 if [ "${BUILD:-0}" = 1 ]; then
@@ -117,7 +119,7 @@ wait_guard() {
 restart_aerial() {
   adb shell am force-stop "$PKG"
   sleep 3
-  adb shell am start -W -n "$PKG/.MainActivity" >/dev/null 2>&1 || true
+  adb shell am start -W -n "$PKG/$NS.MainActivity" >/dev/null 2>&1 || true
 }
 
 # Android 4.0-4.4 cannot run the full app (Jetpack Compose needs Android 5.0). Aerial Lite is a
@@ -287,10 +289,10 @@ adb shell appops set "$PKG" REQUEST_INSTALL_PACKAGES allow 2>/dev/null || true  
 # Android 5 knows the op only by this name.
 adb shell appops set "$PKG" GET_USAGE_STATS allow 2>/dev/null || true
 adb shell appops set "$PKG" android:get_usage_stats allow 2>/dev/null || true
-adb shell cmd notification allow_listener "$PKG/$PKG.guard.RevivalListener" 2>/dev/null || true  # come back after a kill
+adb shell cmd notification allow_listener "$PKG/$NS.guard.RevivalListener" 2>/dev/null || true  # come back after a kill
 # Android 9 on Xiaomi MiTV-MFTP0 reports success but never binds it (issue #72): low-RAM devices
 # get no notification listeners at all. Aerial's sync adapter brings it back there instead, later.
-if ! adb shell dumpsys notification 2>/dev/null | grep -q "$PKG/$PKG.guard.RevivalListener"; then
+if ! adb shell dumpsys notification 2>/dev/null | grep -q "$PKG/$NS.guard.RevivalListener"; then
   echo "Note: this TV refuses notification listeners. After the TV stops Aerial (Xiaomi does at standby)," >&2
   echo "Aerial comes back through Android's sync service about 30-60 seconds later, not at once: after a" >&2
   echo "short standby the TV's launcher can show for up to a minute. Keep auto-sync on. If Home ever stays" >&2
@@ -299,9 +301,9 @@ fi
 # TVs on Android's standard screensaver (TCL's carries a membership upsell) get Aerial's instead,
 # so it also starts while another app sits idle. Xiaomi uses its own; Aerial covers it from Home.
 if [ "$(adb shell settings get secure screensaver_enabled | tr -d '\r')" = 1 ]; then
-  adb shell settings put secure screensaver_components "$PKG/$PKG.dream.AerialDream"
+  adb shell settings put secure screensaver_components "$PKG/$NS.dream.AerialDream"
   # Some firmwares (TCL) put their own back on every boot; Aerial restores it when it starts.
-  adb shell am broadcast -a "$PKG.CONFIG" -n "$PKG/.guard.ConfigReceiver" --ez own_screensaver true >/dev/null
+  adb shell am broadcast -a "$NS.CONFIG" -n "$PKG/$NS.guard.ConfigReceiver" --ez own_screensaver true >/dev/null
   echo "Aerial's screensaver is now the TV's screensaver."
 fi
 # TCL's 自启动管理 (TclAppBootManager in system_server) refuses to start or bind third-party apps
@@ -313,11 +315,11 @@ for op in APP_AUTO_START APP_ASSOC_START AUTO_START ASSOC_START; do
   adb shell appops set "$PKG" "$op" allow >/dev/null 2>&1 || true
 done
 if [ "${KEEP_ADB:-0}" = 1 ]; then
-  adb shell am broadcast -a "$PKG.CONFIG" -n "$PKG/.guard.ConfigReceiver" --ez keep_adb true >/dev/null
+  adb shell am broadcast -a "$NS.CONFIG" -n "$PKG/$NS.guard.ConfigReceiver" --ez keep_adb true >/dev/null
   echo "Aerial will switch ADB debugging back on whenever the TV turns it off."
 fi
 
-if ! adb shell am start -W -n "$PKG/.MainActivity" | grep -q "Status: ok"; then
+if ! adb shell am start -W -n "$PKG/$NS.MainActivity" | grep -q "Status: ok"; then
   echo "Aerial did not start; Home was left untouched." >&2
   exit 1
 fi
@@ -347,7 +349,7 @@ if [ "$FLAVOR" = standard ]; then
     echo "Hisense: Home now opens Aerial instead of $VT_HOME."
   fi
   adb shell cmd role add-role-holder --user 0 android.app.role.HOME "$PKG" >/dev/null 2>&1 \
-    || adb shell cmd package set-home-activity --user 0 "$PKG/.MainActivity" >/dev/null 2>&1 || true
+    || adb shell cmd package set-home-activity --user 0 "$PKG/$NS.MainActivity" >/dev/null 2>&1 || true
   HOME_NOW=$(resolve_home)
   case "$HOME_NOW" in
     "$PKG"/*)
