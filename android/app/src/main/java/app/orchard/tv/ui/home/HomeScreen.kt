@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -83,6 +84,7 @@ import app.orchard.tv.wallpaper.ScreensaverMode
 import app.orchard.tv.wallpaper.Wallpapers
 import app.orchard.tv.ui.components.liquidGlass
 import app.orchard.tv.ui.theme.LocalReducedMotion
+import app.orchard.tv.ui.theme.LocalLightPanel
 import app.orchard.tv.ui.theme.Motion
 import app.orchard.tv.ui.theme.Type
 import androidx.compose.runtime.snapshotFlow
@@ -907,153 +909,157 @@ fun HomeScreen(
             )
         }
 
-        AnimatedVisibility(
-            visible = moving != null,
-            enter = fadeIn(tween(200, easing = Motion.EaseOut)) + slideInVertically(tween(260, easing = Motion.EaseOut)) { it / 2 },
-            exit = fadeOut(tween(150, easing = Motion.EaseOut)) + slideOutVertically(tween(150, easing = Motion.EaseOut)) { it / 2 },
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 28.dp),
-        ) {
-            // Screens that can be touched also say how to move with a finger.
-            val touch = LocalConfiguration.current.touchscreen != Configuration.TOUCHSCREEN_NOTOUCH
-            BasicText(
-                stringResource(if (touch) R.string.move_hint_touch else R.string.move_hint),
-                style = Type.Body,
-                modifier = Modifier
-                    .liquidGlass(20.dp)
-                    .height(40.dp)
-                    .padding(horizontal = 20.dp, vertical = 10.dp),
+        // Fork: the panels (Control Center, Personalize, menus, folders) as light glass with dark
+        // type while Appearance is light; Home's own type over the wallpaper stays white.
+        CompositionLocalProvider(LocalLightPanel provides !AerialSettings.darkTiles) {
+            AnimatedVisibility(
+                visible = moving != null,
+                enter = fadeIn(tween(200, easing = Motion.EaseOut)) + slideInVertically(tween(260, easing = Motion.EaseOut)) { it / 2 },
+                exit = fadeOut(tween(150, easing = Motion.EaseOut)) + slideOutVertically(tween(150, easing = Motion.EaseOut)) { it / 2 },
+                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 28.dp),
+            ) {
+                // Screens that can be touched also say how to move with a finger.
+                val touch = LocalConfiguration.current.touchscreen != Configuration.TOUCHSCREEN_NOTOUCH
+                BasicText(
+                    stringResource(if (touch) R.string.move_hint_touch else R.string.move_hint),
+                    style = Type.Body,
+                    modifier = Modifier
+                        .liquidGlass(20.dp)
+                        .height(40.dp)
+                        .padding(horizontal = 20.dp, vertical = 10.dp),
+                )
+            }
+
+            // Once per process, while Home is idle: Control Center drawn for a few frames, nearly
+            // transparent, so that its first opening is not its first draw (see ControlCenter).
+            var ccWarm by remember { mutableStateOf(false) }
+            LaunchedEffect(vm.loaded) {
+                if (!vm.loaded || ControlCenterWarmed.done) return@LaunchedEffect
+                while (true) {
+                    delay(CC_WARM_AFTER_MS)
+                    val idle = SystemClock.uptimeMillis() - vm.lastInputAt > CC_WARM_AFTER_MS
+                    if (idle && vm.overlay == Overlay.None && !vm.screensaverVisible && vm.resumed) break
+                }
+                ControlCenterWarmed.done = true
+                ccWarm = true
+                repeat(3) { withFrameNanos { } }
+                ccWarm = false
+            }
+            ControlCenter(
+                visible = overlay is Overlay.ControlCenter,
+                page = (overlay as? Overlay.ControlCenter)?.page ?: CcPage.Main,
+                vm = vm,
+                now = now,
+                onOpen = { vm.overlay = Overlay.None; onOpen(it) },
+                onClose = { vm.overlay = Overlay.None },
+                warm = ccWarm,
+            )
+
+            FolderView(
+                name = openFolder?.let { id -> apps.firstOrNull { it.folder?.id == id }?.label },
+                apps = openFolder?.let { vm.folderApps[it] }.orEmpty(),
+                visible = openFolder != null,
+                enabled = overlay is Overlay.Folder,
+                tileW = metrics.tileW,
+                tileH = metrics.tileH,
+                gap = metrics.gap,
+                columns = columns,
+                onLaunch = onLaunch,
+                onLongPress = { app, bounds -> vm.overlay = Overlay.AppMenu(app.key, bounds ?: Rect.Zero, inFolder = openFolder) },
+                onDismiss = { vm.overlay = Overlay.None },
+            )
+
+            val menu = overlay as? Overlay.AppMenu
+            // A menu opened in a folder closes back to the folder.
+            fun closeMenu() { vm.overlay = menu?.inFolder?.let { Overlay.Folder(it) } ?: Overlay.None }
+            AppMenu(
+                app = menu?.let { vm.entry(it.key) },
+                anchor = menu?.anchor,
+                inFolder = menu?.inFolder != null,
+                folders = vm.folders(),
+                onMove = { vm.startMove(it) },
+                onHide = { key ->
+                    closeMenu()
+                    vm.hide(key)
+                },
+                onInfo = { closeMenu(); onAppInfo(it) },
+                onUninstall = { closeMenu(); onUninstall(it) },
+                onUnpin = { key ->
+                    closeMenu()
+                    vm.entry(key)?.source?.let { vm.setSourcePinned(it, false) }
+                },
+                onResetIcon = { key ->
+                    closeMenu()
+                    vm.resetIcon(key)
+                },
+                onBootTarget = { key ->
+                    closeMenu()
+                    val entry = vm.entry(key)
+                    val source = entry?.source
+                    when {
+                        source != null -> vm.chooseBootTarget(sourceId = source.id.takeIf { it != AerialSettings.bootSource })
+                        entry != null -> vm.chooseBootTarget(pkg = key.takeIf { it != AerialSettings.bootApp })
+                    }
+                },
+                onSourceDevice = { id, device ->
+                    closeMenu()
+                    SourceLooks.chooseDevice(id, device)
+                },
+                onToFolder = { key, id ->
+                    val folderKey = vm.putInFolder(key, id)
+                    // From Home, focus goes to the folder the app went into.
+                    if (menu?.inFolder == null) focusAfterOverlay = folderKey
+                    closeMenu()
+                },
+                onOutOfFolder = { key ->
+                    vm.takeOutOfFolder(key)
+                    closeMenu()
+                },
+                onRenameFolder = { id, name ->
+                    vm.renameFolder(id, name)
+                    closeMenu()
+                },
+                onUngroup = { id ->
+                    vm.ungroup(id)
+                    closeMenu()
+                },
+                onDismiss = { closeMenu() },
+            )
+
+            HiddenAppsSheet(
+                visible = overlay is Overlay.HiddenApps,
+                apps = vm.hiddenApps,
+                onUnhide = { key ->
+                    vm.unhide(key)
+                    if (vm.hiddenApps.isEmpty()) vm.overlay = Overlay.Wallpaper
+                },
+                // Hidden apps are reached from Personalization, and Back returns there.
+                onDismiss = { vm.overlay = Overlay.Wallpaper },
+            )
+
+            WallpaperSheet(
+                visible = overlay is Overlay.Wallpaper,
+                onDismiss = { vm.overlay = Overlay.ControlCenter() },
+                hiddenCount = vm.hiddenApps.size,
+                onHiddenApps = { vm.whenUnlocked { vm.overlay = Overlay.HiddenApps } },
+                onStartScreensaver = {
+                    vm.overlay = Overlay.None
+                    onStartScreensaver()
+                },
+                onPin = { on ->
+                    if (on) vm.overlay = Overlay.Pin(PinMode.Create) { vm.overlay = Overlay.Wallpaper }
+                    else vm.whenUnlocked { AerialSettings.choosePin(null); vm.overlay = Overlay.Wallpaper }
+                },
+            )
+
+            val pin = overlay as? Overlay.Pin
+            PinPad(
+                visible = pin != null,
+                mode = pin?.mode,
+                onDone = { pin?.onDone?.invoke() },
+                onCancel = { vm.overlay = Overlay.None },
             )
         }
-
-        // Once per process, while Home is idle: Control Center drawn for a few frames, nearly
-        // transparent, so that its first opening is not its first draw (see ControlCenter).
-        var ccWarm by remember { mutableStateOf(false) }
-        LaunchedEffect(vm.loaded) {
-            if (!vm.loaded || ControlCenterWarmed.done) return@LaunchedEffect
-            while (true) {
-                delay(CC_WARM_AFTER_MS)
-                val idle = SystemClock.uptimeMillis() - vm.lastInputAt > CC_WARM_AFTER_MS
-                if (idle && vm.overlay == Overlay.None && !vm.screensaverVisible && vm.resumed) break
-            }
-            ControlCenterWarmed.done = true
-            ccWarm = true
-            repeat(3) { withFrameNanos { } }
-            ccWarm = false
-        }
-        ControlCenter(
-            visible = overlay is Overlay.ControlCenter,
-            page = (overlay as? Overlay.ControlCenter)?.page ?: CcPage.Main,
-            vm = vm,
-            now = now,
-            onOpen = { vm.overlay = Overlay.None; onOpen(it) },
-            onClose = { vm.overlay = Overlay.None },
-            warm = ccWarm,
-        )
-
-        FolderView(
-            name = openFolder?.let { id -> apps.firstOrNull { it.folder?.id == id }?.label },
-            apps = openFolder?.let { vm.folderApps[it] }.orEmpty(),
-            visible = openFolder != null,
-            enabled = overlay is Overlay.Folder,
-            tileW = metrics.tileW,
-            tileH = metrics.tileH,
-            gap = metrics.gap,
-            columns = columns,
-            onLaunch = onLaunch,
-            onLongPress = { app, bounds -> vm.overlay = Overlay.AppMenu(app.key, bounds ?: Rect.Zero, inFolder = openFolder) },
-            onDismiss = { vm.overlay = Overlay.None },
-        )
-
-        val menu = overlay as? Overlay.AppMenu
-        // A menu opened in a folder closes back to the folder.
-        fun closeMenu() { vm.overlay = menu?.inFolder?.let { Overlay.Folder(it) } ?: Overlay.None }
-        AppMenu(
-            app = menu?.let { vm.entry(it.key) },
-            anchor = menu?.anchor,
-            inFolder = menu?.inFolder != null,
-            folders = vm.folders(),
-            onMove = { vm.startMove(it) },
-            onHide = { key ->
-                closeMenu()
-                vm.hide(key)
-            },
-            onInfo = { closeMenu(); onAppInfo(it) },
-            onUninstall = { closeMenu(); onUninstall(it) },
-            onUnpin = { key ->
-                closeMenu()
-                vm.entry(key)?.source?.let { vm.setSourcePinned(it, false) }
-            },
-            onResetIcon = { key ->
-                closeMenu()
-                vm.resetIcon(key)
-            },
-            onBootTarget = { key ->
-                closeMenu()
-                val entry = vm.entry(key)
-                val source = entry?.source
-                when {
-                    source != null -> vm.chooseBootTarget(sourceId = source.id.takeIf { it != AerialSettings.bootSource })
-                    entry != null -> vm.chooseBootTarget(pkg = key.takeIf { it != AerialSettings.bootApp })
-                }
-            },
-            onSourceDevice = { id, device ->
-                closeMenu()
-                SourceLooks.chooseDevice(id, device)
-            },
-            onToFolder = { key, id ->
-                val folderKey = vm.putInFolder(key, id)
-                // From Home, focus goes to the folder the app went into.
-                if (menu?.inFolder == null) focusAfterOverlay = folderKey
-                closeMenu()
-            },
-            onOutOfFolder = { key ->
-                vm.takeOutOfFolder(key)
-                closeMenu()
-            },
-            onRenameFolder = { id, name ->
-                vm.renameFolder(id, name)
-                closeMenu()
-            },
-            onUngroup = { id ->
-                vm.ungroup(id)
-                closeMenu()
-            },
-            onDismiss = { closeMenu() },
-        )
-
-        HiddenAppsSheet(
-            visible = overlay is Overlay.HiddenApps,
-            apps = vm.hiddenApps,
-            onUnhide = { key ->
-                vm.unhide(key)
-                if (vm.hiddenApps.isEmpty()) vm.overlay = Overlay.Wallpaper
-            },
-            // Hidden apps are reached from Personalization, and Back returns there.
-            onDismiss = { vm.overlay = Overlay.Wallpaper },
-        )
-
-        WallpaperSheet(
-            visible = overlay is Overlay.Wallpaper,
-            onDismiss = { vm.overlay = Overlay.ControlCenter() },
-            hiddenCount = vm.hiddenApps.size,
-            onHiddenApps = { vm.whenUnlocked { vm.overlay = Overlay.HiddenApps } },
-            onStartScreensaver = {
-                vm.overlay = Overlay.None
-                onStartScreensaver()
-            },
-            onPin = { on ->
-                if (on) vm.overlay = Overlay.Pin(PinMode.Create) { vm.overlay = Overlay.Wallpaper }
-                else vm.whenUnlocked { AerialSettings.choosePin(null); vm.overlay = Overlay.Wallpaper }
-            },
-        )
-
-        val pin = overlay as? Overlay.Pin
-        PinPad(
-            visible = pin != null,
-            mode = pin?.mode,
-            onDone = { pin?.onDone?.invoke() },
-            onCancel = { vm.overlay = Overlay.None },
-        )
 
         NoticeBanner(vm.notice, Modifier.align(Alignment.TopCenter).padding(top = 24.dp))
 

@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
 import app.orchard.tv.settings.AerialSettings
+import app.orchard.tv.ui.theme.LocalLightPanel
 import app.orchard.tv.ui.theme.Palette
 import app.orchard.tv.ui.theme.Motion
 import app.orchard.tv.wallpaper.Wallpapers
@@ -61,6 +62,10 @@ import kotlin.math.roundToInt
  */
 fun Modifier.liquidGlass(corner: Dp, bottomCorners: Boolean = true): Modifier = composed {
     val (frost, under, swap) = rememberFrostSwap(Wallpapers.frosted.takeIf { Wallpapers.backdrop != null })
+    // Fork: a light panel brightens the frosted picture instead of dimming it.
+    val light = LocalLightPanel.current
+    val tint = if (light) LightPanelTint else PanelTint
+    val plain = if (light) Palette.Light.Glass else Palette.Dark.Glass
     var at by remember { mutableStateOf(Offset.Zero) }
     var root by remember { mutableStateOf(IntSize.Zero) }
     val shape = if (bottomCorners) RoundedCornerShape(corner) else RoundedCornerShape(topStart = corner, topEnd = corner)
@@ -73,6 +78,8 @@ fun Modifier.liquidGlass(corner: Dp, bottomCorners: Boolean = true): Modifier = 
         }
         .clip(shape)
         .drawWithCache {
+            // Read here so the glass is made again when the appearance changes.
+            val tint = tint
             val shader = frost?.let { BitmapShader(it.asAndroidBitmap(), Shader.TileMode.CLAMP, Shader.TileMode.CLAMP) }
             val underShader = under?.let { BitmapShader(it.asAndroidBitmap(), Shader.TileMode.CLAMP, Shader.TileMode.CLAMP) }
             val radius = corner.toPx()
@@ -90,14 +97,14 @@ fun Modifier.liquidGlass(corner: Dp, bottomCorners: Boolean = true): Modifier = 
             var drawnT = -1f
             onDrawBehind {
                 if (shader == null || brush == null || root == IntSize.Zero) {
-                    drawImage(flat, dstSize = IntSize(w, h), colorFilter = ColorFilter.tint(Palette.Glass))
+                    drawImage(flat, dstSize = IntSize(w, h), colorFilter = ColorFilter.tint(plain))
                     drawGlassEdge(size, radius, bottomCorners)
                 } else if (AerialSettings.lite) {
                     // Lite (AerialSettings.lite): one solid color, the frosted wallpaper's average as
                     // the glass would dim it, without the layer the glass needs every frame, which
                     // weak GPUs feel most while a panel slides in. Solid: the plain glass color is
                     // see-through and showed the tiles under the Personalize sheet.
-                    drawImage(flat, dstSize = IntSize(w, h), colorFilter = ColorFilter.tint(liteGlass(frost)))
+                    drawImage(flat, dstSize = IntSize(w, h), colorFilter = ColorFilter.tint(liteGlass(frost, light)))
                     drawGlassEdge(size, radius, bottomCorners)
                 } else {
                     val t = swap()
@@ -119,10 +126,10 @@ fun Modifier.liquidGlass(corner: Dp, bottomCorners: Boolean = true): Modifier = 
                             if (underShader != null && under != null && t < 1f) {
                                 // A new frosted picture fades in over the old within the outline.
                                 place(underShader, under)
-                                drawRect(ShaderBrush(underShader), colorFilter = PanelTint, blendMode = BlendMode.SrcIn)
-                                drawRect(brush, alpha = t, colorFilter = PanelTint, blendMode = BlendMode.SrcAtop)
+                                drawRect(ShaderBrush(underShader), colorFilter = tint, blendMode = BlendMode.SrcIn)
+                                drawRect(brush, alpha = t, colorFilter = tint, blendMode = BlendMode.SrcAtop)
                             } else {
-                                drawRect(brush, colorFilter = PanelTint, blendMode = BlendMode.SrcIn)
+                                drawRect(brush, colorFilter = tint, blendMode = BlendMode.SrcIn)
                             }
                             drawGlassEdge(size, radius, bottomCorners)
                         }
@@ -210,20 +217,28 @@ fun glassEdge(w: Int, h: Int, radius: Float, rim: Float, bottomCorners: Boolean 
 
 /** Panels: the frosted picture at half its light, lifted a little, so white text reads on snow. */
 /** Lite's panel color for [frost]: its average color, dimmed as [PanelTint] dims the glass. Made once per picture. */
-private fun liteGlass(frost: ImageBitmap): Color = synchronized(liteColors) {
-    liteColors.getOrPut(frost) {
+private fun liteGlass(frost: ImageBitmap, light: Boolean): Color = synchronized(liteColors) {
+    liteColors.getOrPut(frost to light) {
         val small = android.graphics.Bitmap.createScaledBitmap(frost.asAndroidBitmap(), 16, 9, true)
         var r = 0f; var g = 0f; var b = 0f
         for (y in 0 until 9) for (x in 0 until 16) {
             val c = small.getPixel(x, y)
             r += android.graphics.Color.red(c); g += android.graphics.Color.green(c); b += android.graphics.Color.blue(c)
         }
-        fun dim(sum: Float) = ((sum / 144f) * 0.48f + 14f).coerceIn(0f, 255f) / 255f
+        fun dim(sum: Float) = ((sum / 144f) * (if (light) 0.3f else 0.48f) + (if (light) 172f else 14f)).coerceIn(0f, 255f) / 255f
         Color(dim(r), dim(g), dim(b))
     }
 }
 
-private val liteColors = java.util.WeakHashMap<ImageBitmap, Color>()
+private val liteColors = HashMap<Pair<ImageBitmap, Boolean>, Color>()
+
+/** Fork: a light panel, the frosted picture faint under milky white, so dark text reads on night skies. */
+private val LightPanelTint = ColorFilter.colorMatrix(ColorMatrix(floatArrayOf(
+    0.3f, 0f, 0f, 0f, 172f,
+    0f, 0.3f, 0f, 0f, 172f,
+    0f, 0f, 0.3f, 0f, 176f,
+    0f, 0f, 0f, 1f, 0f,
+)))
 
 private val PanelTint = ColorFilter.colorMatrix(ColorMatrix(floatArrayOf(
     0.48f, 0f, 0f, 0f, 14f,
