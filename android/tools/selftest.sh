@@ -79,7 +79,7 @@ echo '```'
 
 # 1. Home Guard bound: everything below depends on it where Aerial is not the default home.
 ACC=$(sh_ settings get secure enabled_accessibility_services)
-BOUND=$(sh_ dumpsys accessibility | grep -c -E "label=(Aerial|$PKG)")
+BOUND=$(sh_ dumpsys accessibility | grep -c -E "label=(Aerial|Home( Home)? Guard|$PKG|app\.orchard\.tv)")
 # Android 6 and older have neither `cmd` nor `pm resolve-activity`; their "not found" and usage
 # text are not a Home (issue #818).
 HOME_TO=$(sh_ cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME -c android.intent.category.DEFAULT | grep -E '^[A-Za-z0-9_.]+/[A-Za-z0-9_.$]+$' | tail -n1)
