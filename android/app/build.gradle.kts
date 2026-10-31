@@ -92,7 +92,7 @@ kotlin {
 // Fork: the owner's logo pack (apps/LogoPack.kt). It lives beside this repo and is trademarks for
 // personal use, so it is only ever copied into build/; without the folder the build has no pack.
 val logoPack = rootProject.file("../logos")
-if (logoPack.resolve("manifest.json").exists()) {
+if (logoPack.resolve("dark").isDirectory) {
     val logoAssets = layout.buildDirectory.dir("generated/logopack")
     val copyLogoPack = tasks.register<Sync>("copyLogoPack") {
         from(logoPack) {
