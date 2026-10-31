@@ -1,0 +1,4 @@
+=== MEMINFO BEFORE ===
+Total RAM: 1,710,032K (status normal)
+ Free RAM:   484,871K (  149,311K cached pss +   292,904K cached kernel +    42,656K free)
+ Used RAM: 1,410,210K (1,138,418K used pss +   271,792K kernel)

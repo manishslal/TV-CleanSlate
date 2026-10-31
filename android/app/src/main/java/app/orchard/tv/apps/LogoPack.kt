@@ -8,7 +8,7 @@ import org.json.JSONObject
 
 /**
  * Fork: the owner's logo pack for Dark Glass tiles, by package. It is copied into the build from
- * PS3-Launcher/logos when that folder is there (app/build.gradle.kts) and never kept in this repo:
+ * logos/ when that folder is there (app/build.gradle.kts) and never kept in this repo:
  * the logos are trademarks, for personal use. A build without it has no such asset, and every
  * tile is drawn from the app's own icon as before.
  */

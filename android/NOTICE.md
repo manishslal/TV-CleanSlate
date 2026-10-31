@@ -1,9 +1,10 @@
 # Notice and credits
 
 This repository is a fork of **[Aerial](https://github.com/pengchujin/aerial-tv)** by **pengchujin** and the Aerial contributors.
-Almost all of the code, design and device-compatibility work here is theirs. The fork exists to make personal UI changes on top of it.
+Almost all of the code, design and device-compatibility work here is theirs. The fork exists as the Android part of [TV CleanSlate](../README.md).
 
 - Upstream: https://github.com/pengchujin/aerial-tv
+- Full project credits: [CREDITS.md](../CREDITS.md)
 - Forked at upstream commit `c3c0511` (v1.67, 2026-10-28)
 - Upstream license: [MIT](LICENSE). Copyright (c) 2026 pengchujin. The original license text and copyright notice are kept unchanged in `LICENSE`, as the MIT license requires.
 - Changes made in this fork are listed in [FORK.md](FORK.md) and in the git history. They are released under the same MIT license.
@@ -23,4 +24,4 @@ If you want Aerial itself, use and support the upstream project. Bug reports for
 | Photo of the day (runtime) | Microsoft Bing | Bing's terms |
 | Location lookup (runtime) | ipinfo.io | ipinfo's terms |
 
-Not affiliated with Apple, Microsoft, Google, pengchujin or any TV maker. "Aerial" is the upstream project's name. This fork will ship under its own name and app ID so it is never mistaken for the original.
+Not affiliated with Apple, Microsoft, Google, pengchujin or any TV maker. "Aerial" is the upstream project's name. This fork uses its own name and app ID so it is never mistaken for the original.

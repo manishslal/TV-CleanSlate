@@ -1,0 +1,1043 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home</title>
+<style>
+@font-face { font-family: Board; src: url(barlow_condensed_semibold.ttf); }
+:root { --u: calc(100vw / 1920); --ink: #efe7d2; --label: #fff; --dim: rgba(235,235,245,.6); --glass: rgba(24,24,26,.82); --hair: rgba(255,255,255,.1);
+  --panel: rgba(32,32,34,.96); --row: rgba(120,120,128,.18); --focus: #f5f5f7; --onfocus: #1d1d1f; --sheet-a: rgba(30,33,40,.44); --sheet-b: rgba(20,22,28,.56); --plain-a: rgba(46,50,58,.9); --plain-b: rgba(24,26,32,.94);
+  --dock-a: rgba(255,255,255,.14); --dock-b: rgba(255,255,255,.05); --rim: rgba(255,255,255,.4); --ring: #f5f5f7; --ringgap: rgba(0,0,0,.75);
+  --onwall: #fff; --onwall-shadow: rgba(0,0,0,.75); --onsheet: #fff; --onsheet-shadow: rgba(0,0,0,.75); --lift: rgba(0,0,0,.6); --dockshadow: rgba(0,0,0,.42); --cleartile: var(--glass); --glowalpha: .5; }
+body.light { --label: #1d1d1f; --dim: rgba(60,60,67,.62); --glass: rgba(242,242,247,.86); --hair: rgba(0,0,0,.12); --panel: rgba(242,242,247,.97); --row: rgba(120,120,128,.16);
+  --focus: #1d1d1f; --onfocus: #fff; --sheet-a: rgba(238,240,244,.52); --sheet-b: rgba(222,226,232,.62); --plain-a: rgba(236,238,242,.92); --plain-b: rgba(214,218,226,.94); --dock-a: rgba(255,255,255,.34); --dock-b: rgba(255,255,255,.18); --rim: rgba(255,255,255,.9); --ringgap: rgba(0,0,0,.4);
+  --onsheet: #1d1d1f; --onsheet-shadow: rgba(255,255,255,.7); --lift: rgba(0,0,0,.3); --dockshadow: rgba(0,0,0,.22); --cleartile: rgba(44,44,48,.88); --glowalpha: .3; }
+* { box-sizing: border-box; margin: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #000; color: var(--label); font-family: "LG Smart UI", "Helvetica Neue", Arial, sans-serif; cursor: none; }
+.fill { position: fixed; left: 0; top: 0; width: 100%; height: 100%; }
+#wall { background: radial-gradient(120% 90% at 30% 10%, #1c2a3a, #05070b 70%); }
+video, #photo { position: fixed; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.4s; }
+video.on, #photo.on { opacity: 1; }
+#shade { transition: opacity .8s; background-image: radial-gradient(62% 58% at 0 0, rgba(0,0,0,.62), rgba(0,0,0,0) 72%), linear-gradient(180deg, rgba(0,0,0,.3) 0, rgba(0,0,0,.04) 40%, rgba(0,0,0,.34) 100%); }
+body.right #shade { background-image: radial-gradient(62% 58% at 100% 0, rgba(0,0,0,.62), rgba(0,0,0,0) 72%), linear-gradient(180deg, rgba(0,0,0,.3) 0, rgba(0,0,0,.04) 40%, rgba(0,0,0,.34) 100%); }
+body.dimwall #shade { background-color: rgba(0,0,0,.3); }
+#glow { position: fixed; left: 0; top: 0; width: 96px; height: 54px; transform-origin: 0 0; opacity: var(--glowalpha); transition: opacity .2s; }
+/* This TV's video plane can't be blurred, so softly blurred frames baked from the clip play over it in step: inside the dock at rest, over the whole screen further down */
+#fclip { position: fixed; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; opacity: 0; transition: clip-path .22s ease-out, opacity .3s;
+  clip-path: inset(calc(800 * var(--u)) calc(52 * var(--u)) calc(40 * var(--u)) calc(52 * var(--u)) round calc(36 * var(--u))); }
+body.frosted #fclip { opacity: 1; }
+body.down #fclip { clip-path: inset(0 round 0); }
+.fl { position: absolute; left: 0; top: 0; width: 192px; height: 108px; transform-origin: 0 0; background-repeat: no-repeat; opacity: 0; transition: opacity 2.5s linear; }
+.fl.on { opacity: 1; }
+#sheet { opacity: 0; transition: opacity .2s; background: linear-gradient(180deg, var(--plain-a), var(--plain-b)); }
+body.frosted #sheet { background: linear-gradient(180deg, var(--sheet-a), var(--sheet-b)); }
+#dock { position: fixed; left: calc(52 * var(--u)); right: calc(52 * var(--u)); bottom: calc(40 * var(--u)); height: calc(240 * var(--u)); border-radius: calc(36 * var(--u)); transition: opacity .2s;
+  background: linear-gradient(180deg, var(--dock-a), var(--dock-b)); box-shadow: inset 0 1px 0 var(--rim), inset 0 -1px 0 rgba(255,255,255,.08), 0 calc(18 * var(--u)) calc(48 * var(--u)) var(--dockshadow); }
+#hint { position: fixed; left: 0; right: 0; bottom: calc(10 * var(--u)); text-align: center; font-size: calc(19 * var(--u)); color: var(--onwall); opacity: .82; text-shadow: 0 1px calc(8 * var(--u)) var(--onwall-shadow); transition: opacity .2s; }
+body.down #sheet { opacity: 1; }
+body.down #dock, body.down #hint { opacity: 0; }
+body.down #hint { opacity: 0; }
+
+#top { position: fixed; left: calc(90 * var(--u)); top: calc(70 * var(--u)); transform-origin: 0 0; transition: transform .22s ease-out, opacity .4s; }
+body.right #top { left: auto; right: calc(90 * var(--u)); transform-origin: 100% 0; text-align: right; }
+body.big #top { transform: scale(1.3); }
+body.down #top { transform: translateY(calc(-30 * var(--u))) scale(.5); }
+body.down #line { opacity: 0; }
+#clock { display: flex; align-items: flex-end; font-family: Board, sans-serif; color: var(--ink); }
+body.right #clock { justify-content: flex-end; }
+#clock > * { margin-right: calc(12 * var(--u)); }
+#meridiem .card + .card { margin-left: calc(6 * var(--u)); }
+#clock > #meridiem { display: flex; margin-left: calc(4 * var(--u)); }
+.card { --h: calc(128 * var(--u)); --r: calc(9 * var(--u)); position: relative; width: calc(88 * var(--u)); height: var(--h); text-align: center; border-radius: var(--r); background: #000;
+  box-shadow: 0 calc(8 * var(--u)) calc(22 * var(--u)) rgba(0,0,0,.55); font-size: calc(116 * var(--u)); line-height: var(--h); perspective: calc(640 * var(--u)); }
+.card.sm { --h: calc(60 * var(--u)); --r: calc(6 * var(--u)); width: calc(44 * var(--u)); font-size: calc(46 * var(--u)); }
+.card::before, .card::after { content: ''; position: absolute; top: 50%; width: calc(5 * var(--u)); height: calc(14 * var(--u)); margin-top: calc(-7 * var(--u)); border-radius: calc(2 * var(--u)); background: #4a4a50; z-index: 4; }
+.card::before { left: 0; }
+.card::after { right: 0; }
+/* a split-flap: two still halves, and two moving flaps while the card turns */
+.half { position: absolute; left: 0; right: 0; height: calc(var(--h) / 2 - 1px); overflow: hidden; backface-visibility: hidden; }
+.half span { position: absolute; left: 0; right: 0; height: var(--h); }
+.half.top { top: 0; border-radius: var(--r) var(--r) 0 0; background: linear-gradient(#313137, #27272b); }
+.half.bot { bottom: 0; border-radius: 0 0 var(--r) var(--r); background: linear-gradient(#212125, #1a1a1e); }
+.half.bot span { bottom: 0; }
+.ft { z-index: 2; transform-origin: 50% calc(100% + 1px); animation: fall linear both; animation-timing-function: cubic-bezier(.55,.06,.9,.5); }
+.fb { z-index: 3; transform-origin: 50% -1px; animation: land both; }
+.ft::after, .fb::after { content: ''; position: absolute; left: 0; right: 0; top: 0; bottom: 0; background: #000; }
+.ft::after { animation: dusk both; animation-duration: inherit; animation-timing-function: ease-in; }
+.fb::after { animation: dawn both; animation-duration: inherit; animation-delay: inherit; }
+@keyframes fall { from { transform: rotateX(0); } to { transform: rotateX(-90deg); } }
+@keyframes land { 0% { transform: rotateX(90deg); animation-timing-function: cubic-bezier(.3,.6,.7,1); } 66% { transform: rotateX(0); animation-timing-function: ease-out; } 82% { transform: rotateX(14deg); animation-timing-function: ease-in; } 100% { transform: rotateX(0); } }
+@keyframes dusk { from { opacity: 0; } to { opacity: .55; } }
+@keyframes dawn { from { opacity: .55; } to { opacity: 0; } }
+#clock.flip .card, #clock.plain .card { background: none; box-shadow: none; width: calc(62 * var(--u)); text-shadow: 0 calc(2 * var(--u)) calc(18 * var(--u)) rgba(0,0,0,.6); }
+#clock.flip .card.sm, #clock.plain .card.sm { width: calc(28 * var(--u)); }
+#clock.flip .card::before, #clock.flip .card::after, #clock.plain .card::before, #clock.plain .card::after { display: none; }
+#clock.flip .half, #clock.plain .half { background: none; }
+#clock.flip .ft::after, #clock.flip .fb::after { display: none; }
+body.light.down .colon { color: var(--onsheet); }
+.colon { font-size: calc(92 * var(--u)); line-height: calc(118 * var(--u)); }
+#line { margin-top: calc(26 * var(--u)); font-family: Board, sans-serif; letter-spacing: .05em; color: var(--ink); font-size: calc(34 * var(--u)); text-transform: uppercase; text-shadow: 0 calc(2 * var(--u)) calc(18 * var(--u)) rgba(0,0,0,.7); }
+#line span { opacity: .78; }
+#line svg { width: calc(30 * var(--u)); height: calc(30 * var(--u)); vertical-align: calc(-5 * var(--u)); margin: 0 calc(6 * var(--u)); fill: currentColor; }
+
+#pill { position: fixed; right: calc(90 * var(--u)); top: calc(66 * var(--u)); height: calc(52 * var(--u)); padding: 0 calc(20 * var(--u)); border-radius: calc(26 * var(--u)); background: var(--glass);
+  display: flex; align-items: center; font-size: calc(22 * var(--u)); box-shadow: inset 0 0 0 1px var(--hair); transition: opacity .8s, transform .1s ease-out; }
+body.right #pill { right: auto; left: calc(90 * var(--u)); }
+#pill svg { width: calc(26 * var(--u)); height: calc(26 * var(--u)); fill: currentColor; margin-right: calc(10 * var(--u)); }
+#pill span + svg { margin-left: calc(12 * var(--u)); margin-right: 0; }
+#pill.f { background: var(--focus); color: var(--onfocus); transform: scale(1.1); }
+
+#gridwrap { position: fixed; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; transition: opacity .8s; }
+#grid { display: grid; grid-template-columns: repeat(6, calc(252 * var(--u))); grid-auto-rows: calc(186 * var(--u)); column-gap: calc(46 * var(--u)); row-gap: calc(14 * var(--u)); padding: 0 calc(89 * var(--u)); transition: transform .22s ease-out; }
+body:not(.down) #grid .tile:nth-child(n+7) { visibility: hidden; }
+.tile { position: relative; }
+.plate { position: relative; width: calc(252 * var(--u)); height: calc(142 * var(--u)); border-radius: calc(22 * var(--u)); background: var(--glass); display: flex; align-items: center; justify-content: center; overflow: hidden; transition: transform .1s ease-out; }
+body.first .plate { animation: rise .42s ease-out backwards; }
+@keyframes rise { from { opacity: 0; transform: translateY(calc(26 * var(--u))) scale(.94); } }
+.plate::after { content: ''; position: absolute; left: 0; right: 0; top: 0; bottom: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--hair), inset 0 1px 0 rgba(255,255,255,.22); background: linear-gradient(180deg, rgba(255,255,255,.13), rgba(255,255,255,0) 42%); }
+.plate img, .plate canvas { position: absolute; }
+.plate.clear { background: var(--cleartile); }
+/* Dark Glass is the tile's own look, whatever the appearance */
+body.glasstiles .plate { background: rgba(24,24,26,.82); color: #fff; }
+body.glasstiles .plate b, body.light.glasstiles .plate b { color: var(--ink); }
+body.light.glasstiles .plate.input img { filter: brightness(3); }
+.plate.mark img { position: static; }
+.plate.plainicon img { position: static; height: 66%; }
+.plate.input img { position: static; height: 52%; margin-right: calc(14 * var(--u)); filter: brightness(3); }
+body.light .plate.input img { filter: none; }
+.plate b { font-family: Board, sans-serif; font-weight: normal; font-size: calc(40 * var(--u)); letter-spacing: .03em; color: var(--ink); }
+body.light .plate b { color: #1d1d1f; }
+.plate svg { width: calc(88 * var(--u)); height: calc(88 * var(--u)); fill: currentColor; }
+.minis { display: grid; grid-template-columns: repeat(2, calc(84 * var(--u))); grid-auto-rows: calc(58 * var(--u)); column-gap: calc(6 * var(--u)); row-gap: calc(4 * var(--u)); }
+.minis img { position: static; width: calc(84 * var(--u)); height: calc(58 * var(--u)); object-fit: contain; }
+.name { margin-top: calc(18 * var(--u)); text-align: center; font-size: calc(21 * var(--u)); opacity: 0; color: var(--onwall); text-shadow: 0 1px calc(8 * var(--u)) var(--onwall-shadow); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.names .name, .tile.f .name { opacity: 1; }
+body.down #grid .name { color: var(--onsheet); text-shadow: 0 1px calc(6 * var(--u)) var(--onsheet-shadow); }
+.tile.f { z-index: 2; }
+.tile.f .plate { transform: scale(1.15); box-shadow: 0 0 0 calc(3 * var(--u)) var(--ringgap), 0 0 0 calc(6 * var(--u)) var(--ring), 0 calc(18 * var(--u)) calc(30 * var(--u)) var(--lift); }
+.tile.move .plate { transform: scale(1.18); box-shadow: 0 0 0 calc(3 * var(--u)) rgba(0,0,0,.75), 0 0 0 calc(7 * var(--u)) #ffd60a, 0 calc(18 * var(--u)) calc(30 * var(--u)) var(--lift); }
+.tile.push .plate { animation: push .18s ease-out; }
+@keyframes push { 40% { transform: scale(1.15) translateX(var(--dx, 0)) translateY(var(--dy, 0)); } }
+body.lite .tile.f .plate { box-shadow: 0 0 0 calc(3 * var(--u)) var(--ringgap), 0 0 0 calc(6 * var(--u)) var(--ring); }
+body.lite #glow { display: none; }
+
+/* panels */
+#scrim { background: rgba(0,0,0,.5); opacity: 0; visibility: hidden; transition: opacity .14s; z-index: 9; }
+body.modal #scrim { opacity: 1; visibility: visible; }
+.panel { position: fixed; top: calc(70 * var(--u)); bottom: calc(70 * var(--u)); right: calc(70 * var(--u)); width: calc(640 * var(--u)); border-radius: calc(32 * var(--u)); background: var(--panel); box-shadow: 0 calc(20 * var(--u)) calc(60 * var(--u)) rgba(0,0,0,.5), inset 0 1px 0 var(--rim); padding: calc(34 * var(--u)); overflow: hidden; z-index: 10; display: none; }
+.panel.on { display: block; animation: pop .18s ease-out; }
+@keyframes pop { from { opacity: 0; transform: translateX(calc(40 * var(--u))); } }
+.panel h2 { font-size: calc(36 * var(--u)); font-weight: 600; margin-bottom: calc(6 * var(--u)); }
+.panel .sub { color: var(--dim); font-size: calc(21 * var(--u)); margin-bottom: calc(22 * var(--u)); line-height: 1.4; }
+.rows { transition: transform .14s ease-out; }
+.row { display: flex; align-items: center; min-height: calc(68 * var(--u)); padding: calc(12 * var(--u)) calc(20 * var(--u)); margin-bottom: calc(8 * var(--u)); border-radius: calc(16 * var(--u)); background: var(--row); font-size: calc(25 * var(--u)); }
+.row svg { width: calc(32 * var(--u)); height: calc(32 * var(--u)); fill: currentColor; margin-right: calc(16 * var(--u)); flex: none; }
+.row .l { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .v { color: var(--dim); margin-left: calc(14 * var(--u)); font-size: calc(23 * var(--u)); white-space: nowrap; }
+.row .bar { width: calc(190 * var(--u)); height: calc(10 * var(--u)); border-radius: calc(5 * var(--u)); background: var(--hair); overflow: hidden; margin-left: calc(14 * var(--u)); }
+.row .bar i { display: block; height: 100%; background: currentColor; }
+.row.f { background: var(--focus); color: var(--onfocus); }
+.row.f .v { color: inherit; opacity: .72; }
+.row.note { background: none; color: var(--dim); font-size: calc(21 * var(--u)); min-height: 0; line-height: 1.4; }
+.row input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: inherit; font: inherit; }
+#fgrid { display: grid; grid-template-columns: repeat(5, calc(252 * var(--u))); grid-auto-rows: calc(186 * var(--u)); column-gap: calc(46 * var(--u)); row-gap: calc(14 * var(--u)); justify-content: center; align-content: center; }
+#folder { position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 10; display: none; padding-top: calc(120 * var(--u)); }
+#folder.on { display: block; }
+#folder h2 { text-align: center; font-size: calc(40 * var(--u)); font-weight: 600; margin-bottom: calc(40 * var(--u)); color: #fff; }
+#pin { position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 12; display: none; align-items: center; justify-content: center; flex-direction: column; color: #fff; background: rgba(0,0,0,.72); }
+#pin.on { display: flex; }
+#pin p { font-size: calc(30 * var(--u)); margin-bottom: calc(28 * var(--u)); }
+#pin .dots { font-size: calc(46 * var(--u)); letter-spacing: .3em; margin-bottom: calc(28 * var(--u)); height: calc(60 * var(--u)); }
+#pin .keys { display: flex; }
+#pin .keys b { width: calc(70 * var(--u)); height: calc(84 * var(--u)); line-height: calc(84 * var(--u)); margin: 0 calc(5 * var(--u)); text-align: center; font-size: calc(36 * var(--u)); font-weight: 500; border-radius: calc(14 * var(--u)); background: rgba(255,255,255,.14); }
+#pin .keys b.f { background: #f5f5f7; color: #1d1d1f; }
+
+/* screensaver */
+#caption, #news { position: fixed; bottom: calc(64 * var(--u)); opacity: 0; transition: opacity .8s; color: #fff; text-shadow: 0 calc(2 * var(--u)) calc(14 * var(--u)) rgba(0,0,0,.8); }
+#caption { left: calc(90 * var(--u)); font-size: calc(30 * var(--u)); }
+#news { right: calc(90 * var(--u)); max-width: calc(760 * var(--u)); text-align: right; font-size: calc(30 * var(--u)); line-height: 1.32; }
+#news small { display: block; font-size: calc(19 * var(--u)); letter-spacing: .08em; text-transform: uppercase; opacity: .72; margin-bottom: calc(6 * var(--u)); }
+body.idle #gridwrap, body.idle #pill, body.idle #dock, body.idle #hint, body.idle #sheet, body.idle #glow, body.idle #fclip { opacity: 0; }
+body.idle #shade { opacity: .5; }
+body.idle #caption, body.idle.news #news { opacity: 1; }
+body.idle.noclock #top { opacity: 0; }
+body.idle #top { transform: translate(var(--driftx, 0), var(--drifty, 0)); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body class="first">
+<div id="wall" class="fill"></div>
+<video id="v0" muted playsinline></video>
+<video id="v1" muted playsinline></video>
+<img id="photo" alt="">
+<div id="glow"></div>
+<div id="shade" class="fill"></div>
+<div id="fclip"><div class="fl" id="f0"></div><div class="fl" id="f1"></div></div>
+<div id="sheet" class="fill"></div>
+<div id="dock"></div>
+<div id="hint">Down for all apps</div>
+<div id="top"><div id="clock"></div><div id="line"></div></div>
+<div id="pill"></div>
+<div id="gridwrap"><div id="grid"></div></div>
+<div id="caption"></div>
+<div id="news"></div>
+<div id="scrim" class="fill"></div>
+<div id="panel" class="panel"></div>
+<div id="folder"><h2 id="ftitle"></h2><div id="fgrid"></div></div>
+<div id="pin"><p id="pintitle"></p><div class="dots" id="pindots"></div><div class="keys" id="pinkeys"></div></div>
+<script>
+/* Home for webOS: a web version of the io.manish.home home screen, served by CleanYourTV's Home takeover. */
+var API = 'http://127.0.0.1:8765', SVC = 'http://127.0.0.1:8766';
+var VERSION = '99.0.0';
+var COLS = 6, PITCH = 200;
+var ORDER = ['netflix', 'youtube.leanback.v4', 'amazon', 'com.disney.disneyplus-prod', 'com.wbd.stream', 'hulu', 'com.apple.appletv',
+  'cdp-30', 'com.peacock.tv', 'com.cbs-all-access.webapp.prod', 'spotify-beehive'];
+var HIDDEN = ['amazon.alexa.view', 'com.webos.app.homeconnect', 'com.webos.app.lgchannels', 'com.webos.app.livepick-full', 'com.webos.app.roomconnect', 'com.webos.app.sportsteamsettings'];
+var VIDEOS = __VIDEOS__;
+var ICONS = __ICONS__;
+var TOPICS = __TOPICS__;
+var LOGOS = __LOGOS__;
+var FROST = __FROST__;
+
+var $ = function (id) { return document.getElementById(id); };
+function read(key, d) { try { return JSON.parse(localStorage.getItem(key)) || d; } catch (e) { return d; } }
+function write(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) {} }
+function svg(name) { return '<svg viewBox="0 -960 960 960"><path d="' + (ICONS[name] || '') + '"/></svg>'; }
+function api(path, body) { return fetch(API + path, body ? { method: 'POST', body: JSON.stringify(body) } : {}).then(function (r) { return r.json(); }); }
+function svc(path) { return fetch(SVC + path).then(function (r) { return r.json(); }); }
+function esc(t) { var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+/* ---- settings, the same names as Android Home's Personalize ---- */
+var S = Object.assign({ clockStyle: 'cards', clockRight: false, largeClock: false, h24: false, showWeather: true, fahrenheit: true, flapSound: false, uiSounds: true,
+  appearance: 'dark', tiles: 'full', effects: 'auto', showAllNames: false, cats: ['landscapes', 'cities'], source: 'aerial', saverMin: 5, saverClock: true, backSaver: true,
+  headlines: true, topics: ['tech'], newsShuffle: false, place: 'New York', lat: 40.7128, lon: -74.0060, hidden: HIDDEN.slice(), folders: {}, order: null, pin: '', bootTarget: '' }, read('home-settings', {}));
+var legacy = read('home-order', null);
+if (!S.order && legacy) S.order = legacy;
+function save() { write('home-settings', S); }
+var colors = read('home-colors', {});
+
+var tiles = [], focus = 0, row = 0, active = 0, lastKey = Date.now(), moving = false, held = null, zone = 'grid', allApps = [], allInputs = [], wx = null;
+
+/* ---- theme ---- */
+var lastGlass = null;
+function darkNow() {
+  if (S.appearance === 'dark') return true;
+  if (S.appearance === 'light') return false;
+  if (wx && wx.rise && wx.set) { var n = Date.now(); return n < wx.rise || n > wx.set; }
+  var h = new Date().getHours();
+  return h < 7 || h >= 19;
+}
+function theme() {
+  var c = document.body.classList;
+  c.toggle('light', !darkNow());
+  c.toggle('right', S.clockRight);
+  c.toggle('big', S.largeClock);
+  c.toggle('names', S.showAllNames);
+  c.toggle('lite', S.effects === 'lite');
+  var glass = tileGlass();
+  c.toggle('glasstiles', glass);
+  c.toggle('dimwall', glass && darkNow());
+  if (glass !== lastGlass) { lastGlass = glass; if (allApps.length) build(); }
+  $('clock').className = S.clockStyle;
+}
+
+/* ---- sound ---- */
+var ac = null, sounds = {};
+function sound(name, force) {
+  if (!S.uiSounds && !force) return;
+  try {
+    if (!ac) ac = new AudioContext();
+    if (ac.state === 'suspended') ac.resume();
+    if (sounds[name]) { var s = ac.createBufferSource(); s.buffer = sounds[name]; s.connect(ac.destination); s.start(); return; }
+    var x = new XMLHttpRequest();
+    x.open('GET', 'ui_' + name + '.wav');
+    x.responseType = 'arraybuffer';
+    x.onload = function () { ac.decodeAudioData(x.response, function (b) { sounds[name] = b; }); };
+    x.send();
+  } catch (e) {}
+}
+
+/* ---- wallpaper ---- */
+function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+var queue = [], plexVideos = read('home-plex-videos', []), plexPhotos = read('home-plex-photos', []), photoTimer = 0;
+function pool() {
+  if (S.source === 'plexv' && plexVideos.length) return plexVideos;
+  var p = VIDEOS.filter(function (v) { return S.cats.indexOf(v[2]) >= 0; });
+  return p.length ? p : VIDEOS;
+}
+var FROST_STEP = 10, frostFrames = 0, frostAt = -1, frostTop = 0, frostTimer = 0, frostUrl = '';
+function frostOff() { clearInterval(frostTimer); frostAt = -1; document.body.classList.remove('frosted'); }
+function frostTick() {
+  var k = Math.min(frostFrames - 1, Math.floor($('v' + active).currentTime / FROST_STEP));
+  if (k === frostAt) return;
+  frostAt = k;
+  var a = $('f' + frostTop), b = $('f' + (1 - frostTop));
+  b.style.backgroundImage = 'url(' + frostUrl + ')';
+  b.style.backgroundPosition = -(k % 6) * 192 + 'px ' + -Math.floor(k / 6) * 108 + 'px';
+  b.className = 'fl on';
+  a.className = 'fl';
+  frostTop = 1 - frostTop;
+}
+function frost(i) {
+  frostOff();
+  if (!FROST[i]) return;
+  var sheet = new Image();
+  sheet.onload = function () {
+    frostFrames = FROST[i]; frostUrl = sheet.src;
+    frostTick();
+    document.body.classList.add('frosted');
+    frostTimer = setInterval(frostTick, 1000);
+  };
+  sheet.src = 'sheet-' + i + '.jpg';
+}
+function nextPhoto() {
+  if (document.hidden) return;
+  var el = $('photo'), url = plexPhotos[Math.floor(Math.random() * plexPhotos.length)];
+  el.onload = function () { el.className = 'on'; };
+  el.src = url;
+  clearTimeout(photoTimer);
+  photoTimer = setTimeout(nextPhoto, 30000);
+}
+function next() {
+  if (document.hidden) return;
+  if (S.source === 'plexp' && plexPhotos.length) return nextPhoto();
+  if (!queue.length) queue = shuffle(pool().slice());
+  var v = $('v' + (1 - active)), old = $('v' + active), item = queue.pop();
+  v.onplaying = function () {
+    v.onplaying = null; v.className = 'on'; old.className = ''; active = 1 - active;
+    $('caption').textContent = item[1] || '';
+    frost(item[3]);
+    setTimeout(function () { old.pause(); old.removeAttribute('src'); old.load(); }, 1600);
+  };
+  v.onended = next;
+  v.onerror = function () { setTimeout(next, 30000); };
+  v.src = item[0];
+  v.play().catch(function () {});
+}
+function stopVideo() {
+  clearTimeout(photoTimer);
+  frostOff();
+  [$('v0'), $('v1')].forEach(function (v) { v.onerror = null; v.pause(); v.removeAttribute('src'); v.load(); v.className = ''; });
+}
+function restartWall() { stopVideo(); queue = []; $('photo').className = ''; next(); }
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden) stopVideo();
+  else { refresh(); next(); }
+});
+
+/* ---- clock ---- */
+var shown = {}, stamp = '', FLIP_MS = 460, RUN_MS = 140, STAGGER_MS = 60, turning = 0;
+function half(cls, ch) { return '<div class="half ' + cls + '"><span>' + esc(ch) + '</span></div>'; }
+function still(el, top, bot) { el.innerHTML = half('top', top) + half('bot', bot); }
+/* one turn: the old top falls and the new bottom swings down and settles, with the new top already behind it */
+function turn(el, from, to, ms) {
+  still(el, to, from);
+  var a = document.createElement('div'), b = document.createElement('div');
+  a.innerHTML = half('top ft', from);
+  b.innerHTML = half('bot fb', to);
+  var fall = ms * .42, land = ms * .58;
+  a.firstChild.style.animationDuration = fall + 'ms';
+  b.firstChild.style.animationDuration = land + 'ms';
+  b.firstChild.style.animationDelay = fall + 'ms';
+  el.appendChild(a);
+  el.appendChild(b);
+  setTimeout(function () { still(el, to, to); }, ms);
+}
+/* a digit counts up through the ones between it and the new one, fast, as Android Home's board does */
+function steps(from, to) {
+  var a = +from, b = +to, out = [];
+  if (isNaN(a) || isNaN(b) || from === ' ' || to === ' ') return [to];
+  while (a !== b && out.length < 9) { a = (a + 1) % 10; out.push(String(a)); }
+  return out;
+}
+function card(slot, ch, small) {
+  var el = $(slot);
+  if (!el) {
+    el = document.createElement('div');
+    el.id = slot;
+    el.className = 'card' + (small ? ' sm' : '');
+    still(el, ch, ch);
+    (small ? $('meridiem') : $('clock')).appendChild(el);
+    shown[slot] = ch;
+    return;
+  }
+  var from = shown[slot];
+  if (from === ch) return;
+  shown[slot] = ch;
+  if (S.clockStyle === 'plain' || document.hidden || !stamp) return still(el, ch, ch);
+  var run = steps(from, ch), ms = run.length > 1 ? RUN_MS : FLIP_MS, at = turning++ * STAGGER_MS;
+  run.forEach(function (to, i) {
+    var was = i ? run[i - 1] : from;
+    setTimeout(function () { turn(el, was, to, ms); }, at + i * ms);
+  });
+}
+function clock(force) {
+  var d = new Date(), key = d.getHours() + ':' + d.getMinutes();
+  if (key === stamp && !force) return;
+  var flip = stamp && !force;
+  if (force) stamp = '';
+  turning = 0;
+  var h = S.h24 ? d.getHours() : d.getHours() % 12 || 12, m = d.getMinutes();
+  var hh = S.h24 && h < 10 ? '0' + h : String(h), mm = (m < 10 ? '0' : '') + m, ap = d.getHours() < 12 ? 'AM' : 'PM';
+  if (!$('colon')) {
+    card('h0', ' ');
+    card('h1', '0');
+    var c = document.createElement('div'); c.id = 'colon'; c.className = 'colon'; c.textContent = ':'; $('clock').appendChild(c);
+    card('m0', '0'); card('m1', '0');
+    var r = document.createElement('div'); r.id = 'meridiem'; $('clock').appendChild(r);
+    card('a0', 'A', true); card('a1', 'M', true);
+  }
+  card('h0', hh.length > 1 ? hh[0] : ' ');
+  $('h0').style.display = hh.length > 1 ? '' : 'none';
+  card('h1', hh[hh.length - 1]);
+  card('m0', mm[0]);
+  card('m1', mm[1]);
+  card('a0', ap[0], true);
+  card('a1', ap[1], true);
+  $('meridiem').style.display = S.h24 ? 'none' : '';
+  stamp = key;
+  line();
+  if (flip && S.flapSound && !document.hidden) sound('flap', true);
+}
+function line() {
+  var date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  var w = wx && S.showWeather ? ' <span>&nbsp;·&nbsp; ' + esc(S.place) + ' ' + svg(wx.icon) + Math.round(S.fahrenheit ? wx.t : (wx.t - 32) * 5 / 9) + '°' + (S.fahrenheit ? 'F' : 'C') + ' ' + esc(wx.text) + '</span>' : '';
+  $('line').innerHTML = esc(date) + w;
+}
+
+/* ---- weather ---- */
+var WMO = { 0: ['Clear', 'sun'], 1: ['Mostly clear', 'sun'], 2: ['Partly cloudy', 'part'], 3: ['Cloudy', 'CLOUD'], 45: ['Fog', 'FOGGY'], 48: ['Fog', 'FOGGY'], 51: ['Drizzle', 'RAINY'], 53: ['Drizzle', 'RAINY'], 55: ['Drizzle', 'RAINY'],
+  61: ['Rain', 'RAINY'], 63: ['Rain', 'RAINY'], 65: ['Heavy rain', 'RAINY'], 71: ['Snow', 'WEATHER_SNOWY'], 73: ['Snow', 'WEATHER_SNOWY'], 75: ['Heavy snow', 'WEATHER_SNOWY'], 80: ['Showers', 'RAINY'], 81: ['Showers', 'RAINY'], 82: ['Showers', 'RAINY'], 95: ['Storms', 'THUNDERSTORM'], 96: ['Storms', 'THUNDERSTORM'], 99: ['Storms', 'THUNDERSTORM'] };
+function loadWeather() {
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=' + S.lat + '&longitude=' + S.lon + '&current=temperature_2m,weather_code,is_day&daily=sunrise,sunset&forecast_days=1&timezone=auto&temperature_unit=fahrenheit')
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      var w = WMO[j.current.weather_code] || ['', 'CLOUD'], day = j.current.is_day;
+      wx = { t: j.current.temperature_2m, text: w[0], icon: w[1] === 'sun' ? (day ? 'LIGHT_MODE' : 'BEDTIME') : w[1] === 'part' ? (day ? 'PARTLY_CLOUDY_DAY' : 'BEDTIME') : w[1],
+        rise: Date.parse(j.daily.sunrise[0]), set: Date.parse(j.daily.sunset[0]) };
+      line();
+      theme();
+    }).catch(function () {});
+}
+
+/* ---- headlines ---- */
+var stories = [], storyAt = 0, storyTimer = 0;
+function loadNews() {
+  if (!S.headlines || !S.topics.length) { stories = []; return; }
+  var got = [];
+  Promise.all(S.topics.map(function (k) {
+    var t = TOPICS.filter(function (x) { return x[0] === k; })[0];
+    if (!t) return null;
+    return svc('/news?u=' + encodeURIComponent(t[2])).then(function (j) {
+      var doc = new DOMParser().parseFromString(j.xml || '', 'text/xml'), items = doc.getElementsByTagName('item'), cut = Date.now() - 864e5, list = [];
+      for (var i = 0; i < items.length && list.length < 20; i++) {
+        var when = Date.parse((items[i].getElementsByTagName('pubDate')[0] || {}).textContent);
+        if (when > cut) list.push({ topic: t[1], title: (items[i].getElementsByTagName('title')[0] || {}).textContent, when: when });
+      }
+      got.push(list);
+    }).catch(function () {});
+  })).then(function () {
+    var out = [], n = 0, more = true;
+    while (more) { more = false; got.forEach(function (l) { if (l[n]) { out.push(l[n]); more = true; } }); n++; }
+    stories = S.newsShuffle ? shuffle(out) : out;
+  });
+}
+function nextStory() {
+  clearTimeout(storyTimer);
+  if (!document.body.classList.contains('idle')) return;
+  var s = stories[storyAt++ % (stories.length || 1)];
+  document.body.classList.toggle('news', !!s && S.headlines);
+  if (s) $('news').innerHTML = '<small>' + esc(s.topic) + '</small>' + esc(s.title);
+  storyTimer = setTimeout(nextStory, 15000);
+}
+
+/* ---- screensaver ---- */
+var driftTimer = 0;
+function drift() {
+  var r = document.documentElement.style;
+  r.setProperty('--driftx', (S.clockRight ? -1 : 1) * Math.round(Math.random() * 760) * window.innerWidth / 1920 + 'px');
+  r.setProperty('--drifty', Math.round(Math.random() * 520) * window.innerWidth / 1920 + 'px');
+  driftTimer = setTimeout(drift, 60000);
+}
+function saver(on) {
+  var c = document.body.classList;
+  if (on === c.contains('idle')) return;
+  c.toggle('idle', on);
+  c.toggle('noclock', on && !S.saverClock);
+  if (on) { drift(); nextStory(); }
+  else { clearTimeout(driftTimer); clearTimeout(storyTimer); c.remove('news'); }
+}
+
+/* ---- tiles ---- */
+function plain(text) { var b = document.createElement('b'); b.textContent = text; return b; }
+/* Each icon draws its logo at its own size, so the logo is measured once and every logo is set to fit the same box.
+   The icon's corner colour fills the rest of the tile. See-through icons have no colour and stay on the glass. */
+var LOGO_W = 168, LOGO_H = 92, ART = 'home-art-1';
+var arts = read(ART, {});
+function pixels(img) {
+  var cv = document.createElement('canvas'), w = img.naturalWidth, h = img.naturalHeight;
+  cv.width = w; cv.height = h;
+  var x = cv.getContext('2d');
+  x.drawImage(img, 0, 0);
+  return { cv: cv, x: x, w: w, h: h, d: x.getImageData(0, 0, w, h) };
+}
+function measure(p) {
+  var d = p.d.data, w = p.w, h = p.h, o = (3 + 3 * w) * 4, clear = d[o + 3] < 128, r = d[o], g = d[o + 1], b = d[o + 2], x0 = w, y0 = h, x1 = 0, y1 = 0;
+  for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) {
+    var i = (x + y * w) * 4, a = d[i + 3];
+    if (clear ? a < 80 : a < 200 || Math.abs(d[i] - r) + Math.abs(d[i + 1] - g) + Math.abs(d[i + 2] - b) < 60) continue;
+    if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+  }
+  if (x1 <= x0 || y1 <= y0) { x0 = 0; y0 = 0; x1 = w - 1; y1 = h - 1; }
+  return { c: clear ? '' : 'rgb(' + r + ',' + g + ',' + b + ')', x: x0 / w, y: y0 / h, w: (x1 - x0 + 1) / w, h: (y1 - y0 + 1) / h };
+}
+/* Dark Glass: the plate goes, near-black type turns white so it reads on the dark tile, and logos in one pale tone go white */
+function stripPlate(p, a) {
+  var d = p.d.data, m = a.c.match(/\d+/g) || [], r = +m[0], g = +m[1], b = +m[2];
+  for (var i = 0; i < d.length; i += 4) {
+    if (a.c) {
+      /* how far each pixel is from the plate is its alpha; taking the plate back out of edge pixels keeps them smooth, with no halo */
+      var e = Math.abs(d[i] - r) + Math.abs(d[i + 1] - g) + Math.abs(d[i + 2] - b), al = Math.min(1, Math.max(0, (e - 12) / 150));
+      if (al > 0) { d[i] = Math.min(255, Math.max(0, (d[i] - (1 - al) * r) / al)); d[i + 1] = Math.min(255, Math.max(0, (d[i + 1] - (1 - al) * g) / al)); d[i + 2] = Math.min(255, Math.max(0, (d[i + 2] - (1 - al) * b) / al)); }
+      d[i + 3] = Math.min(d[i + 3], al * 255);
+    }
+    var hi = Math.max(d[i], d[i + 1], d[i + 2]), lo = Math.min(d[i], d[i + 1], d[i + 2]);
+    if (hi < 90 && hi - lo < 40) { d[i] = d[i + 1] = d[i + 2] = 255; }
+  }
+  p.x.putImageData(p.d, 0, 0);
+  return p.cv;
+}
+function place(el, a, ratio) {
+  var side = Math.min(LOGO_W / a.w, (LOGO_H / a.h) / ratio, 330), high = side * ratio;
+  el.style.width = 'calc(' + side + ' * var(--u))';
+  el.style.height = 'calc(' + high + ' * var(--u))';
+  el.style.left = 'calc(' + (126 - (a.x + a.w / 2) * side) + ' * var(--u))';
+  el.style.top = 'calc(' + (71 - (a.y + a.h / 2) * high) + ' * var(--u))';
+}
+function fill(p, img, id) {
+  try {
+    var data = pixels(img), a = arts[id];
+    if (!a) { a = measure(data); arts[id] = a; colors[id] = a.c; write(ART, arts); write('home-colors', colors); }
+    var ratio = data.h / data.w;
+    if (tileGlass()) {
+      var cv = stripPlate(data, a);
+      p.replaceChild(cv, img);
+      place(cv, a, ratio);
+    } else {
+      if (a.c) p.style.background = a.c;
+      else p.className += ' clear';
+      place(img, a, ratio);
+    }
+  } catch (e) { p.className += ' plainicon'; }
+}
+function tileGlass() { return S.tiles === 'dark'; }
+function tile(t) {
+  var el = document.createElement('div');
+  el.className = 'tile';
+  var p = document.createElement('div');
+  p.className = 'plate';
+  if (t.folder) {
+    var m = document.createElement('div');
+    m.className = 'minis';
+    t.items.slice(0, 4).forEach(function (a) { var i = document.createElement('img'); i.src = a.icon || ''; m.appendChild(i); });
+    p.appendChild(m);
+  } else if (t.logo) {
+    var mark = document.createElement('img');
+    mark.onerror = function () { mark.onerror = null; mark.src = 'input-hdmigeneric.png'; };
+    mark.src = t.logo;
+    p.className += ' input';
+    p.appendChild(mark);
+    p.appendChild(plain(t.short));
+  } else if (t.glyph) {
+    p.innerHTML = svg(t.glyph);
+  } else if (t.icon && tileGlass() && LOGOS[t.id]) {
+    /* the logo pack: real artwork, sized so wide and square logos carry the same visual weight */
+    var art = document.createElement('img');
+    p.className += ' mark';
+    art.onload = function () {
+      var r = art.naturalWidth / art.naturalHeight, high = Math.min(84, Math.sqrt(8000 / r)), wide = Math.min(176, high * r);
+      art.style.width = 'calc(' + wide + ' * var(--u))';
+      art.style.height = 'calc(' + wide / r + ' * var(--u))';
+    };
+    art.onerror = function () { p.removeChild(art); p.appendChild(plain(t.title)); };
+    art.src = LOGOS[t.id];
+    p.appendChild(art);
+  } else if (t.icon) {
+    var img = document.createElement('img');
+    img.onload = function () { fill(p, img, t.id); };
+    img.onerror = function () {
+      if (t.fallback && img.src !== t.fallback) { img.src = t.fallback; return; }
+      p.removeChild(img); p.appendChild(plain(t.title));
+    };
+    img.src = t.icon;
+    p.appendChild(img);
+  } else p.appendChild(plain(t.short || t.title));
+  var n = document.createElement('div');
+  n.className = 'name';
+  n.textContent = t.title;
+  el.appendChild(p);
+  el.appendChild(n);
+  t.el = el;
+  return el;
+}
+function hue(id) { var h = 0; for (var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 360; return 'hsl(' + h + ',55%,38%)'; }
+function tint(id) {
+  var c = colors[id], m = c && c.match(/\d+/g);
+  if (m && Math.max(+m[0], +m[1], +m[2]) - Math.min(+m[0], +m[1], +m[2]) > 40) return c;
+  return hue(id); /* white and black tiles would only grey the picture */
+}
+function paint() {
+  tiles.forEach(function (t, i) { t.el.className = 'tile' + (zone === 'grid' && i === focus ? ' f' + (moving ? ' move' : '') : ''); });
+  $('pill').className = zone === 'pill' ? 'f' : '';
+  var r = Math.floor(focus / COLS), down = zone === 'grid' && r > 0;
+  if (r > row + 3) row = r - 3;
+  if (r < row) row = r;
+  if (!down) row = 0;
+  document.body.classList.toggle('down', down);
+  $('grid').style.transform = 'translateY(' + (down ? 170 - row * PITCH : 849) * window.innerWidth / 1920 + 'px)';
+  var t = tiles[focus];
+  document.getElementById('glow').style.display = down ? 'none' : '';
+  if (t && zone === 'grid' && !down) $('glow').style.background = 'radial-gradient(70% 70% at 50% 100%, ' + tint(t.id) + ', transparent 72%)';
+}
+function nudge(x, y) {
+  var t = tiles[focus];
+  if (!t) return;
+  t.el.style.setProperty('--dx', x * 14 * window.innerWidth / 1920 + 'px');
+  t.el.style.setProperty('--dy', y * 14 * window.innerWidth / 1920 + 'px');
+  t.el.classList.remove('push');
+  void t.el.offsetWidth;
+  t.el.classList.add('push');
+  sound('limit');
+}
+function appEntry(a) { return { id: a.id, title: a.title, icon: SVC + '/icon?id=' + encodeURIComponent(a.id), fallback: API + '/icon/' + encodeURIComponent(a.id) }; }
+function build() {
+  var by = {}, list = [], inFolder = {};
+  Object.keys(S.folders).forEach(function (k) { S.folders[k].items.forEach(function (id) { inFolder[id] = 1; }); });
+  allApps.forEach(function (a) { if (S.hidden.indexOf(a.id) < 0 && !inFolder[a.id]) by[a.id] = appEntry(a); });
+  allInputs.forEach(function (x) { if (S.hidden.indexOf(x.id) < 0) by[x.id] = x; });
+  by['com.palm.app.settings'] = { id: 'com.palm.app.settings', title: 'Settings', short: 'Settings', glyph: 'SETTINGS' };
+  Object.keys(S.folders).forEach(function (k) {
+    var f = S.folders[k], items = f.items.map(function (id) { var a = allApps.filter(function (x) { return x.id === id; })[0]; return a && appEntry(a); }).filter(Boolean);
+    by[k] = { id: k, title: f.name, folder: true, items: items };
+  });
+  (S.order || []).concat(ORDER, allInputs.map(function (x) { return x.id; }), ['com.palm.app.settings'], Object.keys(by)).forEach(function (id) {
+    if (by[id]) { list.push(by[id]); delete by[id]; }
+  });
+  var cur = tiles[focus] && tiles[focus].id;
+  tiles = list;
+  var g = $('grid');
+  g.textContent = '';
+  list.forEach(function (t) { g.appendChild(tile(t)); });
+  focus = 0;
+  for (var i = 0; i < list.length; i++) if (list[i].id === cur) focus = i;
+  paint();
+}
+function readInputs(j) {
+  var out = [];
+  ((j && j.devices) || []).forEach(function (d) {
+    if (!d.connected || !d.appId) return;
+    var sub = (d.subList || []).filter(function (s) { return s.osdName; })[0];
+    var name = (sub && sub.osdName) || d.userName || d.label || d.deviceName || d.id;
+    out.push({ id: d.appId, title: name, short: name.replace('PlayStation 5', 'PS5'), logo: 'input-' + (d.icon || 'hdmigeneric.png') });
+  });
+  return out;
+}
+var net = null;
+function netPill() {
+  svc('/net').then(function (j) {
+    var on = (j.wired && j.wired.state === 'connected'), wifi = j.wifi && j.wifi.state === 'connected';
+    net = j;
+    $('pill').innerHTML = svg(on ? 'LAN' : wifi ? 'WIFI' : 'WIFI_OFF') + '<span>' + esc(on ? 'Ethernet' : wifi ? (j.wifi.ssid || 'Wi-Fi') : 'Offline') + '</span>' + svg('SETTINGS');
+  }).catch(function () { $('pill').innerHTML = svg('SETTINGS') + '<span>Home</span>'; });
+}
+function refresh() {
+  Promise.all([api('/api/apps'), api('/api/inputs').catch(function () { return {}; })]).then(function (r) {
+    allApps = r[0].apps || [];
+    allInputs = readInputs(r[1]);
+    if (!moving) build();
+    if (!allInputs.length) setTimeout(refresh, 5000); /* the input list can lag behind the launcher starting */
+  }).catch(function () { setTimeout(refresh, 4000); });
+}
+function open(t) {
+  if (t.folder) return openFolder(t);
+  sound('select');
+  stopVideo();
+  api('/api/launch', { id: t.id, params: {} }).catch(function () {});
+}
+
+/* ---- moving tiles: the tile is lifted out and put back in, the others close up ---- */
+function setMoving(on) {
+  moving = on;
+  if (!on) { S.order = tiles.map(function (t) { return t.id; }); save(); }
+  $('hint').textContent = on ? 'Arrows to move, OK to place' : 'Down for all apps';
+  paint();
+}
+function shift(to) {
+  var t = tiles.splice(focus, 1)[0], g = $('grid');
+  tiles.splice(to, 0, t);
+  g.removeChild(t.el);
+  g.insertBefore(t.el, g.children[to] || null);
+  focus = to;
+  sound('move');
+}
+
+/* ---- panels: a stack of pages, each a list of rows ---- */
+var stack = [], pageAt = 0;
+function modal() { document.body.classList.toggle('modal', stack.length > 0 || !!folderOpen || pinCb !== null); }
+function push(page) { stack.push(page); pageAt = 0; drawPage(); modal(); }
+function pop() {
+  sound('back');
+  stack.pop();
+  pageAt = 0;
+  if (stack.length) drawPage(); else $('panel').className = 'panel';
+  modal();
+}
+function closeAll() { stack = []; $('panel').className = 'panel'; modal(); }
+function rowsOf(p) { return typeof p.rows === 'function' ? p.rows() : p.rows; }
+function drawPage(keep) {
+  var p = stack[stack.length - 1], rows = rowsOf(p), el = $('panel'), h = '<h2>' + esc(p.title) + '</h2>' + (p.sub ? '<div class="sub">' + esc(p.sub) + '</div>' : '') + '<div class="rows" id="rows">';
+  if (!keep) { pageAt = 0; while (rows[pageAt] && rows[pageAt].note) pageAt++; }
+  rows.forEach(function (r, i) {
+    var v = r.value ? (typeof r.value === 'function' ? r.value() : r.value) : '';
+    h += '<div class="row' + (r.note ? ' note' : '') + (i === pageAt ? ' f' : '') + '">' + (r.icon ? svg(r.icon) : '') + (r.input ? '<input id="field" placeholder="' + esc(r.input) + '">' : '<span class="l">' + esc(r.label) + '</span>') +
+      (r.bar !== undefined ? '<span class="bar"><i style="width:' + (typeof r.bar === 'function' ? r.bar() : r.bar) + '%"></i></span>' : '') + (v !== '' ? '<span class="v">' + esc(v) + '</span>' : '') + (r.to ? svg('CHEVRON_RIGHT') : '') + '</div>';
+  });
+  el.innerHTML = h + '</div>';
+  el.className = 'panel on';
+  el.style.animation = keep ? 'none' : '';
+  var box = $('rows'), f = box.children[pageAt];
+  if (f) { var limit = el.clientHeight - box.offsetTop - 30, y = f.offsetTop + f.offsetHeight - box.offsetTop; box.style.transform = 'translateY(' + Math.min(0, limit - y) + 'px)'; }
+}
+function pageKey(k) {
+  var p = stack[stack.length - 1], rows = rowsOf(p), r = rows[pageAt], n = pageAt;
+  if (k === 461 || k === 8) return pop();
+  if (k === 38 || k === 40) {
+    do { n += k === 40 ? 1 : -1; } while (rows[n] && rows[n].note);
+    if (rows[n]) { pageAt = n; sound('move'); drawPage(true); } else sound('limit');
+    return;
+  }
+  if (!r) return;
+  if ((k === 37 || k === 39) && r.step) { r.step(k === 39 ? 1 : -1); sound('move'); drawPage(true); return; }
+  if (k === 37 && !r.step) return pop();
+  if (k === 13) {
+    sound('select');
+    if (r.input) { $('field').focus(); return; }
+    if (r.step && !r.ok) { r.step(1); drawPage(true); return; }
+    if (r.to) return guard(r.to);
+    if (r.ok) { r.ok(); if (stack.length) drawPage(true); }
+  }
+}
+function choice(label, list, get, set, icon) {
+  return { label: label, icon: icon, value: function () { var c = list.filter(function (x) { return x[0] === get(); })[0]; return c ? c[1] : ''; },
+    step: function (d) { var i = list.map(function (x) { return x[0]; }).indexOf(get()); set(list[(i + d + list.length) % list.length][0]); save(); theme(); clock(true); line(); } };
+}
+function toggle(label, key, after, icon) { return choice(label, [[true, 'On'], [false, 'Off']], function () { return S[key]; }, function (v) { S[key] = v; if (after) after(); }, icon); }
+function guard(page) { typeof page === 'function' ? push(page()) : push(page); }
+
+function pagePersonalize() {
+  return { title: 'Personalize', rows: [
+    { label: 'Clock', icon: 'CALENDAR_MONTH', to: { title: 'Clock', rows: function () { return [
+      choice('Clock Style', [['cards', 'Cards'], ['flip', 'Flip'], ['plain', 'Plain']], function () { return S.clockStyle; }, function (v) { S.clockStyle = v; }),
+      choice('Position', [[false, 'Left'], [true, 'Right']], function () { return S.clockRight; }, function (v) { S.clockRight = v; }),
+      toggle('Large Clock', 'largeClock'),
+      choice('Format', [[false, '5:39 PM'], [true, '17:39']], function () { return S.h24; }, function (v) { S.h24 = v; }),
+      toggle('Flap Sound', 'flapSound') ]; } } },
+    { label: 'Appearance', icon: 'LIGHT_MODE', to: { title: 'Appearance', rows: function () { return [
+      choice('Appearance', [['dark', 'Dark'], ['light', 'Light'], ['auto', 'Auto']], function () { return S.appearance; }, function (v) { S.appearance = v; }),
+      choice('App Tiles', [['full', 'Full Color'], ['dark', 'Dark Glass']], function () { return S.tiles; }, function (v) { S.tiles = v; build(); }),
+      choice('Effects', [['auto', 'Full'], ['lite', 'Lite']], function () { return S.effects; }, function (v) { S.effects = v; }),
+      toggle('Show All App Names', 'showAllNames'),
+      toggle('Navigation Sounds', 'uiSounds') ]; } } },
+    { label: 'Wallpaper', icon: 'IMAGE', to: pageWall },
+    { label: 'Weather', icon: 'PARTLY_CLOUDY_DAY', to: pageWeather },
+    { label: 'Screensaver', icon: 'BEDTIME', to: pageSaver },
+    { label: 'Headlines', icon: 'LANGUAGE', to: pageNews },
+    { label: 'Hidden Apps', icon: 'VISIBILITY_OFF', to: pageHidden },
+    { label: 'Plex', icon: 'PLAY_CIRCLE', to: pagePlex },
+    { label: 'Passcode', icon: 'VERIFIED_USER', to: pagePin } ] };
+}
+function pageWall() {
+  var cats = [['landscapes', 'Landscapes'], ['cities', 'Cities'], ['space', 'Space'], ['underwater', 'Underwater']];
+  return { title: 'Wallpaper', rows: function () {
+    var rows = [choice('Source', [['aerial', 'Aerial Videos'], ['plexv', 'My Videos (Plex)'], ['plexp', 'My Photos (Plex)']], function () { return S.source; }, function (v) { S.source = v; restartWall(); })];
+    cats.forEach(function (c) {
+      rows.push({ label: c[1], value: function () { return S.cats.indexOf(c[0]) >= 0 ? 'On' : 'Off'; }, step: function () {
+        var i = S.cats.indexOf(c[0]);
+        if (i >= 0) S.cats.splice(i, 1); else S.cats.push(c[0]);
+        save(); queue = []; } });
+    });
+    return rows;
+  } };
+}
+function pageWeather() {
+  var found = [], rowsFn = function () {
+    var rows = [toggle('Show Weather', 'showWeather', line), choice('Units', [[true, '°F'], [false, '°C']], function () { return S.fahrenheit; }, function (v) { S.fahrenheit = v; line(); }),
+      { label: 'Location: ' + S.place, note: true }, { input: 'Search for a city', icon: 'LANGUAGE' }];
+    found.forEach(function (f) { rows.push({ label: f.name + (f.admin1 ? ', ' + f.admin1 : '') + ', ' + f.country, ok: function () { S.place = f.name; S.lat = f.latitude; S.lon = f.longitude; save(); loadWeather(); pop(); } }); });
+    return rows;
+  };
+  return { title: 'Weather', rows: rowsFn, search: function (q) {
+    fetch('https://geocoding-api.open-meteo.com/v1/search?count=6&language=en&name=' + encodeURIComponent(q)).then(function (r) { return r.json(); }).then(function (j) { found = j.results || []; pageAt = found.length ? 4 : 3; drawPage(true); }).catch(function () {});
+  } };
+}
+function pageSaver() {
+  return { title: 'Screensaver', rows: function () { return [
+    choice('Start After', [[2, '2 Minutes'], [5, '5 Minutes'], [10, '10 Minutes'], [20, '20 Minutes'], [0, 'Never']], function () { return S.saverMin; }, function (v) { S.saverMin = v; }),
+    toggle('Show Clock', 'saverClock'), toggle('Back Starts Screensaver', 'backSaver'), { label: 'Start Now', ok: function () { closeAll(); saver(true); } } ]; } };
+}
+function pageNews() {
+  return { title: 'Headlines', sub: 'Shown one at a time over the screensaver.', rows: function () {
+    var rows = [toggle('Show Headlines', 'headlines', loadNews), toggle('Shuffle', 'newsShuffle', loadNews)];
+    TOPICS.forEach(function (t) {
+      rows.push({ label: t[1], value: function () { return S.topics.indexOf(t[0]) >= 0 ? 'On' : 'Off'; }, step: function () {
+        var i = S.topics.indexOf(t[0]);
+        if (i >= 0) S.topics.splice(i, 1); else S.topics.push(t[0]);
+        save(); loadNews(); } });
+    });
+    return rows;
+  } };
+}
+function pageHidden() {
+  return { title: 'Hidden Apps', sub: 'Press OK to show an app on Home again.', rows: function () {
+    var rows = allApps.concat(allInputs).filter(function (a) { return S.hidden.indexOf(a.id) >= 0; }).map(function (a) {
+      return { label: a.title, ok: function () { S.hidden.splice(S.hidden.indexOf(a.id), 1); save(); build(); } };
+    });
+    return rows.length ? rows : [{ label: 'Nothing is hidden', note: true }];
+  } };
+}
+function pagePin() {
+  return { title: 'Passcode', sub: 'Asks for four digits before Personalize and Hidden Apps.', rows: function () {
+    return S.pin ? [{ label: 'Turn Passcode Off', ok: function () { S.pin = ''; save(); } }] : [{ label: 'Set Passcode', ok: function () { askPin('Choose four digits', function (p) { S.pin = p; save(); drawPage(true); }); } }];
+  } };
+}
+function pageInputs() {
+  return { title: 'Inputs', rows: function () {
+    var rows = allInputs.map(function (x) { return { label: x.title, icon: 'HDMI', ok: function () { closeAll(); open(x); } }; });
+    return rows.length ? rows : [{ label: 'No inputs found on this TV', note: true }];
+  } };
+}
+function pageBoot() {
+  return { title: 'When TV Turns On', sub: 'What opens each time the TV turns on.', rows: function () {
+    return [{ id: '', title: 'Home' }].concat(allInputs, allApps.filter(function (a) { return ORDER.indexOf(a.id) >= 0; })).map(function (x) {
+      return { label: x.title, value: function () { return S.bootTarget === x.id ? 'On' : ''; }, ok: function () { S.bootTarget = x.id; save(); svc('/target?id=' + encodeURIComponent(x.id)).catch(function () {}); } };
+    });
+  } };
+}
+var volume = { v: 0, muted: false };
+function setVol(d) { svc('/vol?step=' + d).then(function (j) { if (j.volumeStatus) { volume.v = j.volumeStatus.volume; volume.muted = j.volumeStatus.muteStatus; } if (stack.length) drawPage(true); }).catch(function () {}); }
+function pageControl() {
+  var n = new Date(), when = n.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: !S.h24 }) + '  ·  ' + n.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  setVol(0);
+  return { title: 'Control Center', sub: when, rows: function () {
+    var w = net && net.wired && net.wired.state === 'connected' ? net.wired : net && net.wifi;
+    return [
+      { label: 'Volume', icon: volume.muted ? 'VOLUME_OFF' : 'VOLUME_UP', bar: function () { return volume.muted ? 0 : volume.v; }, value: function () { return volume.muted ? 'Muted' : String(volume.v); }, step: function (d) { setVol(d); }, ok: function () { setVol('mute'); } },
+      { label: 'Brightness', icon: 'LIGHT_MODE', value: 'Picture Settings', ok: function () { closeAll(); open({ id: 'com.palm.app.settings' }); } },
+      { label: 'Inputs', icon: 'INPUT', to: pageInputs },
+      { label: 'Network', icon: net && net.wired && net.wired.state === 'connected' ? 'LAN' : 'WIFI', value: (w && w.ipAddress) || 'Offline', ok: function () { closeAll(); open({ id: 'com.palm.app.settings' }); } },
+      { label: 'Settings', icon: 'SETTINGS', ok: function () { closeAll(); open({ id: 'com.palm.app.settings' }); } },
+      { label: 'Personalize', icon: 'IMAGE', ok: function () { lock(function () { push(pagePersonalize()); }); } },
+      { label: 'When TV Turns On', icon: 'POWER', value: function () { var t = allInputs.concat(allApps).filter(function (x) { return x.id === S.bootTarget; })[0]; return t ? t.title : 'Home'; }, to: pageBoot },
+      { label: 'Turn Off TV', icon: 'POWER', ok: function () { api('/api/power/off', {}).catch(function () {}); } } ];
+  } };
+}
+function tileMenu(t) {
+  var rows = [{ label: 'Move', icon: 'OPEN_WITH', ok: function () { closeAll(); setMoving(true); } }, { label: 'Hide', icon: 'VISIBILITY_OFF', ok: function () { closeAll(); S.hidden.push(t.id); save(); build(); } }];
+  if (t.folder) rows = [rows[0], { label: 'Delete Folder', icon: 'DELETE', ok: function () { closeAll(); delete S.folders[t.id]; save(); build(); } }];
+  else if (t.icon) {
+    Object.keys(S.folders).forEach(function (k) { rows.push({ label: 'Add to ' + S.folders[k].name, icon: 'FOLDER', ok: function () { closeAll(); S.folders[k].items.push(t.id); save(); build(); } }); });
+    rows.push({ label: 'New Folder', icon: 'FOLDER', ok: function () { closeAll(); var k = 'folder:' + Date.now(); S.folders[k] = { name: 'Folder ' + (Object.keys(S.folders).length + 1), items: [t.id] }; S.order = tiles.map(function (x) { return x.id; }); S.order.splice(focus, 0, k); save(); build(); } });
+    var armed = false;
+    if (t.id !== 'com.cleanyourtv.manager' && t.id !== 'org.webosbrew.hbchannel') rows.push({ label: 'Uninstall', icon: 'DELETE', value: function () { return armed ? 'Press OK again' : ''; }, ok: function () { if (!armed) { armed = true; return; } closeAll(); api('/api/apps/uninstall', { id: t.id }).then(refresh).catch(function () {}); } });
+  }
+  return { title: t.title, rows: rows };
+}
+
+/* ---- passcode ---- */
+var pinCb = null, pinVal = '', pinAt = 0;
+function drawPin() {
+  $('pindots').textContent = '●'.repeat(pinVal.length) + '○'.repeat(4 - pinVal.length);
+  var h = '';
+  for (var i = 0; i < 10; i++) h += '<b' + (i === pinAt ? ' class="f"' : '') + '>' + i + '</b>';
+  $('pinkeys').innerHTML = h;
+}
+function askPin(title, cb) { pinCb = cb; pinVal = ''; $('pintitle').textContent = title; $('pin').className = 'on'; drawPin(); modal(); }
+function pinDone() { $('pin').className = ''; pinCb = null; modal(); }
+function pinKey(k) {
+  if (k === 461 || k === 8) return pinDone();
+  if (k === 37) pinAt = (pinAt + 9) % 10;
+  else if (k === 39) pinAt = (pinAt + 1) % 10;
+  else if (k === 13 || (k >= 48 && k <= 57)) {
+    pinVal += k === 13 ? pinAt : k - 48;
+    if (pinVal.length === 4) { var v = pinVal, cb = pinCb; pinDone(); return cb(v); }
+  }
+  drawPin();
+}
+function lock(then) {
+  if (!S.pin) return then();
+  askPin('Enter your passcode', function (p) { if (p === S.pin) then(); else sound('limit'); });
+}
+
+/* ---- folders ---- */
+var folderOpen = null, folderAt = 0;
+function drawFolder() {
+  var g = $('fgrid');
+  folderOpen.items.forEach(function (t, i) { t.el.className = 'tile' + (i === folderAt ? ' f' : ''); });
+  if (!g.children.length) folderOpen.items.forEach(function (t) { g.appendChild(t.el); });
+}
+function openFolder(t) {
+  folderOpen = t; folderAt = 0;
+  $('ftitle').textContent = t.title;
+  $('fgrid').textContent = '';
+  t.items.forEach(function (a) { tile(a); });
+  $('folder').className = 'on';
+  drawFolder();
+  modal();
+}
+function closeFolder() { folderOpen = null; $('folder').className = ''; modal(); }
+function folderKey(k) {
+  var n = folderOpen.items.length, f = folderAt;
+  if (k === 461 || k === 8) { sound('back'); return closeFolder(); }
+  if (k === 37 && f % 5 > 0) f--;
+  else if (k === 39 && f + 1 < n && (f + 1) % 5 > 0) f++;
+  else if (k === 38 && f >= 5) f -= 5;
+  else if (k === 40 && f + 5 < n) f += 5;
+  else if (k === 13) { var t = folderOpen.items[f]; closeFolder(); return open(t); }
+  if (f !== folderAt) sound('move');
+  folderAt = f;
+  drawFolder();
+}
+
+/* ---- Plex: PIN link, then the chosen libraries become wallpaper sources ---- */
+var plex = read('home-plex', { id: 'home-' + Date.now(), token: '', base: '', server: '', sections: [], video: '', photo: '' });
+function plexSave() { write('home-plex', plex); }
+function plexFetch(url, method, token) {
+  var h = { Accept: 'application/json', 'X-Plex-Product': 'Home', 'X-Plex-Version': VERSION, 'X-Plex-Client-Identifier': plex.id, 'X-Plex-Platform': 'webOS', 'X-Plex-Device': 'LG TV', 'X-Plex-Device-Name': 'LG TV DC' };
+  if (token) h['X-Plex-Token'] = token;
+  return fetch(url, { method: method || 'GET', headers: h }).then(function (r) { return r.json(); });
+}
+var plexCode = '', plexPoll = 0;
+function plexLink() {
+  plexFetch('https://plex.tv/api/v2/pins', 'POST').then(function (p) {
+    plexCode = p.code;
+    if (stack.length) drawPage(true);
+    clearInterval(plexPoll);
+    plexPoll = setInterval(function () {
+      plexFetch('https://plex.tv/api/v2/pins/' + p.id).then(function (j) {
+        if (j.authToken) { clearInterval(plexPoll); plexCode = ''; plex.token = j.authToken; plexSave(); plexDiscover(); }
+      }).catch(function () {});
+    }, 3000);
+  }).catch(function () { plexCode = 'unavailable, try again'; if (stack.length) drawPage(true); });
+}
+function plexDiscover() {
+  plexFetch('https://plex.tv/api/v2/resources?includeHttps=1', 'GET', plex.token).then(function (list) {
+    var s = list.filter(function (r) { return (r.provides || '').indexOf('server') >= 0; })[0];
+    if (!s) return;
+    var c = (s.connections || []).filter(function (x) { return x.local; })[0] || (s.connections || [])[0];
+    plex.base = c.uri; plex.server = s.name; plex.key = s.accessToken || plex.token;
+    plexSave();
+    return plexFetch(plex.base + '/library/sections', 'GET', plex.key).then(function (j) {
+      plex.sections = (j.MediaContainer.Directory || []).map(function (d) { return { key: d.key, title: d.title, type: d.type }; });
+      plexSave();
+      if (stack.length) drawPage(true);
+    });
+  }).catch(function () {});
+}
+function plexPull() {
+  if (!plex.base) return;
+  function parts(j) { return (j.MediaContainer.Metadata || []).map(function (m) { var p = m.Media && m.Media[0] && m.Media[0].Part && m.Media[0].Part[0]; return p ? { key: p.key, title: m.title } : null; }).filter(Boolean); }
+  if (plex.video) plexFetch(plex.base + '/library/sections/' + plex.video + '/all?type=1', 'GET', plex.key).then(function (j) {
+    plexVideos = parts(j).map(function (p) { return [plex.base + p.key + '?X-Plex-Token=' + plex.key, p.title, 'plex']; });
+    write('home-plex-videos', plexVideos);
+  }).catch(function () {});
+  if (plex.photo) plexFetch(plex.base + '/library/sections/' + plex.photo + '/all?type=13', 'GET', plex.key).then(function (j) {
+    plexPhotos = parts(j).slice(0, 200).map(function (p) { return plex.base + '/photo/:/transcode?width=1920&height=1080&minSize=1&upscale=0&url=' + encodeURIComponent(p.key) + '&X-Plex-Token=' + plex.key; });
+    write('home-plex-photos', plexPhotos);
+  }).catch(function () {});
+}
+function pagePlex() {
+  return { title: 'Plex', sub: 'Use your Plex libraries as wallpaper and screensaver.', rows: function () {
+    if (!plex.token) return [{ label: 'Link Plex Account', icon: 'PLAY_CIRCLE', ok: plexLink }].concat(plexCode ? [{ label: 'Go to plex.tv/link and enter: ' + plexCode, note: true }] : []);
+    var vids = plex.sections.filter(function (s) { return s.type === 'movie' || s.type === 'show'; }), pics = plex.sections.filter(function (s) { return s.type === 'photo'; });
+    function pick(label, list, key) {
+      return choice(label, [['', 'None']].concat(list.map(function (s) { return [s.key, s.title]; })), function () { return plex[key]; }, function (v) { plex[key] = v; plexSave(); plexPull(); });
+    }
+    return [{ label: 'Server: ' + (plex.server || 'searching'), note: true }, pick('My Videos', vids, 'video'), pick('My Photos', pics, 'photo'),
+      { label: 'Unlink Plex', icon: 'DELETE', ok: function () { plex.token = ''; plex.base = ''; plexSave(); } }];
+  } };
+}
+
+/* ---- remote ---- */
+document.addEventListener('keydown', function (e) {
+  lastKey = Date.now();
+  if (document.body.classList.contains('idle')) { saver(false); e.preventDefault(); return; }
+  var k = e.keyCode, a = document.activeElement;
+  if (a && a.id === 'field') {
+    if (k === 13) { var q = a.value; a.blur(); var p = stack[stack.length - 1]; if (p && p.search && q) p.search(q); e.preventDefault(); }
+    else if (k === 461) { a.blur(); e.preventDefault(); }
+    return;
+  }
+  if (pinCb) { e.preventDefault(); return pinKey(k); }
+  if (stack.length) { e.preventDefault(); return pageKey(k); }
+  if (folderOpen) { e.preventDefault(); return folderKey(k); }
+  if (zone === 'pill') {
+    e.preventDefault();
+    if (k === 40 || k === 461 || k === 8) { zone = 'grid'; sound('move'); paint(); }
+    else if (k === 13) { zone = 'grid'; paint(); sound('select'); push(pageControl()); }
+    return;
+  }
+  var f = focus;
+  if (k === 37 && f % COLS > 0) f--;
+  else if (k === 39 && f + 1 < tiles.length && (f + 1) % COLS > 0) f++;
+  else if (k === 38 && f >= COLS) f -= COLS;
+  else if (k === 38 && !moving) { zone = 'pill'; sound('move'); paint(); e.preventDefault(); return; }
+  else if (k === 40) { if (f + COLS < tiles.length) f += COLS; else if (Math.floor(f / COLS) < Math.floor((tiles.length - 1) / COLS)) f = tiles.length - 1; }
+  else if (k === 13) {
+    e.preventDefault();
+    if (moving) { if (!e.repeat) { held = 'drop'; setMoving(false); } }
+    else if (!held) held = setTimeout(function () { held = 'hold'; var t = tiles[focus]; if (t && t.id !== 'com.palm.app.settings') push(tileMenu(t)); else if (t) setMoving(true); }, 650);
+    return;
+  }
+  else if (k === 461 || k === 8) {
+    e.preventDefault();
+    if (moving) setMoving(false);
+    else if (focus >= COLS) { focus %= COLS; sound('back'); paint(); }
+    else if (S.backSaver) saver(true);
+    return;
+  }
+  else return;
+  e.preventDefault();
+  if (f === focus) nudge(k === 37 ? -1 : k === 39 ? 1 : 0, k === 38 ? -1 : k === 40 ? 1 : 0);
+  else if (moving) shift(f);
+  else { focus = f; sound('move'); }
+  paint();
+});
+document.addEventListener('keyup', function (e) {
+  if (e.keyCode !== 13) return;
+  if (typeof held === 'number') { clearTimeout(held); if (zone === 'grid' && tiles[focus] && !stack.length) open(tiles[focus]); }
+  held = null;
+});
+document.addEventListener('webOSRelaunch', function () { saver(false); closeAll(); if (folderOpen) closeFolder(); lastKey = Date.now(); refresh(); if (!$('v0').src && !$('v1').src) next(); });
+
+/* ---- start ---- */
+$('glow').style.transform = 'scale(' + window.innerWidth / 96 + ')';
+$('f0').style.transform = $('f1').style.transform = 'scale(' + window.innerWidth / 192 + ')';
+theme();
+clock(true);
+loadWeather();
+loadNews();
+plexPull();
+netPill();
+refresh();
+next();
+setTimeout(function () { document.body.classList.remove('first'); }, 1400);
+setInterval(function () {
+  clock();
+  if (S.appearance === 'auto') theme();
+  if (S.saverMin && Date.now() - lastKey > S.saverMin * 60000 && !document.hidden && !stack.length) saver(true);
+}, 5000);
+setInterval(function () { loadWeather(); loadNews(); netPill(); theme(); }, 30 * 60 * 1000);
+api('/api/frontend-ok', { version: VERSION }).catch(function () {});
+</script>
+</body>
+</html>

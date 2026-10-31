@@ -1,0 +1,126 @@
+{
+  "peacock": {
+    "title": "Peacock",
+    "file": "dark/peacock.png",
+    "webos": [
+      "com.peacock.tv"
+    ],
+    "android": [
+      "com.peacocktv.peacockandroid"
+    ]
+  },
+  "plex": {
+    "title": "Plex",
+    "file": "dark/plex.png",
+    "webos": [
+      "cdp-30"
+    ],
+    "android": [
+      "com.plexapp.android"
+    ]
+  },
+  "hbo-max": {
+    "title": "HBO Max",
+    "file": "dark/hbo-max.png",
+    "webos": [
+      "com.wbd.stream"
+    ],
+    "android": [
+      "com.wbd.stream"
+    ]
+  },
+  "youtube": {
+    "title": "YouTube",
+    "file": "dark/youtube.png",
+    "webos": [
+      "youtube.leanback.v4"
+    ],
+    "android": [
+      "com.google.android.youtube.tv"
+    ]
+  },
+  "netflix": {
+    "title": "Netflix",
+    "file": "dark/netflix.png",
+    "webos": [
+      "netflix"
+    ],
+    "android": [
+      "com.netflix.ninja"
+    ]
+  },
+  "hulu": {
+    "title": "Hulu",
+    "file": "dark/hulu.png",
+    "webos": [
+      "hulu"
+    ],
+    "android": [
+      "com.hulu.livingroomplus"
+    ]
+  },
+  "disney-plus": {
+    "title": "Disney+",
+    "file": "dark/disney-plus.png",
+    "webos": [
+      "com.disney.disneyplus-prod"
+    ],
+    "android": [
+      "com.disney.disneyplus"
+    ]
+  },
+  "prime-video": {
+    "title": "Prime Video",
+    "file": "dark/prime-video.png",
+    "webos": [
+      "amazon"
+    ],
+    "android": [
+      "com.amazon.amazonvideo.livingroom"
+    ]
+  },
+  "paramount-plus": {
+    "title": "Paramount+",
+    "file": "dark/paramount-plus.png",
+    "webos": [
+      "com.cbs-all-access.webapp.prod"
+    ],
+    "android": [
+      "com.cbs.ott"
+    ]
+  },
+  "apple-tv": {
+    "title": "Apple TV",
+    "file": "dark/apple-tv.png",
+    "webos": [
+      "com.apple.appletv"
+    ],
+    "android": [
+      "com.apple.atve.androidtv.appletv"
+    ]
+  },
+  "spotify": {
+    "title": "Spotify",
+    "file": "dark/spotify.svg",
+    "webos": [
+      "spotify-beehive"
+    ],
+    "android": [
+      "com.spotify.tv.android"
+    ]
+  },
+  "tivimate": {
+    "title": "TiviMate",
+    "file": "dark/tivimate.png",
+    "android": [
+      "ar.tvplayer.tv"
+    ]
+  },
+  "windscribe": {
+    "title": "Windscribe",
+    "file": "dark/windscribe.png",
+    "android": [
+      "com.windscribe.vpn"
+    ]
+  }
+}

@@ -1,0 +1,4 @@
+#!/bin/sh
+# Start the local helper for the Home page. Undo: rm /var/lib/webosbrew/init.d/12-home-svc and restart the TV.
+export PATH=/usr/bin:/usr/sbin:/bin:/sbin:$PATH
+pgrep -f "[h]ome-svc.js" >/dev/null || (nohup node /media/developer/cleanyourtv/home-svc.js </dev/null >/dev/null 2>&1 &)

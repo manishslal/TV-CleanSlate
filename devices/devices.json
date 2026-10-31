@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "devices": [
+    {"id": "onn-4k-streaming-box", "name": "onn 4K Streaming Box", "codename": "onn_4k_gtv", "platform": "google-tv", "os": "Android TV 14", "sdk": 34, "ram_gb": 2, "home": "android", "debloat": true, "liquid_glass": true, "verified_on_hardware": true},
+    {"id": "onn-4k-plus", "name": "onn 4K Plus", "codename": "coffey", "platform": "google-tv", "os": "Android TV 14", "sdk": 34, "ram_gb": 2, "home": "android", "debloat": true, "liquid_glass": true, "verified_on_hardware": true},
+    {"id": "nvidia-shield-tube", "name": "NVIDIA SHIELD TV (2019 tube)", "codename": "sif", "platform": "android-tv", "os": "Android TV 11", "sdk": 30, "ram_gb": 2, "home": "android", "debloat": true, "liquid_glass": false, "verified_on_hardware": true},
+    {"id": "tcl-c02-4k-us", "name": "TCL C02_4K_US", "codename": "C02_4K_US", "platform": "android-tv", "os": "Android TV 9", "sdk": 28, "ram_gb": 2, "home": "android", "debloat": true, "liquid_glass": false, "verified_on_hardware": true},
+    {"id": "lg-50up8000pua", "name": "LG 50UP8000PUA", "codename": "lm21a", "platform": "webos", "os": "webOS 6.5.3", "ram_gb": 1.3, "home": "webos", "debloat": true, "requires_root": true, "liquid_glass": false, "verified_on_hardware": true},
+    {"id": "hisense-smarttv-4k", "name": "Hisense SmartTV 4K", "platform": "android-tv", "os": "Android TV 12", "home": null, "debloat": true, "verified_on_hardware": true},
+    {"id": "fire-tv-stick-4k-gen2", "name": "Fire TV Stick 4K (2nd gen)", "platform": "fire-os", "home": null, "debloat": true, "verified_on_hardware": true}
+  ]
+}

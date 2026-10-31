@@ -1,0 +1,4 @@
+MemTotal:        1833488 kB
+MemFree:           54976 kB
+MemAvailable:     564168 kB
+NOTE: dumpsys meminfo times out on this device before reaching the Total/Free/Used RAM summary (10000ms timeout, confirmed on 2 attempts). Using /proc/meminfo (MemTotal/MemFree/MemAvailable) as the equivalent metric instead.

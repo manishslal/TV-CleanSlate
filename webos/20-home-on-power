@@ -1,0 +1,24 @@
+#!/bin/sh
+# Open Home after a reboot and each time the TV wakes, instead of the last HDMI input.
+# Undo: rm /var/lib/webosbrew/init.d/20-home-on-power and restart the TV.
+(
+  export PATH=/usr/bin:/usr/sbin:/bin:/sbin:$PATH
+  home() {
+    id=$(cat /media/developer/cleanyourtv/boot-target 2>/dev/null)
+    luna-send -n 1 -w 10000 luna://com.webos.applicationManager/launch "{\"id\":\"${id:-com.webos.app.home}\"}" </dev/null >/dev/null 2>&1
+  }
+  # the takeover mounts about a minute into a cold boot; opening Home sooner would show LG's
+  for i in $(seq 1 60); do [ -f /tmp/cleanyourtv-home-standin ] && break; sleep 1; done
+  sleep 1
+  home
+  last=Active
+  luna-send -i luna://com.webos.service.tvpower/power/getPowerState '{"subscribe":true}' </dev/null 2>/dev/null | while read -r line; do
+    state=$(echo "$line" | sed -n 's/.*"state": *"\([^"]*\)".*/\1/p')
+    [ -n "$state" ] || continue
+    if [ "$state" = Active ] && [ "$last" != Active ]; then
+      sleep 2
+      home
+    fi
+    last=$state
+  done
+) </dev/null >/dev/null 2>&1 &

@@ -1,0 +1,9 @@
+#!/bin/sh
+# Block LG's US ad and telemetry servers (CleanYourTV's list only has the NL ones) and stop LG's upload services.
+# Undo: rm /var/lib/webosbrew/init.d/16-lg-us-ads and restart the TV.
+export PATH=/usr/bin:/usr/sbin:/bin:/sbin:$PATH
+if ! grep -q "# lg-us-ads" /etc/hosts; then
+  echo '127.0.0.1 us.ad.lgsmartad.com us.info.lgsmartad.com us.rdx2.lgtvsdp.com # lg-us-ads' >> /etc/hosts
+  echo '::1 us.ad.lgsmartad.com us.info.lgsmartad.com us.rdx2.lgtvsdp.com # lg-us-ads' >> /etc/hosts
+fi
+(sleep 70; systemctl --no-block stop rdxd.service uploadd.service) </dev/null >/dev/null 2>&1 &

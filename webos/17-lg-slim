@@ -1,0 +1,19 @@
+#!/bin/sh
+# Free memory: stop LG's app preloading and services for features this TV does not use.
+# Everything here lasts until the next boot. Undo: rm /var/lib/webosbrew/init.d/17-lg-slim and restart the TV.
+(
+  export PATH=/usr/bin:/usr/sbin:/bin:/sbin:$PATH
+  sleep 80
+  [ -e /media/developer/cleanyourtv/DISABLE-SLIM ] && exit 0
+  systemctl --no-block stop preload-manager.service miracast.service broadcast-conf-downloader.service rec-info-adapter.service rec-listmgr.service tv-reservation-agent.service lgchannelurl.service
+  for id in netflix youtube.leanback.v4; do
+    fg=$(luna-send -n 1 -w 5000 luna://com.webos.applicationManager/getForegroundAppInfo '{}' </dev/null)
+    case "$fg" in *"\"$id\""*) ;; *) luna-send -n 1 -w 5000 luna://com.webos.applicationManager/closeByAppId "{\"id\":\"$id\"}" </dev/null >/dev/null 2>&1 ;; esac
+  done
+  # on-demand services for HomeKit and LG's cloud link: a do-nothing stub keeps the bus from starting them
+  for b in homekit mqtt-client; do
+    p=$(command -v $b) || continue
+    grep -q " $p " /proc/mounts || mount --bind /media/developer/cleanyourtv/stub-noop "$p"
+    pkill -9 -f "^$p"
+  done
+) </dev/null >/dev/null 2>&1 &
