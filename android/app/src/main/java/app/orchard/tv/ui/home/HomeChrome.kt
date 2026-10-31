@@ -1,5 +1,14 @@
 package app.orchard.tv.ui.home
 
+import android.os.Build
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.ShaderBrush
+import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
+import app.orchard.tv.ui.components.LiquidLens
+import app.orchard.tv.ui.components.liquidGlass
+import app.orchard.tv.ui.theme.LocalLightPanel
 import androidx.compose.ui.text.TextStyle
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -264,10 +273,10 @@ fun HomeBackground(
             val a = saverReveal()
             if (a > 0.01f) drawDrawingIn(saverImage, saverPush(), a)
         }
-        Plate(frosted ?: backdrop, filmGlass, plate, scroll, collapse, cover, filmStopped, toSaver, lift)
+        Plate(frosted ?: backdrop, backdrop, filmGlass, plate, scroll, collapse, cover, filmStopped, toSaver, lift)
         // Fork: Dark appearance dims the wallpaper, as iOS does in dark mode, so the dark tiles and
         // white type sit on a deeper room. The screensaver it hands over to is shown undimmed.
-        val dim by animateFloatAsState(if (AerialSettings.darkTiles) DARK_DIM else 0f, tween(400, easing = Motion.EaseInOut), label = "appearance-dim")
+        val dim by animateFloatAsState(if (AerialSettings.darkNow) DARK_DIM else 0f, tween(400, easing = Motion.EaseInOut), label = "appearance-dim")
         if (dim > 0.005f) Canvas(Modifier.fillMaxSize()) {
             drawRect(Color.Black, alpha = dim * (1f - toSaver()))
         }
@@ -375,7 +384,7 @@ private fun Pictures(
  * moves or a new frame fades in, every [GLASS_EVERY_MS]: the film plays with Compose all but still.
  */
 @Composable
-private fun Plate(glass: ImageBitmap?, film: ImageBitmap?, plate: Rect?, scroll: () -> Float, collapse: Float, cover: () -> Float, filmStopped: () -> Float, toSaver: () -> Float, lift: () -> Float) {
+private fun Plate(glass: ImageBitmap?, sharp: ImageBitmap?, film: ImageBitmap?, plate: Rect?, scroll: () -> Float, collapse: Float, cover: () -> Float, filmStopped: () -> Float, toSaver: () -> Float, lift: () -> Float) {
     var shown by remember { mutableStateOf(glass) }
     var under by remember { mutableStateOf<ImageBitmap?>(null) }
     val swap = remember { Animatable(1f) }
@@ -435,6 +444,12 @@ private fun Plate(glass: ImageBitmap?, film: ImageBitmap?, plate: Rect?, scroll:
         filmBottom = null
     }
     val frostPaint = remember { androidx.compose.ui.graphics.Paint() }
+    // Fork: Liquid Glass on the plate too, in a layer the GPU keeps. The layer is drawn again only
+    // for a new picture or place; the baked plate is software and cannot run the lens.
+    val lensLayer = rememberGraphicsLayer()
+    var lensFor by remember { mutableStateOf<List<Any?>?>(null) }
+    val lens = LiquidLens.supported && AerialSettings.liquidGlass && !AerialSettings.lite
+    val lightLens = !AerialSettings.darkNow
 
     Canvas(Modifier.fillMaxSize().onSizeChanged { screen = Size(it.width.toFloat(), it.height.toFloat()) }) {
         if (plate == null) return@Canvas
@@ -473,6 +488,27 @@ private fun Plate(glass: ImageBitmap?, film: ImageBitmap?, plate: Rect?, scroll:
         val grow = PlateSwell.toPx() * (1f - rest)
         val r = plate.translate(0f, -scroll() - lift()).inflate(grow)
         val t = swap.value
+        val picture = shown
+        if (lens && t >= 1f && picture != null && Build.VERSION.SDK_INT >= 33) {
+            val w = plate.width.roundToInt().coerceAtLeast(1)
+            val h = plate.height.roundToInt().coerceAtLeast(1)
+            val key = listOf(picture, sharp, plate, size, lightLens)
+            if (lensFor != key) {
+                lensFor = key
+                val radius = PlateCorner.toPx()
+                val mask = smoothMask(w, h, radius).asImageBitmap()
+                val root = IntSize(size.width.roundToInt(), size.height.roundToInt())
+                val shader = LiquidLens.shader(picture, sharp, IntSize(w, h), radius, false, plate.topLeft, root, lightLens, density.density, PlateBand.toPx(), dock = true)
+                lensLayer.compositingStrategy = androidx.compose.ui.graphics.layer.CompositingStrategy.Offscreen
+                lensLayer.record(this, layoutDirection, IntSize(w, h)) {
+                    drawImage(mask, dstSize = IntSize(w, h))
+                    drawRect(ShaderBrush(shader), blendMode = BlendMode.SrcIn)
+                }
+            }
+            lensLayer.alpha = alpha
+            withTransform({ translate(r.left, r.top); scale(r.width / w, r.height / h, Offset.Zero) }) { drawLayer(lensLayer) }
+            return@Canvas
+        }
         if (t < 1f) bottom?.draw(this, plate, r, alpha)
         top?.draw(this, plate, r, if (bottom != null) alpha * t else alpha)
     }
@@ -524,6 +560,9 @@ private const val FILM_SWAP_MS = 700
 val PlatePadH = 26.dp
 val PlatePadV = 20.dp
 private val PlateCorner = 32.dp
+
+/** How far in the plate's lens bends: wider, and its long straight edges smeared what lies behind into streaks. */
+private val PlateBand = 16.dp
 
 /** Panels' background (PanelBackdrop): the frosted picture under this much black. */
 private const val GRID_SHADE = 0.55f
@@ -827,17 +866,19 @@ fun StatusPill(
         focusRequester = focusRequester,
         focusedScale = 1.08f,
         modifier = modifier,
+        label = stringResource(R.string.cc_title),
     ) { state ->
         LaunchedEffect(state.focused) { onFocused(state.focused) }
-        val bg by animateColorAsState(
-            if (state.focused) Palette.Focus else Color.Transparent,
-            tween(160, easing = Motion.EaseOut), label = "pill-bg",
-        )
-        val fg = if (state.focused) Palette.OnFocus else Color.White.copy(alpha = 0.9f)
+        // Fork: focus is a drop of glass over the wallpaper, not a plate, here where the glass has
+        // the picture itself to bend. It fades in, kept composed so its first showing is not its first draw.
+        val light = !AerialSettings.darkNow
+        val glass by animateFloatAsState(if (state.focused) 1f else 0f, tween(Motion.Quick, easing = Motion.EaseOut), label = "pill-glass")
+        val fg = if (state.focused && light) Palette.Light.Label else Color.White.copy(alpha = if (state.focused) 1f else 0.9f)
+        CompositionLocalProvider(LocalLightPanel provides light) {
+            Box(Modifier.matchParentSize().graphicsLayer { alpha = glass }.liquidGlass(17.dp, band = 12.dp))
+        }
         Row(
             Modifier
-                .clip(RoundedCornerShape(50))
-                .background(bg)
                 .height(34.dp)
                 .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically,

@@ -152,6 +152,26 @@ class ConfigReceiver : BroadcastReceiver() {
             Wallpapers.init(context)
             ScreensaverMode.entries.firstOrNull { it.key == key }?.let { Wallpapers.chooseScreensaver(it) }
         }
+        // Fork: what the performance measurements change, one setting a run (docs/PERFORMANCE.md).
+        // ... --es glass liquid|frosted --es effects auto|full|lite --es clock_style cards|flip|plain
+        //     --ez headlines false --es tile_style system|glass|full --es wallpaper <id>
+        if (LOOK_EXTRAS.any { intent.hasExtra(it) }) {
+            AerialSettings.init(context)
+            Wallpapers.init(context)
+            intent.getStringExtra("home_mode")?.let { AerialSettings.chooseHomeMode(app.orchard.tv.settings.HomeMode.of(it)) }
+            intent.getStringExtra("glass")?.let { AerialSettings.chooseLiquidGlass(it == "liquid") }
+            intent.getStringExtra("effects")?.let { key -> app.orchard.tv.settings.Effects.of(key).let(AerialSettings::chooseEffects) }
+            intent.getStringExtra("clock_style")?.let { key -> app.orchard.tv.settings.ClockStyle.of(key).let(AerialSettings::chooseClockStyle) }
+            if (intent.hasExtra("headlines")) AerialSettings.chooseHeadlines(intent.getBooleanExtra("headlines", true))
+            intent.getStringExtra("tile_style")?.let { key -> app.orchard.tv.settings.TileStyle.of(key)?.let(AerialSettings::chooseTileStyle) }
+            intent.getStringExtra("wallpaper")?.let { Wallpapers.select(it) }
+        }
+        if (intent.getBooleanExtra("show_look", false)) {
+            AerialSettings.init(context)
+            Wallpapers.init(context)
+            resultData = "mode=${AerialSettings.homeMode.key} wallpaper=${Wallpapers.selectedId} saver=${Wallpapers.screensaver.key} glass=${AerialSettings.liquidGlass} effects=${AerialSettings.effects.key} clock=${AerialSettings.clockStyle.key} lite=${AerialSettings.lite} lowEnd=${AerialSettings.lowEnd} headlines=${AerialSettings.headlines}"
+            return
+        }
         // Opt-in for an input ("*" = any recognized Apple TV input). Empty input disables.
         // Optional player and current-input setting key allow testing other firmware routes.
         val cecKeys = listOf("cec_home_input", "cec_home_player", "cec_home_input_setting").filter { intent.hasExtra(it) }
@@ -165,3 +185,5 @@ class ConfigReceiver : BroadcastReceiver() {
         resultData = "keep_adb=${GuardSetup.keepAdb(context)} guard_off_in_standby=${GuardSetup.offInStandby(context)}"
     }
 }
+
+private val LOOK_EXTRAS = listOf("home_mode", "glass", "effects", "clock_style", "headlines", "tile_style", "wallpaper")

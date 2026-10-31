@@ -1,5 +1,26 @@
 package app.orchard.tv.ui.wallpaper
 
+import android.view.KeyEvent as NativeKeyEvent
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.text.font.FontWeight
+import app.orchard.tv.apps.AppEntry
+import app.orchard.tv.ui.home.MiniTile
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -22,7 +43,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,8 +59,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,6 +75,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.focusable
+import app.orchard.tv.ui.components.SidePanel
+import app.orchard.tv.ui.home.MenuRow
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -75,13 +98,18 @@ import app.orchard.tv.settings.AerialSettings
 import app.orchard.tv.news.NewsTopic
 import app.orchard.tv.settings.Appearance
 import app.orchard.tv.settings.ClockStyle
+import android.content.res.Configuration
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.semantics.Role
 import app.orchard.tv.settings.FocusStyle
+import app.orchard.tv.settings.TileStyle
 import app.orchard.tv.settings.UiSounds
 import app.orchard.tv.settings.Effects
 import app.orchard.tv.system.Sounds
 import app.orchard.tv.ui.components.Pressable
 import app.orchard.tv.ui.components.consumeTaps
 import app.orchard.tv.ui.components.dismissOnTap
+import app.orchard.tv.ui.components.glassRim
 import app.orchard.tv.ui.components.liquidGlass
 import app.orchard.tv.ui.theme.Glyph
 import app.orchard.tv.ui.theme.GlyphIcon
@@ -104,16 +132,22 @@ import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
 /**
- * Wallpaper and screensaver, chosen on the TV. A sheet rises from the bottom and leaves the top of
- * the screen showing Home, so a new wallpaper can be seen the moment it is chosen. A QR code on the
- * right opens the same settings on a phone, where sending photos is easy.
+ * Personalize, chosen on the TV. Fork: a panel docked on the right (SidePanel), a grouped list that
+ * leads to a page for each subject; Home stays in view on the left, so a new wallpaper can be seen
+ * the moment it is chosen. The last page's QR code opens the same settings on a phone, where
+ * sending photos is easy.
+ *
+ * Every setting is one line and one focus stop: a switch for on or off, a value that Left and Right
+ * change for up to four choices, and a row that opens a list for more. The focused row's note sits
+ * in a fixed place at the panel's foot.
  */
 @Composable
 fun WallpaperSheet(
     visible: Boolean,
     onDismiss: () -> Unit,
-    hiddenCount: Int,
-    onHiddenApps: () -> Unit,
+    hiddenApps: List<AppEntry>,
+    onUnhide: (String) -> Unit,
+    onHiddenApps: (open: () -> Unit) -> Unit,
     onStartScreensaver: () -> Unit,
     onPin: (on: Boolean) -> Unit,
 ) {
@@ -121,7 +155,6 @@ fun WallpaperSheet(
     var phoneUrl by remember { mutableStateOf<String?>(null) }
     var qr by remember { mutableStateOf<ImageBitmap?>(null) }
 
-    BackHandler(enabled = visible, onBack = onDismiss)
 
     // The phone page listens all along (PhoneServer.listen); the address is read again each time,
     // as the TV's may have changed.
@@ -132,317 +165,386 @@ fun WallpaperSheet(
         qr = url?.let { withContext(Dispatchers.Default) { PhoneServer.qr(it).asImageBitmap() } }
     }
 
-    AnimatedVisibility(visible = visible, enter = fadeIn(tween(220, easing = Motion.EaseOut)), exit = fadeOut(tween(180, easing = Motion.EaseOut)), modifier = Modifier.fillMaxSize()) {
+    AnimatedVisibility(visible = visible, enter = fadeIn(tween(Motion.Enter, easing = Motion.EaseOut)), exit = fadeOut(tween(Motion.Quick, easing = Motion.EaseOut)), modifier = Modifier.fillMaxSize()) {
         // A tap above the sheet closes it, back to Control Center as Back does.
         Box(Modifier.fillMaxSize().dismissOnTap(onDismiss).background(Color.Black.copy(alpha = 0.25f)))
     }
 
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-        AnimatedVisibility(
-            visible = visible,
-            enter = fadeIn(tween(200, easing = Motion.EaseOut)) + slideInVertically(tween(380, easing = Motion.Drawer)) { it / 3 },
-            exit = fadeOut(tween(160, easing = Motion.EaseOut)) + slideOutVertically(tween(200, easing = Motion.EaseOut)) { it / 4 },
-        ) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .height(360.dp)
-                    .consumeTaps()
-                    // Glass made from the wallpaper itself, opaque: Home is not blurred behind
-                    // this sheet, so the wallpaper above it stays sharp while you choose, and the
-                    // app grid must not show through.
-                    .liquidGlass(30.dp, bottomCorners = false)
-                    .padding(start = 40.dp, end = 32.dp, top = 24.dp),
-            ) {
-                val scroll = rememberScrollState()
-                val scope = rememberCoroutineScope()
-                // How Home looks, in the order you see it: the picture behind everything, how Home
-                // is laid out over it, what replaces it when idle, then the weather and the PIN.
-                // Settings sit in tvOS-style grouped rows; each group's note follows the focused row.
-                Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(scroll)) {
-                    BasicText(stringResource(R.string.wp_title), style = Type.LargeTitle)
-                    Spacer(Modifier.height(16.dp))
-                    SectionTitle(R.string.wp_wallpaper)
-                    WallpaperRows()
-                    // Only for the owner's videos: whether keys stop them. The aerial films always move.
-                    if (Wallpapers.isVideo()) Group { note ->
-                        Choices(
-                            R.string.st_play, stringResource(R.string.st_play_hint), note,
-                            listOf(false to R.string.st_play_still, true to R.string.st_play_always),
-                            AerialSettings.wallpaperAlwaysMoves, AerialSettings::chooseWallpaperAlwaysMoves, first = true,
-                        )
-                    }
+    val panel = remember { PanelState() }
+    // Back leaves a list for its page, a page for the grouped list, then Personalize.
+    var page by remember { mutableStateOf(PersonalizePage.Root) }
+    var cameFrom by remember { mutableStateOf<PersonalizePage?>(null) }
+    val back = {
+        when {
+            panel.list != null -> panel.list = null
+            page == PersonalizePage.Root -> onDismiss()
+            else -> { cameFrom = page; page = PersonalizePage.Root }
+        }
+    }
+    BackHandler(enabled = visible, onBack = back)
 
-                    Spacer(Modifier.height(6.dp))
-                    SectionTitle(R.string.st_home_layout)
-                    // What is on Home and where; then the clock; then how the remote feels.
-                    Group { note ->
-                        Choices(
-                            R.string.st_layout, stringResource(R.string.st_home_layout_hint), note,
-                            listOf(true to R.string.st_home_one_row, false to R.string.st_home_standard),
-                            AerialSettings.oneRowHome, AerialSettings::chooseOneRowHome, first = true,
-                        )
-                        // Two rows show the second row whole; only one row has a peek to hide.
-                        if (AerialSettings.oneRowHome) Choices(
-                            R.string.st_peek, stringResource(R.string.st_peek_hint), note,
-                            listOf(true to R.string.st_peek_show, false to R.string.st_peek_hide),
-                            AerialSettings.peekNextRow, AerialSettings::choosePeekNextRow,
-                        )
-                        Choices(
-                            R.string.st_columns, stringResource(R.string.st_columns_hint), note,
-                            AerialSettings.HOME_COLUMNS.map { it to it.toString() },
-                            AerialSettings.homeColumns, AerialSettings::chooseHomeColumns,
-                        )
-                        Choices(
-                            R.string.st_plate, stringResource(R.string.st_plate_hint), note,
-                            listOf(true to R.string.st_plate_glass, false to R.string.st_plate_none),
-                            AerialSettings.homePlate, AerialSettings::chooseHomePlate,
-                        )
-                        Choices(
-                            R.string.fk_tiles, stringResource(R.string.fk_tiles_hint), note,
-                            listOf(Appearance.Dark to R.string.fk_tiles_dark, Appearance.Light to R.string.fk_tiles_color, Appearance.Auto to R.string.fk_tiles_auto),
-                            AerialSettings.appearance, AerialSettings::chooseAppearance,
-                        )
-                        // Fork: only where the TV can draw Liquid Glass (Android 13 and later).
-                        if (app.orchard.tv.ui.components.LiquidLens.supported && !AerialSettings.lite) Choices(
-                            R.string.fk_glass, stringResource(R.string.fk_glass_hint), note,
-                            listOf(true to R.string.fk_glass_liquid, false to R.string.fk_glass_frosted),
-                            AerialSettings.liquidGlass, AerialSettings::chooseLiquidGlass,
-                        )
-                        Choices(
-                            R.string.st_names, stringResource(R.string.st_names_hint), note,
-                            listOf(false to R.string.st_names_focused, true to R.string.st_names_all),
-                            AerialSettings.showAllNames, AerialSettings::chooseShowAllNames,
-                        )
-                        // Apps taken off Home are kept with the rest of how Home looks.
-                        SettingRow(R.string.st_hidden_apps, stringResource(R.string.st_hidden_apps_hint), note) {
-                            ActionChip(
-                                if (hiddenCount == 0) stringResource(R.string.st_hidden_none) else stringResource(R.string.st_hidden_count, hiddenCount),
-                                Glyph.ChevronRight,
-                                onHiddenApps,
-                            )
-                        }
-                    }
-                    Spacer(Modifier.height(10.dp))
-                    Group { note ->
-                        Choices(
-                            R.string.st_clock, stringResource(R.string.st_clock_hint), note,
-                            listOf(false to R.string.st_clock_left, true to R.string.st_clock_right),
-                            AerialSettings.clockRight, AerialSettings::chooseClockRight, first = true,
-                        )
-                        Choices(
-                            R.string.st_clock_size, stringResource(R.string.st_clock_size_hint), note,
-                            listOf(false to R.string.st_clock_small, true to R.string.st_clock_large),
-                            AerialSettings.largeClock, AerialSettings::chooseLargeClock,
-                        )
-                        Choices(
-                            R.string.fk_time_format, null, note,
-                            listOf(true to R.string.fk_time_12, false to R.string.fk_time_24),
-                            AerialSettings.clock12, AerialSettings::chooseClock12,
-                        )
-                        Choices(
-                            R.string.fk_flip, stringResource(R.string.fk_flip_hint), note,
-                            listOf(ClockStyle.Cards to R.string.fk_flip_cards, ClockStyle.Flip to R.string.fk_flip_on, ClockStyle.Plain to R.string.fk_flip_off),
-                            AerialSettings.clockStyle, AerialSettings::chooseClockStyle,
-                        )
-                        if (AerialSettings.clockStyle == ClockStyle.Cards) Choices(
-                            R.string.fk_flap_sound, null, note,
-                            listOf(true to R.string.st_on, false to R.string.st_off),
-                            AerialSettings.flapSound, AerialSettings::chooseFlapSound,
-                        )
-                        Choices(
-                            R.string.wp_weather, null, note,
-                            listOf(true to R.string.st_on, false to R.string.st_off),
-                            AerialSettings.showWeather, AerialSettings::chooseShowWeather,
-                        )
-                    }
-                    Spacer(Modifier.height(10.dp))
-                    Group { note ->
-                        Choices(
-                            R.string.st_focus_style,
-                            stringResource(if (AerialSettings.focusStyle == FocusStyle.HighContrast) R.string.st_focus_high_hint else R.string.st_focus_standard_hint),
-                            note,
-                            listOf(FocusStyle.HighContrast to R.string.st_focus_high, FocusStyle.Standard to R.string.st_focus_standard),
-                            AerialSettings.focusStyle, AerialSettings::chooseFocusStyle, first = true,
-                        )
-                        Choices(
-                            R.string.st_sounds,
-                            stringResource(if (AerialSettings.uiSounds == UiSounds.Tv) R.string.st_sounds_tv_hint else R.string.st_sounds_hint),
-                            note,
-                            listOf(UiSounds.Tv to R.string.st_sounds_tv, UiSounds.Aerial to R.string.st_sounds_aerial, UiSounds.Off to R.string.st_off),
-                            AerialSettings.uiSounds, { AerialSettings.chooseUiSounds(it); Sounds.prepare() },
-                        )
-                        Choices(
-                            R.string.st_effects,
-                            stringResource(
-                                if (AerialSettings.effects == Effects.Auto && AerialSettings.lowEnd) R.string.st_effects_auto_lite_hint
-                                else R.string.st_effects_hint,
-                            ),
-                            note,
-                            listOf(Effects.Auto to R.string.st_effects_auto, Effects.Full to R.string.st_effects_full, Effects.Lite to R.string.st_effects_lite),
-                            AerialSettings.effects, AerialSettings::chooseEffects,
-                        )
-                    }
-
-                    Spacer(Modifier.height(22.dp))
-                    SectionTitle(R.string.wp_screensaver)
-                    Group { note ->
-                        SettingRow(
-                            R.string.ss_kind,
-                            when {
-                                Wallpapers.screensaver == ScreensaverMode.Videos -> stringResource(R.string.ss_videos_hint)
-                                Wallpapers.screensaver == ScreensaverMode.System -> stringResource(R.string.ss_system_hint)
-                                Wallpapers.screensaverFollows -> stringResource(R.string.ss_follow_hint)
-                                AerialSettings.backStartsScreensaver -> stringResource(R.string.ss_back_hint)
-                                else -> null
-                            },
-                            note, first = true,
-                        ) { ScreensaverChoice(onStartScreensaver) }
-                        // Only the qualities this TV can play; a 1080p-only TV has nothing to choose.
-                        val qualities = remember { AerialFormats.supported(context) }
-                        if (qualities.size > 1) {
-                            Choices(
-                                R.string.ss_quality, stringResource(R.string.ss_quality_hint), note,
-                                listOf(AerialQuality.Auto to R.string.ss_quality_auto, AerialQuality.Hd to R.string.ss_quality_hd) +
-                                    listOf(AerialQuality.Uhd to R.string.ss_quality_uhd, AerialQuality.DolbyVision to R.string.ss_quality_dv)
-                                        .filter { it.first in qualities },
-                                AerialSettings.aerialQuality, AerialSettings::chooseAerialQuality,
-                            )
-                        }
-                        // The clock screensaver is its clock, and the others show none.
-                        if (Wallpapers.screensaver == ScreensaverMode.Aerial || Wallpapers.screensaver == ScreensaverMode.Photos) Choices(
-                            R.string.ss_show_time, stringResource(R.string.ss_show_time_hint), note,
-                            listOf(true to R.string.st_on, false to R.string.st_off),
-                            AerialSettings.screensaverClock, AerialSettings::chooseScreensaverClock,
-                        )
-                        // The firmware's screensaver starts on the firmware's timer: Aerial's delay
-                        // did nothing there, and Xiaomi's 1 minute came before the 5 chosen (issue #675).
-                        if (Wallpapers.screensaver == ScreensaverMode.System) SettingRow(R.string.ss_delay, null, note) {
-                            val delay = remember { SystemScreensaver.firmwareDelayMs(context) }
-                            BasicText(
-                                when {
-                                    delay == null -> stringResource(R.string.ss_delay_system)
-                                    delay == 0L -> stringResource(R.string.ss_delay_system_off)
-                                    else -> stringResource(R.string.ss_delay_system_minutes, ((delay + 30_000) / 60_000).coerceAtLeast(1).toInt())
-                                },
-                                style = Type.Body.copy(color = Palette.SecondaryLabel),
-                                modifier = Modifier.padding(end = 8.dp),
-                            )
-                        } else Choices(
-                            R.string.ss_delay, null, note,
-                            AerialSettings.screensaverChoices.map {
-                                it to if (it == AerialSettings.NEVER) stringResource(R.string.ss_never) else stringResource(R.string.ss_minutes, it)
-                            },
-                            AerialSettings.screensaverMinutes, AerialSettings::chooseScreensaverMinutes,
-                        )
-                        Choices(
-                            R.string.fk_headlines, stringResource(R.string.fk_headlines_hint), note,
-                            listOf(true to R.string.st_on, false to R.string.st_off),
-                            AerialSettings.headlines, AerialSettings::chooseHeadlines,
-                        )
-                        // Fork: what the headlines are about, several at once, and their order.
-                        if (AerialSettings.headlines) {
-                            SettingRow(R.string.fk_news_topics, stringResource(R.string.fk_news_topics_hint), note) {
-                                Row(
-                                    Modifier.widthIn(max = 470.dp).horizontalScroll(rememberScrollState()).padding(horizontal = 4.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                ) {
-                                    NewsTopic.entries.forEach { topic ->
-                                        Chip(stringResource(topic.label), on = topic in AerialSettings.newsTopics) { AerialSettings.toggleNewsTopic(topic) }
-                                    }
-                                }
-                            }
-                            Choices(
-                                R.string.fk_news_order, stringResource(R.string.fk_news_order_hint), note,
-                                listOf(false to R.string.fk_news_by_topic, true to R.string.fk_news_shuffle),
-                                AerialSettings.newsShuffle, AerialSettings::chooseNewsShuffle,
-                            )
-                        }
-                        Choices(
-                            R.string.ss_back, stringResource(R.string.ss_back_choice_hint), note,
-                            listOf(true to R.string.ss_back_on, false to R.string.ss_back_off),
-                            AerialSettings.backStartsScreensaver, AerialSettings::chooseBackStartsScreensaver,
-                        )
-                    }
-
-                    Spacer(Modifier.height(22.dp))
-                    SectionTitle(R.string.wp_weather)
-                    // Fork: the city is chosen here too, not only from the phone page.
-                    var pickingPlace by remember { mutableStateOf(false) }
-                    Group(stringResource(if (Weather.chosen) R.string.fk_weather_chosen else R.string.fk_weather_guessed)) { note ->
-                        SettingRow(R.string.wp_weather_city, null, note, first = true) {
-                            WeatherValue()
-                            ActionChip(stringResource(R.string.fk_loc_change), Glyph.ChevronRight) { pickingPlace = !pickingPlace }
-                        }
-                        if (pickingPlace) LocationPicker { pickingPlace = false }
-                        Choices(
-                            R.string.fk_units, null, note,
-                            listOf(true to R.string.fk_units_f, false to R.string.fk_units_c),
-                            AerialSettings.fahrenheit, AerialSettings::chooseFahrenheit,
-                        )
-                    }
-
-                    // Fork: the owner's videos and photos from Plex on the home network (plex/Plex.kt).
-                    Spacer(Modifier.height(22.dp))
-                    SectionTitle(R.string.fk_plex)
-                    Group(Plex.problem?.let { stringResource(it) } ?: stringResource(if (Plex.linked) R.string.fk_plex_linked_hint else R.string.fk_plex_hint)) { note ->
-                        SettingRow(R.string.fk_plex_account, null, note, first = true) {
-                            val code = Plex.linkCode
-                            ActionChip(
-                                when {
-                                    code != null -> stringResource(R.string.fk_plex_code, code)
-                                    Plex.linked -> Plex.serverName ?: stringResource(R.string.fk_plex_linked)
-                                    else -> stringResource(R.string.fk_plex_link)
-                                },
-                                Glyph.ChevronRight,
-                            ) { if (Plex.linked) Plex.refresh(photosIfStale = false) else Plex.startLink() }
-                        }
-                        if (Plex.linked) {
-                            val none = "" to stringResource(R.string.fk_plex_none)
-                            Choices(
-                                R.string.fk_plex_videos, null, note,
-                                listOf<Pair<String, Any>>(none) + Plex.sections.filter { it.type == "movie" || it.type == "show" }.map { it.key to it.title },
-                                Plex.videoSection, Plex::chooseVideoSection, scrolls = true,
-                            )
-                            Choices(
-                                R.string.fk_plex_photos, null, note,
-                                listOf<Pair<String, Any>>(none) + Plex.sections.filter { it.type == "photo" }.map { it.key to it.title },
-                                Plex.photoSection, Plex::choosePhotoSection, scrolls = true,
-                            )
-                            SettingRow(R.string.fk_plex_unlink, null, note) {
-                                ActionChip(stringResource(R.string.fk_plex_unlink_action), Glyph.ChevronRight) { Plex.unlink() }
-                            }
-                        }
-                    }
-
-                    // One row says what it is; a title over it would only repeat it.
-                    Spacer(Modifier.height(10.dp))
-                    Group(stringResource(R.string.st_pin_hint)) { note ->
-                        SettingRow(R.string.st_pin, null, note, first = true) {
-                            // The last row that takes focus: bring the note under it into view too.
-                            PinChoice(onPin, onFocused = { scope.launch { scroll.animateScrollTo(scroll.maxValue) } })
-                        }
-                    }
-                    Spacer(Modifier.height(24.dp))
-                }
-                Spacer(Modifier.width(28.dp))
-                PhoneCard(phoneUrl, qr)
+    SidePanel(visible = visible) {
+        CompositionLocalProvider(LocalPanel provides panel) {
+            val scroll = rememberScrollState()
+            // What a page opens on: its first control, or the row a page was left from.
+            val pageStart = remember { FocusRequester() }
+            val list = panel.list
+            LaunchedEffect(page, list) {
+                panel.rowNote = null
+                panel.pageNote = null
+                scroll.scrollTo(0)
+                withFrameNanos { }
+                runCatching { pageStart.requestFocus() }
             }
+            BasicText(stringResource(list?.label ?: page.title), style = Type.Title, modifier = Modifier.padding(start = 4.dp))
+            Spacer(Modifier.height(12.dp))
+            val body = Modifier.weight(1f).fillMaxWidth()
+            when {
+                list != null -> Column(body.verticalScroll(scroll).focusRequester(pageStart).focusGroup()) { ChoiceList(list) }
+                page == PersonalizePage.Wallpaper -> WallpaperGrid(body.focusRequester(pageStart).focusGroup())
+                page == PersonalizePage.Hidden -> HiddenGrid(hiddenApps, onUnhide, body.focusRequester(pageStart).focusGroup())
+                else -> Column(body.verticalScroll(scroll).focusRequester(pageStart).focusGroup()) {
+                    when (page) {
+                        PersonalizePage.Root -> RootPage(hiddenApps.size, cameFrom) { to ->
+                            if (to == PersonalizePage.Hidden) onHiddenApps { page = to } else page = to
+                        }
+                        PersonalizePage.Layout -> LayoutPage()
+                        PersonalizePage.Appearance -> AppearancePage()
+                        PersonalizePage.Clock -> ClockPage()
+                        PersonalizePage.Screensaver -> ScreensaverPage(onStartScreensaver)
+                        PersonalizePage.Headlines -> HeadlinesPage()
+                        PersonalizePage.Plex -> PlexPage()
+                        PersonalizePage.Passcode -> PasscodePage(onPin)
+                        PersonalizePage.Phone -> PhoneCard(phoneUrl, qr)
+                        PersonalizePage.Wallpaper, PersonalizePage.Hidden -> Unit
+                    }
+                }
+            }
+            if (page != PersonalizePage.Root && page != PersonalizePage.Phone && list == null) NoteFooter()
         }
     }
 }
 
-/**
- * Every wallpaper in one row, in the order most people want them: the moving aerial, Bing's photo
- * of the day, the owner's own photos, then a few of the built-in pictures and "Follow App". Past
- * daily photos and the rest of the built-ins are left out unless one of them is the current
- * choice. The focused card's note is under the row, as under a group of settings.
- */
+/** Fork: the panel's foot and the list a row has opened, shared by the rows of a page. */
+private class PanelState {
+    var rowNote by mutableStateOf<String?>(null)
+    var pageNote by mutableStateOf<String?>(null)
+    var list by mutableStateOf<OpenList?>(null)
+    var returnTo by mutableStateOf<Any?>(null)
+}
+
+private val LocalPanel = staticCompositionLocalOf { PanelState() }
+
+/** The choices a [ListRow] opened; [returnTo][PanelState.returnTo] takes focus back to that row. */
+private class OpenList(val label: Int, val options: List<Pair<Any?, String>>, val current: Any?, val choose: (Any?) -> Unit)
+
+/** Fork: the list Personalize opens on, and the page each row leads to, in their groups. */
+private enum class PersonalizeGroup(val title: Int) {
+    Look(R.string.fk_group_look),
+    Home(R.string.st_home_layout),
+    Access(R.string.fk_group_access),
+}
+
+private enum class PersonalizePage(val title: Int, val glyph: Glyph, val group: PersonalizeGroup?) {
+    Root(R.string.cc_personalize, Glyph.Photo, null),
+    Wallpaper(R.string.wp_wallpaper, Glyph.Photo, PersonalizeGroup.Look),
+    Appearance(R.string.fk_tiles, Glyph.Sun, PersonalizeGroup.Look),
+    Screensaver(R.string.wp_screensaver, Glyph.Moon, PersonalizeGroup.Look),
+    Layout(R.string.fk_page_layout, Glyph.Home, PersonalizeGroup.Home),
+    Clock(R.string.fk_page_clock, Glyph.Calendar, PersonalizeGroup.Home),
+    Headlines(R.string.fk_headlines, Glyph.Globe, PersonalizeGroup.Home),
+    Hidden(R.string.st_hidden_apps, Glyph.EyeSlash, PersonalizeGroup.Access),
+    Passcode(R.string.st_pin, Glyph.Shield, PersonalizeGroup.Access),
+    Plex(R.string.fk_plex, Glyph.Play, PersonalizeGroup.Access),
+    Phone(R.string.wp_phone_title, Glyph.Cast, PersonalizeGroup.Access),
+}
+
+/** What a page is set to, shown on its row so it need not be opened to find out. */
 @Composable
-private fun WallpaperRows() {
+private fun pageValue(page: PersonalizePage, hiddenCount: Int): String? = when (page) {
+    PersonalizePage.Wallpaper -> when (Wallpapers.selectedId) {
+        Wallpapers.VIDEOS -> stringResource(R.string.wp_videos_rotate)
+        Wallpapers.LATEST_DAILY -> stringResource(R.string.wp_daily_latest)
+        Wallpapers.ROTATE_PHOTOS -> stringResource(R.string.wp_photos_rotate)
+        else -> Wallpapers.items.firstOrNull { it.id == Wallpapers.selectedId }?.title
+    }
+    PersonalizePage.Appearance -> stringResource(
+        when (AerialSettings.appearance) {
+            Appearance.Dark -> R.string.fk_tiles_dark
+            Appearance.Light -> R.string.fk_tiles_color
+            Appearance.Auto -> R.string.fk_tiles_auto
+        },
+    )
+    PersonalizePage.Screensaver -> stringResource(screensaverName(Wallpapers.screensaver))
+    PersonalizePage.Layout -> stringResource(if (AerialSettings.oneRowHome) R.string.st_home_one_row else R.string.st_home_standard) + ", ${AerialSettings.homeColumns}"
+    PersonalizePage.Clock -> stringResource(if (AerialSettings.largeClock) R.string.st_clock_large else R.string.st_clock_small)
+    PersonalizePage.Headlines -> stringResource(if (AerialSettings.headlines) R.string.st_on else R.string.st_off)
+    PersonalizePage.Hidden -> hiddenCount.takeIf { it > 0 }?.toString()
+    PersonalizePage.Passcode -> stringResource(if (AerialSettings.pinSet) R.string.st_pin_on else R.string.st_pin_off)
+    PersonalizePage.Plex -> if (Plex.linked) stringResource(R.string.fk_plex_linked) else null
+    else -> null
+}
+
+private fun screensaverName(mode: ScreensaverMode) = when (mode) {
+    ScreensaverMode.Aerial -> R.string.ss_aerial
+    ScreensaverMode.Photos -> R.string.ss_photos
+    ScreensaverMode.Clock -> R.string.ss_clock
+    ScreensaverMode.Videos -> R.string.ss_videos
+    ScreensaverMode.System -> R.string.ss_system
+}
+
+@Composable
+private fun ColumnScope.RootPage(hiddenCount: Int, cameFrom: PersonalizePage?, open: (PersonalizePage) -> Unit) {
+    PersonalizeGroup.entries.forEach { group ->
+        GroupTitle(group.title)
+        PersonalizePage.entries.filter { it.group == group }.forEach { to ->
+            val row = remember { FocusRequester() }
+            LaunchedEffect(Unit) {
+                if (to == cameFrom) { withFrameNanos { }; withFrameNanos { }; runCatching { row.requestFocus() } }
+            }
+            MenuRow(
+                to.glyph, stringResource(to.title),
+                onClick = { open(to) },
+                focusRequester = row,
+                trailing = (pageValue(to, hiddenCount)?.let { "$it " } ?: "") + "›",
+            )
+        }
+    }
+}
+
+@Composable
+private fun LayoutPage() {
+    Group(R.string.st_layout) {
+        ValueRow(
+            R.string.fk_label_rows, stringResource(R.string.st_home_layout_hint),
+            listOf(true to R.string.st_home_one_row, false to R.string.st_home_standard),
+            AerialSettings.oneRowHome, AerialSettings::chooseOneRowHome,
+        )
+        ValueRow(
+            R.string.st_columns, stringResource(R.string.st_columns_hint),
+            AerialSettings.HOME_COLUMNS.map { it to it.toString() },
+            AerialSettings.homeColumns, AerialSettings::chooseHomeColumns,
+        )
+        SwitchRow(R.string.fk_label_plate, stringResource(R.string.st_plate_hint), AerialSettings.homePlate, AerialSettings::chooseHomePlate)
+        // Two rows show the second row whole; only one row has a peek to hide.
+        if (AerialSettings.oneRowHome) SwitchRow(R.string.fk_label_peek, stringResource(R.string.st_peek_hint), AerialSettings.peekNextRow, AerialSettings::choosePeekNextRow)
+    }
+    Group(R.string.fk_sec_tiles) {
+        ValueRow(
+            R.string.st_names, stringResource(R.string.st_names_hint),
+            listOf(false to R.string.st_names_focused, true to R.string.st_names_all),
+            AerialSettings.showAllNames, AerialSettings::chooseShowAllNames,
+        )
+    }
+}
+
+@Composable
+private fun AppearancePage() {
+    Group(R.string.fk_sec_theme) {
+        ValueRow(
+            R.string.fk_label_mode, stringResource(R.string.fk_tiles_hint),
+            listOf(Appearance.Dark to R.string.fk_tiles_dark, Appearance.Light to R.string.fk_tiles_color, Appearance.Auto to R.string.fk_tiles_auto),
+            AerialSettings.appearance, AerialSettings::chooseAppearance,
+        )
+        ValueRow(
+            R.string.fk_label_tile_style, stringResource(R.string.fk_tile_style_hint),
+            listOf(TileStyle.System to R.string.fk_tiles_system, TileStyle.Glass to R.string.fk_tiles_glass, TileStyle.Full to R.string.fk_tiles_full),
+            AerialSettings.tileStyle, AerialSettings::chooseTileStyle,
+        )
+        // Fork: only where the TV can draw Liquid Glass (Android 13 and later).
+        if (app.orchard.tv.ui.components.LiquidLens.supported && !AerialSettings.lite) ValueRow(
+            R.string.fk_glass, stringResource(R.string.fk_glass_hint),
+            listOf(true to R.string.fk_glass_liquid, false to R.string.fk_glass_frosted),
+            AerialSettings.liquidGlass, AerialSettings::chooseLiquidGlass,
+        )
+        ValueRow(
+            R.string.st_focus_style,
+            stringResource(if (AerialSettings.focusStyle == FocusStyle.HighContrast) R.string.st_focus_high_hint else R.string.st_focus_standard_hint),
+            listOf(FocusStyle.HighContrast to R.string.st_focus_high, FocusStyle.Standard to R.string.st_focus_standard),
+            AerialSettings.focusStyle, AerialSettings::chooseFocusStyle,
+        )
+    }
+    Group(R.string.fk_sec_motion) {
+        ValueRow(
+            R.string.st_sounds,
+            stringResource(if (AerialSettings.uiSounds == UiSounds.Tv) R.string.st_sounds_tv_hint else R.string.st_sounds_hint),
+            listOf(UiSounds.Tv to R.string.st_sounds_tv, UiSounds.Aerial to R.string.st_sounds_aerial, UiSounds.Off to R.string.st_off),
+            AerialSettings.uiSounds, { AerialSettings.chooseUiSounds(it); Sounds.prepare() },
+        )
+        ValueRow(
+            R.string.st_effects,
+            stringResource(
+                if (AerialSettings.effects == Effects.Auto && AerialSettings.lowEnd) R.string.st_effects_auto_lite_hint
+                else R.string.st_effects_hint,
+            ),
+            listOf(Effects.Auto to R.string.st_effects_auto, Effects.Full to R.string.st_effects_full, Effects.Lite to R.string.st_effects_lite),
+            AerialSettings.effects, AerialSettings::chooseEffects,
+        )
+    }
+}
+
+@Composable
+private fun ClockPage() {
+    // Fork: the city is chosen here too, not only from the phone page.
+    var pickingPlace by remember { mutableStateOf(false) }
+    Group(R.string.st_clock) {
+        ValueRow(
+            R.string.fk_label_position, stringResource(R.string.st_clock_hint),
+            listOf(false to R.string.st_clock_left, true to R.string.st_clock_right),
+            AerialSettings.clockRight, AerialSettings::chooseClockRight,
+        )
+        ValueRow(
+            R.string.fk_label_size, stringResource(R.string.st_clock_size_hint),
+            listOf(false to R.string.st_clock_small, true to R.string.st_clock_large),
+            AerialSettings.largeClock, AerialSettings::chooseLargeClock,
+        )
+        ValueRow(
+            R.string.ss_kind, stringResource(R.string.fk_flip_hint),
+            listOf(ClockStyle.Cards to R.string.fk_flip_cards, ClockStyle.Flip to R.string.fk_flip_on, ClockStyle.Plain to R.string.fk_flip_off),
+            AerialSettings.clockStyle, AerialSettings::chooseClockStyle,
+        )
+        ValueRow(
+            R.string.fk_time_format, null,
+            listOf(true to R.string.fk_time_12, false to R.string.fk_time_24),
+            AerialSettings.clock12, AerialSettings::chooseClock12,
+        )
+        if (AerialSettings.clockStyle == ClockStyle.Cards) SwitchRow(R.string.fk_flap_sound, null, AerialSettings.flapSound, AerialSettings::chooseFlapSound)
+    }
+    Group(R.string.wp_weather, stringResource(if (Weather.chosen) R.string.fk_weather_chosen else R.string.fk_weather_guessed)) {
+        SwitchRow(R.string.fk_show_on_home, null, AerialSettings.showWeather, AerialSettings::chooseShowWeather)
+        PanelRow(R.string.wp_weather_city, stringResource(R.string.wp_weather_city), null, onClick = { pickingPlace = !pickingPlace }) { fg, _ ->
+            WeatherValue(fg)
+            GlyphIcon(Glyph.ChevronRight, fg, 14.dp)
+        }
+        if (pickingPlace) LocationPicker { pickingPlace = false }
+        ValueRow(
+            R.string.fk_units, null,
+            listOf(true to R.string.fk_units_f, false to R.string.fk_units_c),
+            AerialSettings.fahrenheit, AerialSettings::chooseFahrenheit,
+        )
+    }
+}
+
+@Composable
+private fun ScreensaverPage(onStart: () -> Unit) {
+    val context = LocalContext.current
+    Group(
+        note = when {
+            Wallpapers.screensaver == ScreensaverMode.Videos -> stringResource(R.string.ss_videos_hint)
+            Wallpapers.screensaver == ScreensaverMode.System -> stringResource(R.string.ss_system_hint)
+            Wallpapers.screensaverFollows -> stringResource(R.string.ss_follow_hint)
+            AerialSettings.backStartsScreensaver -> stringResource(R.string.ss_back_hint)
+            else -> null
+        },
+    ) {
+        OptionRow(
+            R.string.ss_kind, null,
+            ScreensaverMode.entries.map { it to screensaverName(it) },
+            Wallpapers.screensaver, Wallpapers::chooseScreensaver,
+        )
+        // The action that tries the choice, right after it.
+        PanelRow(R.string.ss_start, stringResource(R.string.ss_start), null, onClick = onStart) { fg, _ -> GlyphIcon(Glyph.Play, fg, 14.dp) }
+        // Only the qualities this TV can play; a 1080p-only TV has nothing to choose.
+        val qualities = remember { AerialFormats.supported(context) }
+        if (qualities.size > 1) ValueRow(
+            R.string.ss_quality, stringResource(R.string.ss_quality_hint),
+            listOf(AerialQuality.Auto to R.string.ss_quality_auto, AerialQuality.Hd to R.string.ss_quality_hd) +
+                listOf(AerialQuality.Uhd to R.string.ss_quality_uhd, AerialQuality.DolbyVision to R.string.ss_quality_dv)
+                    .filter { it.first in qualities },
+            AerialSettings.aerialQuality, AerialSettings::chooseAerialQuality,
+        )
+        // The clock screensaver is its clock, and the others show none.
+        if (Wallpapers.screensaver == ScreensaverMode.Aerial || Wallpapers.screensaver == ScreensaverMode.Photos) {
+            SwitchRow(R.string.ss_show_time, stringResource(R.string.ss_show_time_hint), AerialSettings.screensaverClock, AerialSettings::chooseScreensaverClock)
+        }
+        // The firmware's screensaver starts on the firmware's timer: Aerial's delay
+        // did nothing there, and Xiaomi's 1 minute came before the 5 chosen (issue #675).
+        if (Wallpapers.screensaver == ScreensaverMode.System) {
+            val delay = remember { SystemScreensaver.firmwareDelayMs(context) }
+            val text = when {
+                delay == null -> stringResource(R.string.ss_delay_system)
+                delay == 0L -> stringResource(R.string.ss_delay_system_off)
+                else -> stringResource(R.string.ss_delay_system_minutes, ((delay + 30_000) / 60_000).coerceAtLeast(1).toInt())
+            }
+            PanelRow(R.string.ss_delay, stringResource(R.string.ss_delay), null, onClick = {}) { fg, _ -> RowValue(text, fg) }
+        } else OptionRow(
+            R.string.ss_delay, null,
+            AerialSettings.screensaverChoices.map {
+                it to if (it == AerialSettings.NEVER) stringResource(R.string.ss_never) else stringResource(R.string.ss_minutes, it)
+            },
+            AerialSettings.screensaverMinutes, AerialSettings::chooseScreensaverMinutes,
+        )
+        ValueRow(
+            R.string.ss_back, stringResource(R.string.ss_back_choice_hint),
+            listOf(true to R.string.ss_back_on, false to R.string.ss_back_off),
+            AerialSettings.backStartsScreensaver, AerialSettings::chooseBackStartsScreensaver,
+        )
+    }
+}
+
+@Composable
+private fun HeadlinesPage() {
+    Group {
+        SwitchRow(R.string.fk_headlines, stringResource(R.string.fk_headlines_hint), AerialSettings.headlines, AerialSettings::chooseHeadlines)
+        // Fork: what the headlines are about, several at once, and their order.
+        if (AerialSettings.headlines) ValueRow(
+            R.string.fk_news_order, stringResource(R.string.fk_news_order_hint),
+            listOf(false to R.string.fk_news_by_topic, true to R.string.fk_news_shuffle),
+            AerialSettings.newsShuffle, AerialSettings::chooseNewsShuffle,
+        )
+    }
+    if (AerialSettings.headlines) Group(R.string.fk_news_topics, stringResource(R.string.fk_news_topics_hint)) {
+        NewsTopic.entries.forEach { topic ->
+            SwitchRow(topic.label, null, topic in AerialSettings.newsTopics, { AerialSettings.toggleNewsTopic(topic) })
+        }
+    }
+}
+
+@Composable
+private fun PlexPage() {
+    Group(note = Plex.problem?.let { stringResource(it) } ?: stringResource(if (Plex.linked) R.string.fk_plex_linked_hint else R.string.fk_plex_hint)) {
+        val code = Plex.linkCode
+        val account = when {
+            code != null -> stringResource(R.string.fk_plex_code, code)
+            Plex.linked -> Plex.serverName ?: stringResource(R.string.fk_plex_linked)
+            else -> stringResource(R.string.fk_plex_link)
+        }
+        PanelRow(R.string.fk_plex_account, stringResource(R.string.fk_plex_account), null, onClick = { if (Plex.linked) Plex.refresh(photosIfStale = false) else Plex.startLink() }) { fg, _ ->
+            RowValue(account, fg)
+            GlyphIcon(Glyph.ChevronRight, fg, 14.dp)
+        }
+        if (Plex.linked) {
+            val none = "" to stringResource(R.string.fk_plex_none)
+            ListRow(
+                R.string.fk_plex_videos, null,
+                listOf(none) + Plex.sections.filter { it.type == "movie" || it.type == "show" }.map { it.key to it.title },
+                Plex.videoSection, Plex::chooseVideoSection,
+            )
+            ListRow(
+                R.string.fk_plex_photos, null,
+                listOf(none) + Plex.sections.filter { it.type == "photo" }.map { it.key to it.title },
+                Plex.photoSection, Plex::choosePhotoSection,
+            )
+            PanelRow(R.string.fk_plex_unlink, stringResource(R.string.fk_plex_unlink_action), null, onClick = { Plex.unlink() }) { _, _ -> }
+        }
+    }
+}
+
+/** Parental PIN on or off; either way goes through the PIN pad (issue #10). */
+@Composable
+private fun PasscodePage(onPin: (on: Boolean) -> Unit) {
+    Group(note = stringResource(R.string.st_pin_hint)) {
+        SwitchRow(R.string.st_pin, null, AerialSettings.pinSet, { onPin(it) })
+    }
+}
+
+/** Every wallpaper in a grid, in the order most people want them, grouped by kind. */
+@Composable
+private fun WallpaperGrid(modifier: Modifier) {
     val items = Wallpapers.items
     val selected = Wallpapers.selectedId
     val first = remember { FocusRequester() }
+    val panel = LocalPanel.current
     LaunchedEffect(Unit) {
         withFrameNanos { }
         runCatching { first.requestFocus() }
@@ -469,25 +571,29 @@ private fun WallpaperRows() {
             addAll(items.filter { it.kind == WallpaperKind.Source })
         }
     }
-    var note by remember { mutableStateOf<String?>(null) }
-    // A row clips to its bounds, and the focused card grows by 8%: room on the left for that,
-    // with the row moved back by as much so the cards still line up with the titles.
-    LazyRow(
-        modifier = Modifier.offset(x = (-10).dp),
-        horizontalArrangement = Arrangement.spacedBy(18.dp),
-        contentPadding = PaddingValues(start = 14.dp, end = 24.dp, top = 6.dp, bottom = 4.dp),
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        contentPadding = PaddingValues(6.dp),
     ) {
         items(list, key = { it.id }) { wp ->
             val hint = wallpaperNote(wp)
-            WallpaperCard(wp, if (wp === list.first()) first else null, onFocused = { note = hint })
+            WallpaperCard(wp, if (wp === list.first()) first else null, onFocused = { panel.rowNote = hint })
         }
-    }
-    Box(Modifier.height(42.dp).padding(start = 4.dp, top = 8.dp)) {
-        note?.let { BasicText(it, style = Type.Caption.copy(color = Palette.TertiaryLabel), maxLines = 2, overflow = TextOverflow.Ellipsis) }
+        // Only for the owner's videos: whether keys stop them. The aerial films always move.
+        if (Wallpapers.isVideo()) item(span = { GridItemSpan(maxLineSpan) }) {
+            ValueRow(
+                R.string.st_play, stringResource(R.string.st_play_hint),
+                listOf(false to R.string.st_play_still, true to R.string.st_play_always),
+                AerialSettings.wallpaperAlwaysMoves, AerialSettings::chooseWallpaperAlwaysMoves,
+            )
+        }
     }
 }
 
-/** What a wallpaper card is, for the note under the row; null where its picture says it all. */
+/** What a wallpaper card is, for the panel's note; null where its picture says it all. */
 @Composable
 private fun wallpaperNote(wp: Wallpaper): String? = when {
     wp.kind == WallpaperKind.Live -> stringResource(R.string.wp_live)
@@ -508,12 +614,13 @@ private fun WallpaperCard(wp: Wallpaper, focusRequester: FocusRequester?, onFocu
     val thumb by produceState<ImageBitmap?>(null, wp.id, Wallpapers.items) {
         value = withContext(Dispatchers.Default) { Wallpapers.thumbnail(wp.id)?.asImageBitmap() }
     }
-    Pressable(onClick = { Wallpapers.select(wp.id) }, focusRequester = focusRequester, focusedScale = 1.08f) { state ->
+    Pressable(onClick = { Wallpapers.select(wp.id) }, focusRequester = focusRequester, focusedScale = 1.06f) { state ->
         LaunchedEffect(state.focused) { if (state.focused) onFocused() }
-        Column(Modifier.width(168.dp)) {
+        Column(Modifier.fillMaxWidth()) {
             Box(
                 Modifier
-                    .size(168.dp, 94.dp)
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 9f)
                     .clip(RoundedCornerShape(12.dp))
                     .background(Palette.Fill)
                     .border(
@@ -533,20 +640,20 @@ private fun WallpaperCard(wp: Wallpaper, focusRequester: FocusRequester?, onFocu
                 }
                 if (selected) {
                     Box(
-                        Modifier.align(Alignment.TopEnd).padding(7.dp).size(22.dp).clip(CircleShape).background(Palette.Focus),
+                        Modifier.align(Alignment.TopEnd).padding(6.dp).size(20.dp).clip(CircleShape).background(Palette.Focus),
                         contentAlignment = Alignment.Center,
-                    ) { GlyphIcon(Glyph.Check, Palette.OnFocus, 13.dp) }
+                    ) { GlyphIcon(Glyph.Check, Palette.OnFocus, 12.dp) }
                 }
                 // The aerial wallpaper moves; its card shows the last frame it stopped on.
                 if (wp.kind == WallpaperKind.Live || wp.kind == WallpaperKind.Video) {
-                    GlyphIcon(Glyph.Play, Color.White, 22.dp, Modifier.align(Alignment.BottomStart).padding(7.dp))
+                    GlyphIcon(Glyph.Play, Color.White, 20.dp, Modifier.align(Alignment.BottomStart).padding(6.dp))
                 }
                 // An input's picture cannot be copied for a card: its mark over the dark picture.
                 if (wp.kind == WallpaperKind.Source) {
-                    GlyphIcon(Glyph.Hdmi, Color.White, 34.dp, Modifier.align(Alignment.Center))
+                    GlyphIcon(Glyph.Hdmi, Color.White, 30.dp, Modifier.align(Alignment.Center))
                 }
             }
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(5.dp))
             BasicText(
                 wp.title, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 style = Type.Caption.copy(color = if (state.focused) Palette.Label else Palette.SecondaryLabel),
@@ -555,110 +662,215 @@ private fun WallpaperCard(wp: Wallpaper, focusRequester: FocusRequester?, onFocu
     }
 }
 
+/** Fork: hidden apps inside the panel, in place of a sheet of their own. OK puts one back on Home. */
 @Composable
-private fun SectionTitle(title: Int) {
-    BasicText(stringResource(title), style = Type.Headline, modifier = Modifier.padding(start = 4.dp))
-    Spacer(Modifier.height(10.dp))
+private fun HiddenGrid(apps: List<AppEntry>, onUnhide: (String) -> Unit, modifier: Modifier) {
+    val panel = LocalPanel.current
+    val note = stringResource(if (apps.isEmpty()) R.string.hidden_empty else R.string.hidden_hint)
+    SideEffect { panel.pageNote = note }
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        contentPadding = PaddingValues(6.dp),
+    ) {
+        items(apps, key = { it.key }) { app ->
+            Pressable(onClick = { onUnhide(app.key) }, focusedScale = 1.06f) { state ->
+                Column {
+                    MiniTile(app, state.focused, Modifier.fillMaxWidth().aspectRatio(16f / 9f))
+                    Spacer(Modifier.height(5.dp))
+                    BasicText(
+                        app.label, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        style = Type.Caption.copy(color = if (state.focused) Palette.Label else Palette.SecondaryLabel),
+                    )
+                }
+            }
+        }
+    }
 }
 
-/**
- * A card of setting rows, as in tvOS Settings, with one note under it: the focused row's, or
- * [note] when the row has none or focus is elsewhere. The note keeps two lines of room so the
- * sheet does not shift as focus moves.
- */
+/** The list a [ListRow] opened. Choosing goes back to the row, which then shows the choice. */
 @Composable
-private fun Group(note: String? = null, rows: @Composable ColumnScope.(note: (String?) -> Unit) -> Unit) {
-    var focusedNote by remember { mutableStateOf<String?>(null) }
-    var inside by remember { mutableStateOf(false) }
+private fun ChoiceList(list: OpenList) {
+    val panel = LocalPanel.current
+    Group {
+        list.options.forEach { (value, text) ->
+            PanelRow(value ?: text, text, null, onClick = { list.choose(value); panel.list = null }) { fg, _ ->
+                if (value == list.current) GlyphIcon(Glyph.Check, fg, 16.dp)
+            }
+        }
+    }
+}
+
+/** The name over a group of rows. */
+@Composable
+private fun GroupTitle(title: Int) {
+    BasicText(
+        stringResource(title),
+        style = Type.Callout.copy(color = Palette.Label.copy(alpha = 0.72f), fontWeight = FontWeight.W600),
+        modifier = Modifier.padding(start = 14.dp, top = 8.dp, bottom = 5.dp),
+    )
+}
+
+/** Rows that belong together on one surface; [note] stands at the panel's foot unless a row has its own. */
+@Composable
+private fun Group(title: Int? = null, note: String? = null, rows: @Composable ColumnScope.() -> Unit) {
+    val panel = LocalPanel.current
+    if (note != null) SideEffect { panel.pageNote = note }
+    if (title != null) GroupTitle(title)
     Column(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White.copy(alpha = 0.05f))
-            .onFocusChanged { inside = it.hasFocus },
-    ) { rows { focusedNote = it } }
-    Box(Modifier.height(38.dp).padding(start = 16.dp, top = 7.dp)) {
-        (if (inside) focusedNote ?: note else note)?.let {
-            BasicText(it, style = Type.Caption.copy(color = Palette.TertiaryLabel), maxLines = 2, overflow = TextOverflow.Ellipsis)
+            .padding(4.dp),
+    ) { rows() }
+    Spacer(Modifier.height(10.dp))
+}
+
+/** The focused row's note, or the page's, in one place at the panel's foot. */
+@Composable
+private fun NoteFooter() {
+    val panel = LocalPanel.current
+    Box(Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(start = 14.dp, end = 6.dp, top = 8.dp)) {
+        (panel.rowNote ?: panel.pageNote)?.let {
+            BasicText(it, style = Type.Caption.copy(color = Palette.Label.copy(alpha = 0.72f)), maxLines = 7, overflow = TextOverflow.Ellipsis)
         }
     }
 }
 
-/** One row: the setting's name on the left, its control on the right, a hairline above all but the first. */
+/**
+ * One setting on one line, one focus stop: the name on the left, [trailing] on the right. [key]
+ * finds the row again when a list it opened closes.
+ */
 @Composable
-private fun SettingRow(label: Int, hint: String?, note: (String?) -> Unit, first: Boolean = false, control: @Composable () -> Unit) {
-    if (!first) Box(Modifier.padding(start = 18.dp).fillMaxWidth().height(1.dp).background(Palette.Hairline))
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .height(58.dp)
-            .padding(start = 18.dp, end = 10.dp)
-            .onFocusChanged { if (it.hasFocus) note(hint) },
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        BasicText(stringResource(label), style = Type.Body, modifier = Modifier.weight(1f), maxLines = 1)
-        control()
-    }
-}
-
-/** A row of chips for one of a few values. */
-@Composable
-private fun <T> Choices(
-    label: Int,
+private fun PanelRow(
+    key: Any,
+    label: String,
     hint: String?,
-    note: (String?) -> Unit,
-    options: List<Pair<T, Any>>,
-    current: T,
-    choose: (T) -> Unit,
-    first: Boolean = false,
-    scrolls: Boolean = false,
+    onClick: () -> Unit,
+    onKey: ((KeyEvent) -> Boolean)? = null,
+    spokenState: String? = null,
+    role: Role = Role.Button,
+    trailing: @Composable RowScope.(fg: Color, focused: Boolean) -> Unit,
 ) {
-    SettingRow(label, hint, note, first) {
-        // Fork: a row with an open-ended list (Plex libraries) scrolls under focus instead of pushing the label out.
-        val fit = if (scrolls) Modifier.widthIn(max = 470.dp).horizontalScroll(rememberScrollState()).padding(horizontal = 4.dp) else Modifier
-        Row(fit, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            options.forEach { (value, text) ->
-                Chip(if (text is Int) stringResource(text) else text.toString(), on = current == value) { choose(value) }
-            }
+    val panel = LocalPanel.current
+    val requester = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        if (panel.returnTo == key) {
+            panel.returnTo = null
+            withFrameNanos { }
+            withFrameNanos { }
+            runCatching { requester.requestFocus() }
+        }
+    }
+    Pressable(onClick = onClick, focusRequester = requester, focusedScale = 1.02f, onKey = onKey, spokenState = spokenState, role = role, modifier = Modifier.fillMaxWidth()) { state ->
+        LaunchedEffect(state.focused, hint) { if (state.focused) panel.rowNote = hint }
+        val bg by animateColorAsState(if (state.focused) Palette.Focus else Color.Transparent, tween(Motion.Quick, easing = Motion.EaseOut), label = "row-bg")
+        val fg = if (state.focused) Palette.OnFocus else Palette.Label
+        Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(bg).height(44.dp).padding(horizontal = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            BasicText(label, style = Type.Row.copy(color = fg), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            trailing(fg, state.focused)
         }
     }
 }
 
-/** Parental PIN on or off; either way goes through the PIN pad (issue #10). */
 @Composable
-private fun PinChoice(onPin: (on: Boolean) -> Unit, onFocused: () -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        listOf(false to R.string.st_pin_off, true to R.string.st_pin_on).forEach { (on, label) ->
-            Chip(stringResource(label), on = AerialSettings.pinSet == on, onFocused = onFocused) {
-                if (AerialSettings.pinSet != on) onPin(on)
-            }
+private fun PanelRow(key: Int, label: String, hint: String?, onClick: () -> Unit, trailing: @Composable RowScope.(fg: Color, focused: Boolean) -> Unit) =
+    PanelRow(key as Any, label, hint, onClick, trailing = trailing)
+
+/** The value a row is set to. */
+@Composable
+private fun RowValue(text: String, fg: Color) {
+    BasicText(text, style = Type.Callout.copy(color = fg.copy(alpha = 0.72f)), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 150.dp))
+}
+
+/** On or off: OK flips it. Ink alone says which, as the panels keep color for status. */
+@Composable
+private fun SwitchRow(label: Int, hint: String?, on: Boolean, choose: (Boolean) -> Unit) =
+    SwitchRow(label, stringResource(label), hint, on, choose)
+
+@Composable
+private fun SwitchRow(key: Any, label: String, hint: String?, on: Boolean, choose: (Boolean) -> Unit) {
+    val travel by animateFloatAsState(if (on) 1f else 0f, tween(Motion.Quick, easing = Motion.EaseOut), label = "switch")
+    PanelRow(key, label, hint, onClick = { choose(!on) }, onKey = null, spokenState = stringResource(if (on) R.string.st_on else R.string.st_off), role = Role.Switch) { fg, _ ->
+        Canvas(Modifier.size(36.dp, 20.dp).glassRim(10.dp)) {
+            val r = CornerRadius(size.height / 2)
+            drawRoundRect(fg, alpha = 0.22f + 0.78f * travel, cornerRadius = r)
+            val knob = size.height / 2 - 2.dp.toPx()
+            val x = size.height / 2 + (size.width - size.height) * travel
+            drawCircle(if (on) knobOn(fg) else fg, radius = knob, center = Offset(x, size.height / 2))
         }
     }
 }
 
-/** Where the weather is for and what it is now. The city is set on the phone page. */
+/** The knob on a filled track: the track's opposite. */
+private fun knobOn(track: Color) = if (track.luminance() > 0.5f) Color(0xFF1D1D1F) else Color.White
+
+/** Up to four choices, or a list for more. */
 @Composable
-private fun WeatherValue() {
+private fun <T> OptionRow(label: Int, hint: String?, options: List<Pair<T, Any>>, current: T, choose: (T) -> Unit) {
+    if (options.size <= 4) ValueRow(label, hint, options, current, choose) else ListRow(label, hint, options, current, choose)
+}
+
+/**
+ * A few choices in one focus stop: Left and Right move through them and take effect at once, so
+ * Home shows the result behind the panel. Chevrons appear with focus.
+ */
+@Composable
+private fun <T> ValueRow(label: Int, hint: String?, options: List<Pair<T, Any>>, current: T, choose: (T) -> Unit) {
+    val at = options.indexOfFirst { it.first == current }.coerceAtLeast(0)
+    // OK does nothing with a remote: a press too many should not change a setting unseen. A touch
+    // screen has no Left or Right, so a tap moves on.
+    val touch = LocalConfiguration.current.touchscreen != Configuration.TOUCHSCREEN_NOTOUCH
+    PanelRow(
+        label, stringResource(label), hint,
+        onClick = { if (touch) choose(options[(at + 1) % options.size].first) },
+        onKey = { e ->
+            val code = e.nativeKeyEvent.keyCode
+            if (code != NativeKeyEvent.KEYCODE_DPAD_LEFT && code != NativeKeyEvent.KEYCODE_DPAD_RIGHT) return@PanelRow false
+            if (e.type == KeyEventType.KeyDown && e.nativeKeyEvent.repeatCount == 0) {
+                val to = at + if (code == NativeKeyEvent.KEYCODE_DPAD_RIGHT) 1 else -1
+                if (to in options.indices) { Sounds.step(); choose(options[to].first) } else Sounds.limit()
+            }
+            true
+        },
+    ) { fg, focused ->
+        if (focused) GlyphIcon(Glyph.ChevronLeft, fg.copy(alpha = if (at > 0) 1f else 0.25f), 14.dp)
+        RowValue(optionText(options[at].second), fg)
+        if (focused) GlyphIcon(Glyph.ChevronRight, fg.copy(alpha = if (at < options.lastIndex) 1f else 0.25f), 14.dp)
+    }
+}
+
+/** Many choices, or an open-ended list: OK opens them on a page of their own. */
+@Composable
+private fun <T> ListRow(label: Int, hint: String?, options: List<Pair<T, Any>>, current: T, choose: (T) -> Unit) {
+    val panel = LocalPanel.current
+    val named = options.map { (value, text) -> value to optionText(text) }
+    PanelRow(label, stringResource(label), hint, onClick = {
+        panel.returnTo = label
+        @Suppress("UNCHECKED_CAST")
+        panel.list = OpenList(label, named as List<Pair<Any?, String>>, current) { choose(it as T) }
+    }) { fg, _ ->
+        RowValue(named.firstOrNull { it.first == current }?.second.orEmpty(), fg)
+        GlyphIcon(Glyph.ChevronRight, fg, 14.dp)
+    }
+}
+
+@Composable
+private fun optionText(text: Any) = if (text is Int) stringResource(text) else text.toString()
+
+/** Where the weather is for and what it is now. */
+@Composable
+private fun WeatherValue(fg: Color) {
     val w = Weather.now
     val place = Weather.place
-    val kind = w?.let {
-        stringResource(
-            when (it.kind) {
-                WeatherKind.Clear -> R.string.wx_clear
-                WeatherKind.PartlyCloudy -> R.string.wx_partly_cloudy
-                WeatherKind.Cloudy -> R.string.wx_cloudy
-                WeatherKind.Fog -> R.string.wx_fog
-                WeatherKind.Rain -> R.string.wx_rain
-                WeatherKind.Snow -> R.string.wx_snow
-                WeatherKind.Thunder -> R.string.wx_thunder
-            },
-        )
-    }
-    BasicText(
-        if (w != null) listOfNotNull(place, "${w.degrees}° $kind").joinToString(" · ") else stringResource(R.string.wp_weather_none),
-        style = Type.Body.copy(color = Palette.SecondaryLabel),
-        modifier = Modifier.padding(end = 8.dp),
-    )
+    RowValue(if (w != null) listOfNotNull(place, "${w.degrees}°").joinToString(" · ") else stringResource(R.string.wp_weather_none), fg)
 }
 
 /**
@@ -745,7 +957,7 @@ private fun LocationPicker(onDone: () -> Unit) {
 @Composable
 private fun PlaceRow(place: Weather.Place, onClick: () -> Unit) {
     Pressable(onClick = onClick, focusedScale = 1.02f, modifier = Modifier.fillMaxWidth()) { state ->
-        val bg by animateColorAsState(if (state.focused) Palette.Focus else Palette.Fill, tween(140, easing = Motion.EaseOut), label = "place-bg")
+        val bg by animateColorAsState(if (state.focused) Palette.Focus else Palette.Fill, tween(Motion.Quick, easing = Motion.EaseOut), label = "place-bg")
         val fg = if (state.focused) Palette.OnFocus else Palette.Label
         Row(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(bg).height(44.dp).padding(horizontal = 18.dp),
@@ -769,11 +981,11 @@ private fun Chip(label: String, on: Boolean, onFocused: (() -> Unit)? = null, on
                 on -> Palette.FillStrong
                 else -> Palette.Fill
             },
-            tween(140, easing = Motion.EaseOut), label = "chip-bg",
+            tween(Motion.Quick, easing = Motion.EaseOut), label = "chip-bg",
         )
         val fg = if (state.focused) Palette.OnFocus else Palette.Label
         Row(
-            Modifier.clip(RoundedCornerShape(50)).background(bg).height(40.dp).padding(horizontal = 20.dp),
+            Modifier.clip(RoundedCornerShape(50)).background(bg).height(40.dp).glassRim(20.dp).padding(horizontal = 20.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -783,56 +995,9 @@ private fun Chip(label: String, on: Boolean, onFocused: (() -> Unit)? = null, on
     }
 }
 
-/** A pill that does something rather than choosing a value: white when focused, a glyph after its label. */
-@Composable
-private fun ActionChip(label: String, glyph: Glyph, onClick: () -> Unit) {
-    Pressable(onClick = onClick, focusedScale = 1.06f) { state ->
-        val bg by animateColorAsState(if (state.focused) Palette.Focus else Palette.FillStrong, tween(140, easing = Motion.EaseOut), label = "action-bg")
-        val fg = if (state.focused) Palette.OnFocus else Palette.Label
-        Row(
-            Modifier.clip(RoundedCornerShape(50)).background(bg).height(40.dp).padding(start = 20.dp, end = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            BasicText(label, style = Type.Body.copy(color = fg))
-            GlyphIcon(glyph, fg, 18.dp)
-        }
-    }
-}
-
-@Composable
-private fun ScreensaverChoice(onStart: () -> Unit) {
-    // The choice first, then the action that tries it. Fork: with Videos added the row outgrew the
-    // sheet and squeezed "Style" to "Styl"; it scrolls under focus instead, as the Plex rows do.
-    Row(Modifier.widthIn(max = 470.dp).horizontalScroll(rememberScrollState()).padding(horizontal = 4.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        listOf(
-            ScreensaverMode.Aerial to R.string.ss_aerial,
-            ScreensaverMode.Photos to R.string.ss_photos,
-            ScreensaverMode.Clock to R.string.ss_clock,
-            ScreensaverMode.Videos to R.string.ss_videos,
-            ScreensaverMode.System to R.string.ss_system,
-        ).forEach { (mode, label) ->
-            Chip(stringResource(label), on = Wallpapers.screensaver == mode) { Wallpapers.chooseScreensaver(mode) }
-        }
-        Spacer(Modifier.width(6.dp))
-        Pressable(onClick = onStart, focusedScale = 1.06f) { state ->
-            val bg by animateColorAsState(if (state.focused) Palette.Focus else Palette.FillStrong, tween(140, easing = Motion.EaseOut), label = "ss-start")
-            val fg = if (state.focused) Palette.OnFocus else Palette.Label
-            Row(
-                Modifier.clip(RoundedCornerShape(50)).background(bg).height(40.dp).padding(horizontal = 20.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                GlyphIcon(Glyph.Play, fg, 14.dp)
-                BasicText(stringResource(R.string.ss_start), style = Type.Body.copy(color = fg))
-            }
-        }
-    }
-}
-
 @Composable
 private fun PhoneCard(url: String?, qr: ImageBitmap?) {
-    Column(Modifier.width(220.dp).padding(top = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.fillMaxWidth().padding(top = 6.dp).focusable(), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             Modifier.size(176.dp).clip(RoundedCornerShape(18.dp)).background(Color.White).padding(14.dp),
             contentAlignment = Alignment.Center,

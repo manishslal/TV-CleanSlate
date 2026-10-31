@@ -62,7 +62,7 @@ import kotlin.math.roundToInt
  * "12:59 PM" to "1:00 PM" turns the hour's last digit and lets the first one fall away.
  */
 @Composable
-fun FlipText(text: String, style: TextStyle, modifier: Modifier = Modifier, cards: Boolean = false, sound: Boolean = false) {
+fun FlipText(text: String, style: TextStyle, modifier: Modifier = Modifier, cards: Boolean = false, sound: Boolean = false, darkCards: Boolean = false) {
     val clockStyle = AerialSettings.clockStyle
     if (clockStyle == ClockStyle.Plain) {
         BasicText(text, style = style, modifier = modifier)
@@ -72,7 +72,7 @@ fun FlipText(text: String, style: TextStyle, modifier: Modifier = Modifier, card
     val still = LocalReducedMotion.current
     // Cards only where the clock is large enough to carry them; the small clocks just turn.
     if (cards && clockStyle == ClockStyle.Cards) {
-        Board(text, style, modifier, still, sound)
+        Board(text, style, modifier, still, sound, if (darkCards || AerialSettings.darkNow) DarkCards else LightCards)
         return
     }
     // Tabular figures: every digit the same width, so a turning digit never nudges its neighbours.
@@ -92,9 +92,9 @@ val BoardInk = Color(0xFFEFE7D2)
 
 /** The board: the time on full-size cards, then AM/PM on half-size ones, lined up on their baseline. */
 @Composable
-private fun Board(text: String, style: TextStyle, modifier: Modifier, still: Boolean, sound: Boolean) {
-    val board = remember(style.fontSize) {
-        TextStyle(fontFamily = BoardFont, fontSize = style.fontSize, color = BoardInk, textAlign = TextAlign.Center, fontFeatureSettings = "tnum")
+private fun Board(text: String, style: TextStyle, modifier: Modifier, still: Boolean, sound: Boolean, faces: CardFaces) {
+    val board = remember(style.fontSize, faces) {
+        TextStyle(fontFamily = BoardFont, fontSize = style.fontSize, color = faces.ink, textAlign = TextAlign.Center, fontFeatureSettings = "tnum")
     }
     val small = remember(board) { board.copy(fontSize = board.fontSize * SUFFIX_SCALE) }
     val main = text.substringBeforeLast(' ')
@@ -108,17 +108,17 @@ private fun Board(text: String, style: TextStyle, modifier: Modifier, still: Boo
         with(density) { (measurer.measure("0", board).firstBaseline - measurer.measure("0", small).firstBaseline).toDp() }
     }
     Row(modifier.baselineOf(board)) {
-        CardRow(main, board, still, sound, Modifier)
+        CardRow(main, board, still, sound, faces, Modifier)
         if (suffix.isNotEmpty()) {
             Spacer(Modifier.width(em * SUFFIX_GAP))
-            CardRow(suffix, small, still, sound = false, modifier = Modifier.padding(top = drop))
+            CardRow(suffix, small, still, sound = false, faces = faces, modifier = Modifier.padding(top = drop))
         }
     }
 }
 
 /** One run of cards, all [style]'s card width; a colon stands between them without one. */
 @Composable
-private fun CardRow(text: String, style: TextStyle, still: Boolean, sound: Boolean, modifier: Modifier) {
+private fun CardRow(text: String, style: TextStyle, still: Boolean, sound: Boolean, faces: CardFaces, modifier: Modifier) {
     val density = LocalDensity.current
     val measurer = rememberTextMeasurer()
     val em = with(density) { style.fontSize.toDp() }
@@ -126,7 +126,7 @@ private fun CardRow(text: String, style: TextStyle, still: Boolean, sound: Boole
     val glyph = remember(style, measurer) {
         with(density) { CARD_CHARS.maxOf { measurer.measure(it.toString(), style).size.width }.toDp() }
     }
-    val card = Card(width = glyph + em * CARD_PAD_H * 2, em = em)
+    val card = Card(width = glyph + em * CARD_PAD_H * 2, em = em, faces = faces)
     Row(modifier) {
         Cells(text) { c, i, leading ->
             if (c == ':') BasicText(":", style = style, modifier = Modifier.padding(horizontal = em * COLON_PAD))
@@ -168,7 +168,7 @@ private fun Modifier.baselineOf(style: TextStyle): Modifier {
 
 /** A flap card's size: its [width], and the text's [em] its padding and corners follow. */
 @Immutable
-private class Card(val width: Dp, val em: Dp)
+private class Card(val width: Dp, val em: Dp, val faces: CardFaces)
 
 @Composable
 private fun Flap(target: Char, style: TextStyle, delayMs: Int, leading: Boolean, card: Card?, still: Boolean, sound: Boolean) {
@@ -217,8 +217,8 @@ private fun Flap(target: Char, style: TextStyle, delayMs: Int, leading: Boolean,
             val s = lines.split
             val w = card.em.toPx() * PIN_W
             val h = card.em.toPx() * PIN_H
-            drawRect(Pin, Offset(-w * 0.6f, s - h / 2f), Size(w, h))
-            drawRect(Pin, Offset(size.width - w * 0.4f, s - h / 2f), Size(w, h))
+            drawRect(card.faces.pin, Offset(-w * 0.6f, s - h / 2f), Size(w, h))
+            drawRect(card.faces.pin, Offset(size.width - w * 0.4f, s - h / 2f), Size(w, h))
         }
     }
 }
@@ -287,7 +287,7 @@ private fun Half(
                 )
                 clipRect(-far, y0, size.width + far, y1) {
                     // Lit from above: the top half's face lighter than the bottom's.
-                    val (a, b) = if (top) TopFaceA to TopFaceB else BottomFaceA to BottomFaceB
+                    val (a, b) = if (top) card.faces.topA to card.faces.topB else card.faces.bottomA to card.faces.bottomB
                     drawRoundRect(
                         Brush.verticalGradient(0f to a, 1f to b, startY = if (top) cardTop else s, endY = if (top) s else cardBottom),
                         topLeft = Offset(0f, cardTop), size = Size(size.width, cardBottom - cardTop), cornerRadius = r,
@@ -295,7 +295,7 @@ private fun Half(
                     this@drawWithContent.drawContent()
                     // The gap between the two flaps.
                     val gap = (em * SPLIT_GAP).coerceAtLeast(1.5f)
-                    drawRect(Gap, Offset(0f, s - gap / 2f), Size(size.width, gap))
+                    drawRect(card.faces.gap, Offset(0f, s - gap / 2f), Size(size.width, gap))
                     if (shade > 0.01f) drawRoundRect(
                         Color.Black.copy(alpha = 0.5f * shade),
                         topLeft = Offset(0f, cardTop), size = Size(size.width, cardBottom - cardTop), cornerRadius = r,
@@ -325,12 +325,13 @@ private fun lerp(a: Float, b: Float, t: Float) = a + (b - a) * t
 private const val CARD_CHARS = "0123456789AMP"
 
 /** A card's faces, lit from above, and the gap between the flaps and the axle's pins. */
-private val TopFaceA = Color(0xF22A2B2E)
-private val TopFaceB = Color(0xF2202124)
-private val BottomFaceA = Color(0xF21B1C1E)
-private val BottomFaceB = Color(0xF2141517)
-private val Gap = Color(0xFF060607)
-private val Pin = Color(0xFF45474B)
+@Immutable
+private class CardFaces(val topA: Color, val topB: Color, val bottomA: Color, val bottomB: Color, val gap: Color, val pin: Color, val ink: Color)
+
+private val DarkCards = CardFaces(Color(0xF22A2B2E), Color(0xF2202124), Color(0xF21B1C1E), Color(0xF2141517), Color(0xFF060607), Color(0xFF45474B), BoardInk)
+
+/** Fork: Light's cards: white, black type, and a soft grey split where Dark's is black. */
+private val LightCards = CardFaces(Color(0xFFFCFCFA), Color(0xFFF2F2EF), Color(0xFFEBEBE7), Color(0xFFE0E0DB), Color(0xFF9B9B96), Color(0xFFB9B9B4), Color(0xFF141517))
 
 // A card's proportions, in ems of its text, so the screensaver's smaller clock has smaller cards.
 private const val CARD_PAD_H = 0.07f

@@ -223,6 +223,7 @@ object Wallpapers {
 
     fun select(id: String) {
         selectedId = id
+        AerialSettings.becameCustom()
         prefs.edit { putString("selected", id) }
         rebuildBackdrop()
     }
@@ -246,6 +247,7 @@ object Wallpapers {
 
     fun chooseScreensaver(mode: ScreensaverMode) {
         chosenScreensaver = mode
+        AerialSettings.becameCustom()
         prefs.edit { putString("screensaver", mode.key) }
         GuardSetup.screensaverModeChanged(app)
     }

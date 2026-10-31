@@ -102,7 +102,7 @@ fun Screensaver(visible: Boolean, apps: List<AppEntry>, now: LocalDateTime, skip
         visible = visible,
         enter = fadeIn(tween(1200, easing = Motion.EaseOut)),
         // Leaves quickly: the viewer pressed a key and wants Home back.
-        exit = fadeOut(tween(220, easing = Motion.EaseOut)),
+        exit = fadeOut(tween(Motion.Enter, easing = Motion.EaseOut)),
         modifier = Modifier.fillMaxSize(),
     ) {
         // Fork: the headlines go over every screensaver but the clock's.
@@ -254,6 +254,8 @@ private fun Labels(caption: String?, now: LocalDateTime, showTime: Boolean = tru
             timeText(now),
             style = SaverClockStyle,
             cards = true,
+            // Fork: dark in either mode: white cards are harsh in the dark room a screensaver runs in.
+            darkCards = true,
             modifier = Modifier
                 .align(if (AerialSettings.clockRight) Alignment.TopEnd else Alignment.TopStart)
                 .padding(top = SaverClockTop, start = SaverClockSide, end = SaverClockSide)

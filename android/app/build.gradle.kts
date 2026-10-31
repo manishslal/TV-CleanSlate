@@ -17,8 +17,8 @@ android {
         // Android 5.0. Compose 1.10 and later need 6.0, so the Compose BOM below stays on 1.9.
         minSdk = 21
         targetSdk = 34
-        versionCode = 82
-        versionName = "1.67-mh2"
+        versionCode = 88
+        versionName = "1.67-mh8"
         // `./gradlew -Pdiag ...`: a build for one reporter's TV whose logcat shows no app lines;
         // see system/DiagLog.kt.
         val diag = project.hasProperty("diag")
@@ -87,6 +87,22 @@ android {
 
 kotlin {
     compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
+}
+
+// Fork: the owner's logo pack (apps/LogoPack.kt). It lives beside this repo and is trademarks for
+// personal use, so it is only ever copied into build/; without the folder the build has no pack.
+val logoPack = rootProject.file("../logos")
+if (logoPack.resolve("manifest.json").exists()) {
+    val logoAssets = layout.buildDirectory.dir("generated/logopack")
+    val copyLogoPack = tasks.register<Sync>("copyLogoPack") {
+        from(logoPack) {
+            include("manifest.json", "dark/*.png", "dark/*.webp")
+            into("logopack")
+        }
+        into(logoAssets)
+    }
+    tasks.matching { it.name.endsWith("Assets") || it.name.contains("lint", ignoreCase = true) }.configureEach { if (this != copyLogoPack.get()) dependsOn(copyLogoPack) }
+    android.sourceSets.getByName("main").assets.srcDir(logoAssets)
 }
 
 dependencies {

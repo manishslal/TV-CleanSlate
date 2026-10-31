@@ -80,6 +80,7 @@ import app.orchard.tv.Overlay
 import app.orchard.tv.R
 import app.orchard.tv.apps.SourceLooks
 import app.orchard.tv.settings.AerialSettings
+import app.orchard.tv.settings.HomeMode
 import app.orchard.tv.system.HomeStatus
 import app.orchard.tv.system.LaunchFallback
 import app.orchard.tv.system.NetKind
@@ -131,8 +132,8 @@ fun ControlCenter(
 
     AnimatedVisibility(
         visible = visible,
-        enter = fadeIn(tween(220, easing = Motion.EaseOut)),
-        exit = fadeOut(tween(180, easing = Motion.EaseOut)),
+        enter = fadeIn(tween(Motion.Enter, easing = Motion.EaseOut)),
+        exit = fadeOut(tween(Motion.Quick, easing = Motion.EaseOut)),
         modifier = Modifier.fillMaxSize(),
     ) {
         // A tap outside the panel closes Control Center.
@@ -152,8 +153,8 @@ fun ControlCenter(
         AnimatedVisibility(
             visible = visible,
             // Grows out of the corner where the status pill lives; leaves faster than it came.
-            enter = fadeIn(tween(200, easing = Motion.EaseOut)) + scaleIn(tween(280, easing = Motion.Drawer), initialScale = 0.9f, transformOrigin = TransformOrigin(1f, 0f)),
-            exit = fadeOut(tween(160, easing = Motion.EaseOut)) + scaleOut(tween(160, easing = Motion.EaseOut), targetScale = 0.95f, transformOrigin = TransformOrigin(1f, 0f)),
+            enter = fadeIn(tween(Motion.Enter, easing = Motion.EaseOut)) + scaleIn(tween(Motion.Panel, easing = Motion.Drawer), initialScale = 0.9f, transformOrigin = TransformOrigin(1f, 0f)),
+            exit = fadeOut(tween(Motion.Quick, easing = Motion.EaseOut)) + scaleOut(tween(Motion.Quick, easing = Motion.EaseOut), targetScale = 0.95f, transformOrigin = TransformOrigin(1f, 0f)),
         ) {
             Column(
                 Modifier
@@ -169,7 +170,7 @@ fun ControlCenter(
                         // both pages (and their scrollables) every frame, and sliding the new page on
                         // top of the cross-fade makes its first frame land late; on low-end TV SoCs
                         // that is felt as a stutter when opening and leaving pages.
-                        (fadeIn(tween(130, easing = Motion.EaseOut)) togetherWith fadeOut(tween(110, easing = Motion.EaseOut)))
+                        (fadeIn(tween(Motion.Fast, easing = Motion.EaseOut)) togetherWith fadeOut(tween(Motion.Fast, easing = Motion.EaseOut)))
                             .using(SizeTransform { _, _ -> tween(0) })
                     },
                     label = "cc-page",
@@ -264,6 +265,7 @@ private fun MainPage(vm: HomeViewModel, now: LocalDateTime, takeFocus: Boolean, 
             stringResource(R.string.cc_personalize),
             onClick = { vm.overlay = Overlay.Wallpaper },
         )
+        HomeModeRow()
         // What the TV opens when switched on: easy to forget, and puzzling when it happens.
         vm.bootTargetLabel()?.let { name ->
             MenuRow(
@@ -426,9 +428,9 @@ private fun SetupPage(vm: HomeViewModel, takeFocus: Boolean, onOpen: (android.co
 @Composable
 private fun RoundButton(glyph: Glyph, label: String, focusRequester: FocusRequester? = null, onClick: () -> Unit) {
     Pressable(onClick = onClick, focusRequester = focusRequester, focusedScale = 1.1f) { state ->
-        val bg by animateColorAsState(if (state.focused) Palette.Focus else Palette.Fill, tween(140, easing = Motion.EaseOut), label = "round-bg")
+        val bg by animateColorAsState(if (state.focused) Palette.Focus else Color.Transparent, tween(Motion.Quick, easing = Motion.EaseOut), label = "round-bg")
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(64.dp)) {
-            Box(Modifier.size(48.dp).clip(CircleShape).background(bg), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(48.dp).liquidGlass(24.dp, band = 10.dp).background(bg), contentAlignment = Alignment.Center) {
                 GlyphIcon(glyph, if (state.focused) Palette.OnFocus else Palette.Label, 20.dp)
             }
             Spacer(Modifier.height(6.dp))
@@ -474,7 +476,7 @@ private fun SliderRow(
             true
         },
     ) { state ->
-        val bg by animateColorAsState(if (state.focused) Palette.Focus else Palette.Fill, tween(140, easing = Motion.EaseOut), label = "slider-bg")
+        val bg by animateColorAsState(if (state.focused) Palette.Focus else Color.Transparent, tween(Motion.Quick, easing = Motion.EaseOut), label = "slider-bg")
         val fg = if (state.focused) Palette.OnFocus else Palette.Label
         val fraction by animateFloatAsState(level, spring(dampingRatio = 1f, stiffness = 700f), label = "slider-level")
         Row(
@@ -492,7 +494,7 @@ private fun SliderRow(
                         while (travelled <= -pitch) { step(-1); travelled += pitch }
                     }
                 }
-                .clip(RoundedCornerShape(14.dp)).background(bg).height(40.dp).padding(horizontal = 14.dp),
+                .height(40.dp).liquidGlass(14.dp, band = 8.dp).background(bg).padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -507,6 +509,45 @@ private fun SliderRow(
                 style = Type.Headline.copy(color = fg, textAlign = TextAlign.End),
                 modifier = Modifier.widthIn(min = 28.dp),
             )
+        }
+    }
+}
+
+/** Fork: Home Mode ([HomeMode]): Left and Right move through them, as a value in Personalize does. */
+@Composable
+private fun HomeModeRow() {
+    val modes = HomeMode.entries
+    val at = modes.indexOf(AerialSettings.homeMode)
+    Pressable(
+        onClick = {},
+        focusedScale = 1.03f,
+        modifier = Modifier.fillMaxWidth(),
+        onKey = { e ->
+            val code = e.nativeKeyEvent.keyCode
+            if (code != NativeKeyEvent.KEYCODE_DPAD_LEFT && code != NativeKeyEvent.KEYCODE_DPAD_RIGHT) return@Pressable false
+            if (e.type == KeyEventType.KeyDown && e.nativeKeyEvent.repeatCount == 0) {
+                val to = at + if (code == NativeKeyEvent.KEYCODE_DPAD_RIGHT) 1 else -1
+                if (to in modes.indices) { Sounds.step(); AerialSettings.chooseHomeMode(modes[to]) } else Sounds.limit()
+            }
+            true
+        },
+    ) { state ->
+        val bg by animateColorAsState(if (state.focused) Palette.Focus else Color.Transparent, tween(Motion.Quick, easing = Motion.EaseOut), label = "mode-bg")
+        val fg = if (state.focused) Palette.OnFocus else Palette.Label
+        Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(bg).height(44.dp).padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            GlyphIcon(Glyph.Power, fg, 18.dp)
+            Spacer(Modifier.width(6.dp))
+            BasicText(stringResource(R.string.fk_home_mode), style = Type.Body.copy(color = fg), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            if (state.focused) GlyphIcon(Glyph.ChevronLeft, fg.copy(alpha = if (at > 0) 1f else 0.25f), 14.dp)
+            BasicText(
+                stringResource(when (modes[at]) { HomeMode.Full -> R.string.fk_mode_full; HomeMode.Custom -> R.string.fk_mode_custom; HomeMode.Efficient -> R.string.fk_mode_efficient }),
+                style = Type.Callout.copy(color = fg.copy(alpha = 0.72f)),
+            )
+            if (state.focused) GlyphIcon(Glyph.ChevronRight, fg.copy(alpha = if (at < modes.lastIndex) 1f else 0.25f), 14.dp)
         }
     }
 }
@@ -675,7 +716,7 @@ private fun InputSettingsPage(vm: HomeViewModel, takeFocus: Boolean) {
 @Composable
 private fun ChoiceRow(text: String, selected: Boolean, focusRequester: FocusRequester?, onClick: () -> Unit) {
     Pressable(onClick = onClick, focusRequester = focusRequester, focusedScale = 1.03f, modifier = Modifier.fillMaxWidth()) { state ->
-        val bg by animateColorAsState(if (state.focused) Palette.Focus else Color.Transparent, tween(140, easing = Motion.EaseOut), label = "choice-bg")
+        val bg by animateColorAsState(if (state.focused) Palette.Focus else Color.Transparent, tween(Motion.Quick, easing = Motion.EaseOut), label = "choice-bg")
         val fg = if (state.focused) Palette.OnFocus else Palette.Label
         Row(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(bg).height(44.dp).padding(horizontal = 14.dp),

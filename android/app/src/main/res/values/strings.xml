@@ -102,7 +102,7 @@
     <string name="wp_phone_body">Scan the code, or open the address below in a computer\'s browser, to send photos and videos, change app icons and set the weather\'s city. It must be on the same network as the TV.</string>
     <string name="wp_phone_offline">Connect the TV to a network to set it up from a phone or computer.</string>
     <string name="ss_start">Start Now</string>
-    <string name="ss_delay">Start after</string>
+    <string name="ss_delay">Start After</string>
     <string name="ss_minutes">%d min</string>
     <string name="ss_never">Never</string>
     <string name="ss_delay_system">Follows the TV</string>
@@ -110,7 +110,7 @@
     <string name="ss_delay_system_minutes">Follows the TV · %d min</string>
     <string name="ss_back_hint">Tip: press Back on the top row of Home to start the screensaver.</string>
     <string name="ss_back">Back Button</string>
-    <string name="ss_back_on">Starts It</string>
+    <string name="ss_back_on">Starts Screensaver</string>
     <string name="ss_back_off">Does Nothing</string>
     <string name="ss_back_choice_hint">What Back does on the top row of Home. Turn it off if it gets pressed by accident; the screensaver still starts on its own.</string>
     <string name="ss_quality">Aerial Quality</string>
@@ -249,17 +249,21 @@
     <string name="ss_show_time">Time</string>
     <string name="ss_show_time_hint">The time over the aerial and photo screensavers. The time and place name move a little now and then, so nothing stays on the same pixels.</string>
     <!-- Fork additions (FORK.md) -->
-    <string name="fk_time_format">Time</string>
+    <string name="fk_time_format">Time Format</string>
     <string name="fk_time_12">12-hour</string>
     <string name="fk_time_24">24-hour</string>
     <string name="fk_units">Temperature</string>
     <string name="fk_units_f">°F</string>
     <string name="fk_units_c">°C</string>
     <string name="fk_tiles">Appearance</string>
-    <string name="fk_tiles_hint">Dark dims the wallpaper and puts each app on dark glass. Light keeps each app in its own colors. Auto turns dark at sunset and light at sunrise.</string>
+    <string name="fk_tiles_hint">Dark panels and a dimmed wallpaper, or light panels. Auto turns dark at sunset and light at sunrise.</string>
     <string name="fk_tiles_dark">Dark</string>
     <string name="fk_tiles_auto">Auto</string>
     <string name="fk_tiles_color">Light</string>
+    <string name="fk_app_tiles">App Tiles</string>
+    <string name="fk_app_tiles_hint">Dark Glass shows each app\'s logo on dark glass. Full Color keeps each app\'s own colors. It works in any appearance.</string>
+    <string name="fk_tiles_glass">Dark Glass</string>
+    <string name="fk_tiles_full">Full Color</string>
     <string name="fk_flip">Clock</string>
     <string name="fk_flip_cards">Cards</string>
     <string name="fk_flip_on">Flip</string>
@@ -272,7 +276,7 @@
     <string name="fk_loc_none">No place by that name</string>
     <string name="fk_weather_guessed">Located from the network. Choose Change to pick your city.</string>
     <string name="fk_weather_chosen">Chosen on this TV or your phone. Choose Change to pick another city.</string>
-    <string name="fk_flap_sound">Flap sound</string>
+    <string name="fk_flap_sound">Flap Sound</string>
     <string name="fk_news_tech">Tech</string>
     <string name="fk_news_ai">AI</string>
     <string name="fk_news_us">US</string>
@@ -313,4 +317,26 @@
     <string name="fk_plex_server_down">The Plex server did not answer; the last list is kept.</string>
     <string name="fk_age_minutes">%1$d min ago</string>
     <string name="fk_age_hours">%1$d h ago</string>
+    <string name="fk_group_look">Look</string>
+    <string name="fk_group_access">Apps and Access</string>
+    <string name="fk_page_layout">Layout and Tiles</string>
+    <string name="fk_page_clock">Clock and Weather</string>
+    <string name="fk_sec_tiles">Tiles</string>
+    <string name="fk_sec_theme">Theme</string>
+    <string name="fk_sec_motion">Sound and Motion</string>
+    <string name="fk_label_position">Position</string>
+    <string name="fk_label_size">Size</string>
+    <string name="fk_label_rows">Rows</string>
+    <string name="fk_show_on_home">Show on Home</string>
+    <string name="fk_label_peek">Peek at Next Row</string>
+    <string name="fk_label_plate">Glass Behind Apps</string>
+    <string name="fk_more_apps">More Apps</string>
+    <string name="fk_label_tile_style">Tile Style</string>
+    <string name="fk_label_mode">Mode</string>
+    <string name="fk_tiles_system">System</string>
+    <string name="fk_tile_style_hint">System follows Mode: dark glass in Dark, each app\'s own colors in Light. Dark Glass and Full Color stay as they are.</string>
+    <string name="fk_home_mode">Home Mode</string>
+    <string name="fk_mode_full">Full</string>
+    <string name="fk_mode_custom">Custom</string>
+    <string name="fk_mode_efficient">Efficient</string>
 </resources>

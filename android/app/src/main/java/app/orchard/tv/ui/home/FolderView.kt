@@ -77,8 +77,8 @@ fun FolderView(
 
     AnimatedVisibility(
         visible = visible,
-        enter = fadeIn(tween(200, easing = Motion.EaseOut)) + scaleIn(tween(300, easing = Motion.Drawer), initialScale = 0.94f),
-        exit = fadeOut(tween(150, easing = Motion.EaseOut)) + scaleOut(tween(150, easing = Motion.EaseOut), targetScale = 0.97f),
+        enter = fadeIn(tween(Motion.Enter, easing = Motion.EaseOut)) + scaleIn(tween(Motion.Panel, easing = Motion.Drawer), initialScale = 0.94f),
+        exit = fadeOut(tween(Motion.Quick, easing = Motion.EaseOut)) + scaleOut(tween(Motion.Quick, easing = Motion.EaseOut), targetScale = 0.97f),
         modifier = Modifier.fillMaxSize(),
     ) {
         Box(Modifier.fillMaxSize().dismissOnTap(onDismiss).background(Color.Black.copy(alpha = 0.45f))) {

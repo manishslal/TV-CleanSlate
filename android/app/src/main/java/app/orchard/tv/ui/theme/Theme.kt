@@ -59,8 +59,8 @@ object Palette {
     /** The dark values, for drawing outside composition. */
     object Dark {
         val Label = Color(0xFFFFFFFF)
-        val SecondaryLabel = Color(0x99EBEBF5)
-        val TertiaryLabel = Color(0x4DEBEBF5)
+        val SecondaryLabel = Color(0xB8EBEBF5)
+        val TertiaryLabel = Color(0x99EBEBF5)
         val Glass = Color(0xE6202022)
         val Fill = Color(0x2E787880)
         val FillStrong = Color(0x52787880)
@@ -72,8 +72,8 @@ object Palette {
     /** Fork: Apple's light system colors, for a light panel. */
     object Light {
         val Label = Color(0xFF1D1D1F)
-        val SecondaryLabel = Color(0x993C3C43)
-        val TertiaryLabel = Color(0x4D3C3C43)
+        val SecondaryLabel = Color(0xD93C3C43)
+        val TertiaryLabel = Color(0xCC3C3C43)
         val Glass = Color(0xEBF2F2F7)
         val Fill = Color(0x29787880)
         val FillStrong = Color(0x3D787880)
@@ -89,6 +89,12 @@ object Motion {
 
     /** On-screen movement between two resting places. */
     val EaseInOut = CubicBezierEasing(0.77f, 0f, 0.175f, 1f)
+
+    /** Fork: the app's durations, in ms: what a state change, an exit, an entrance and a panel take. */
+    const val Fast = 120
+    const val Quick = 160
+    const val Enter = 220
+    const val Panel = 300
 
     /** iOS sheet curve, for panels sliding in. */
     val Drawer = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
@@ -157,13 +163,13 @@ object Type {
 
     private val TitleBase = TextStyle(
         fontFamily = InterDisplay, fontWeight = FontWeight.W600,
-        fontSize = 19.sp, letterSpacing = (-0.01).em,
+        fontSize = 20.sp, letterSpacing = (-0.01).em,
     )
     val Title: TextStyle @Composable @ReadOnlyComposable get() = TitleBase.copy(color = Palette.Label)
 
     private val HeadlineBase = TextStyle(
         fontFamily = InterText, fontWeight = FontWeight.W600,
-        fontSize = 15.sp, letterSpacing = (-0.005).em,
+        fontSize = 16.sp, letterSpacing = (-0.005).em,
     )
     val Headline: TextStyle @Composable @ReadOnlyComposable get() = HeadlineBase.copy(color = Palette.Label)
 
@@ -173,15 +179,22 @@ object Type {
     )
     val Body: TextStyle @Composable @ReadOnlyComposable get() = BodyBase.copy(color = Palette.Label)
 
+    /** Fork: a setting's name on its row: above the value beside it, and lighter than a heading. */
+    private val RowBase = TextStyle(
+        fontFamily = InterText, fontWeight = FontWeight.W500,
+        fontSize = 16.sp,
+    )
+    val Row: TextStyle @Composable @ReadOnlyComposable get() = RowBase.copy(color = Palette.Label)
+
     private val CalloutBase = TextStyle(
         fontFamily = InterText, fontWeight = FontWeight.W500,
-        fontSize = 13.sp,
+        fontSize = 14.sp,
     )
     val Callout: TextStyle @Composable @ReadOnlyComposable get() = CalloutBase.copy(color = Palette.SecondaryLabel)
 
     private val CaptionBase = TextStyle(
         fontFamily = InterText, fontWeight = FontWeight.W500,
-        fontSize = 11.sp, letterSpacing = 0.01.em,
+        fontSize = 12.sp, letterSpacing = 0.01.em,
     )
     val Caption: TextStyle @Composable @ReadOnlyComposable get() = CaptionBase.copy(color = Palette.SecondaryLabel)
 

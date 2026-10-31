@@ -58,7 +58,6 @@ sealed interface Overlay {
     /** [inFolder]: the menu was opened inside that folder, and closes back to it. */
     data class AppMenu(val key: String, val anchor: Rect, val inFolder: String? = null) : Overlay
     data class Folder(val id: String) : Overlay
-    data object HiddenApps : Overlay
     data object Wallpaper : Overlay
     data class Pin(val mode: PinMode, val onDone: () -> Unit) : Overlay
 }

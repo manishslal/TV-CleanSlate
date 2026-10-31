@@ -199,6 +199,7 @@ object AppCatalog {
      * TCL MT5879 (23 MB of pixels), while only the first rows show.
      */
     suspend fun load(context: Context, first: ((installed: Set<String>) -> Set<String>)? = null): List<AppEntry> = withContext(Dispatchers.Default) {
+        LogoPack.use(context)
         val started = android.os.SystemClock.uptimeMillis()
         TileDiskCache.init(context)
         val pm = context.packageManager
@@ -370,7 +371,14 @@ object AppCatalog {
             ?.takeIf { it.intrinsicWidth >= it.intrinsicHeight * 4 / 3 }
 
     /** The tile drawn from the app's own art: its recipe's glyph, its banner, or its icon. */
-    private fun fromApp(pm: PackageManager, info: ActivityInfo, banner: android.graphics.drawable.Drawable?, recipe: TileRecipe?): TileArt = when {
+    private fun fromApp(pm: PackageManager, info: ActivityInfo, banner: android.graphics.drawable.Drawable?, recipe: TileRecipe?): TileArt {
+        // Fork: real artwork from the logo pack comes before anything processed from the icon.
+        val logo = if (TileArtFactory.dark) LogoPack.load(info.packageName) else null
+        if (logo != null) return TileArtFactory.fromLogo(logo, densest(pm, info, info.iconResource) ?: info.loadIcon(pm))
+        return drawnFromApp(pm, info, banner, recipe)
+    }
+
+    private fun drawnFromApp(pm: PackageManager, info: ActivityInfo, banner: android.graphics.drawable.Drawable?, recipe: TileRecipe?): TileArt = when {
         recipe?.glyph != null -> TileArtFactory.glyphTile(recipe.top ?: 0, recipe.bottom ?: 0, recipe.glyph)
         // Fork: dark tiles take the logo from the icon, which can go on in white; a banner is a picture.
         banner != null && recipe?.useIcon != true && !TileArtFactory.dark -> TileArtFactory.fromBanner(banner)
@@ -384,6 +392,7 @@ object AppCatalog {
     fun ownArt(context: Context, entry: AppEntry): TileArt? = runCatching {
         val pm = context.packageManager
         val info = pm.getActivityInfo(entry.component, 0)
+        LogoPack.use(context)
         fromApp(pm, info, banner(pm, info, entry.leanback), TileRecipes.of(entry.packageName))
     }.getOrNull()
 

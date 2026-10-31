@@ -76,6 +76,7 @@ import app.orchard.tv.CcPage
 import app.orchard.tv.apps.SourceLooks
 import app.orchard.tv.HomeViewModel
 import app.orchard.tv.Overlay
+import androidx.compose.ui.graphics.Shadow
 import app.orchard.tv.R
 import app.orchard.tv.settings.AerialSettings
 import app.orchard.tv.apps.AppEntry
@@ -564,16 +565,16 @@ fun HomeScreen(
 
         // The folder open, or under its app's menu.
         val openFolder = (overlay as? Overlay.Folder)?.id ?: (overlay as? Overlay.AppMenu)?.inFolder
-        val folderOpen = overlay is Overlay.HiddenApps || openFolder != null
+        val folderOpen = openFolder != null
         val ccOpen = overlay is Overlay.ControlCenter
         // Folders open on Home frosted, as on tvOS; Control Center keeps Home sharp, dimmed.
         val backdropFrost by animateFloatAsState(
             if (folderOpen) 1f else 0f,
-            tween(320, easing = Motion.EaseOut), label = "backdrop-frost",
+            tween(Motion.Panel, easing = Motion.EaseOut), label = "backdrop-frost",
         )
         val backdropVeil by animateFloatAsState(
             if (ccOpen) 1f else 0f,
-            tween(320, easing = Motion.EaseOut), label = "backdrop-veil",
+            tween(Motion.Panel, easing = Motion.EaseOut), label = "backdrop-veil",
         )
         // With Control Center open, Home is still: once the panel is in, a picture of it stands in
         // for it, one full-screen image a frame instead of every tile again under the panel
@@ -709,7 +710,7 @@ fun HomeScreen(
 
             // Fork: in Dark, a faint light in the focused app's own color rises behind the tiles,
             // as if the tile lit the room; it moves to the next app's color as focus moves.
-            val glowTint = apps.getOrNull(focusedIndex)?.art?.tint?.takeIf { AerialSettings.darkTiles && !pillFocused && it.alpha > 0f } ?: Color.Transparent
+            val glowTint = apps.getOrNull(focusedIndex)?.art?.tint?.takeIf { AerialSettings.darkTiles && !AerialSettings.lite && !pillFocused && it.alpha > 0f } ?: Color.Transparent
             val glow by animateColorAsState(glowTint, tween(GLOW_MS, easing = Motion.EaseInOut), label = "app-glow")
             if (glow.alpha > 0.01f) Canvas(Modifier.fillMaxSize()) {
                 val a = 1f - toSaver.value
@@ -774,6 +775,18 @@ fun HomeScreen(
                     !oneRow -> columns * 2
                     !peek -> columns
                     else -> Int.MAX_VALUE
+                }
+                // Fork: the name of what follows the shelf, once Home has scrolled to it. Left out
+                // with every name shown: the row above's names fill the gap it would sit in.
+                if (apps.size > columns * metrics.shelfRows && !AerialSettings.showAllNames) {
+                    val (_, headY) = metrics.slot(columns * metrics.shelfRows, onTop = !inGrid)
+                    BasicText(
+                        stringResource(R.string.fk_more_apps),
+                        style = Type.OnWallpaper.Headline.copy(shadow = Shadow(Color.Black.copy(alpha = 0.6f), blurRadius = 8f)),
+                        modifier = Modifier
+                            .offset(x = metrics.margin, y = headY - 30.dp)
+                            .graphicsLayer { alpha = (scroll.value / collapsePx * 1.6f - 0.6f).coerceIn(0f, 1f) },
+                    )
                 }
                 apps.forEachIndexed { index, app ->
                     key(app.key) {
@@ -860,7 +873,7 @@ fun HomeScreen(
         Canvas(Modifier.fillMaxWidth().height(TopShade)) {
             val a = ((scroll.value - collapsePx * 0.5f) / (collapsePx * 0.6f)).coerceIn(0f, 1f) * (1f - toSaver.value)
             if (a < 0.01f) return@Canvas
-            val top = if (AerialSettings.darkTiles) 0.82f else 0.72f
+            val top = if (AerialSettings.darkNow) 0.82f else 0.72f
             drawRect(
                 Brush.verticalGradient(
                     0f to Color.Black.copy(alpha = top),
@@ -936,11 +949,11 @@ fun HomeScreen(
 
         // Fork: the panels (Control Center, Personalize, menus, folders) as light glass with dark
         // type while Appearance is light; Home's own type over the wallpaper stays white.
-        CompositionLocalProvider(LocalLightPanel provides !AerialSettings.darkTiles) {
+        CompositionLocalProvider(LocalLightPanel provides !AerialSettings.darkNow) {
             AnimatedVisibility(
                 visible = moving != null,
-                enter = fadeIn(tween(200, easing = Motion.EaseOut)) + slideInVertically(tween(260, easing = Motion.EaseOut)) { it / 2 },
-                exit = fadeOut(tween(150, easing = Motion.EaseOut)) + slideOutVertically(tween(150, easing = Motion.EaseOut)) { it / 2 },
+                enter = fadeIn(tween(Motion.Enter, easing = Motion.EaseOut)) + slideInVertically(tween(Motion.Enter, easing = Motion.EaseOut)) { it / 2 },
+                exit = fadeOut(tween(Motion.Quick, easing = Motion.EaseOut)) + slideOutVertically(tween(Motion.Quick, easing = Motion.EaseOut)) { it / 2 },
                 modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 28.dp),
             ) {
                 // Screens that can be touched also say how to move with a finger.
@@ -1051,22 +1064,13 @@ fun HomeScreen(
                 onDismiss = { closeMenu() },
             )
 
-            HiddenAppsSheet(
-                visible = overlay is Overlay.HiddenApps,
-                apps = vm.hiddenApps,
-                onUnhide = { key ->
-                    vm.unhide(key)
-                    if (vm.hiddenApps.isEmpty()) vm.overlay = Overlay.Wallpaper
-                },
-                // Hidden apps are reached from Personalization, and Back returns there.
-                onDismiss = { vm.overlay = Overlay.Wallpaper },
-            )
-
             WallpaperSheet(
                 visible = overlay is Overlay.Wallpaper,
                 onDismiss = { vm.overlay = Overlay.ControlCenter() },
-                hiddenCount = vm.hiddenApps.size,
-                onHiddenApps = { vm.whenUnlocked { vm.overlay = Overlay.HiddenApps } },
+                hiddenApps = vm.hiddenApps,
+                onUnhide = vm::unhide,
+                // The PIN pad closes Personalize, so it comes back before the page opens.
+                onHiddenApps = { open -> vm.whenUnlocked { vm.overlay = Overlay.Wallpaper; open() } },
                 onStartScreensaver = {
                     vm.overlay = Overlay.None
                     onStartScreensaver()

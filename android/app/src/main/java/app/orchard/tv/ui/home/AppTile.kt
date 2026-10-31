@@ -1,5 +1,9 @@
 package app.orchard.tv.ui.home
 
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import android.graphics.BitmapShader
 import android.graphics.BlurMaskFilter
 import android.graphics.ComposeShader
@@ -190,7 +194,7 @@ fun AppTile(
         // Press answers immediately; focus settles on a spring so rapid D-pad presses retarget
         // smoothly. Critically damped, as Android TV's focus zoom (Leanback, Compose for TV) is: an
         // overshoot reads as a wobble on a lit tile and makes the white frame shimmer.
-        animationSpec = if (pressed) tween(110, easing = Motion.EaseOut) else spring(dampingRatio = 1f, stiffness = 520f),
+        animationSpec = if (pressed) tween(Motion.Fast, easing = Motion.EaseOut) else spring(dampingRatio = 1f, stiffness = 520f),
         label = "tile-scale",
     )
     val lift by animateFloatAsState(
@@ -200,7 +204,7 @@ fun AppTile(
     )
     val ring by animateFloatAsState(
         targetValue = if (AerialSettings.focusStyle == FocusStyle.HighContrast) 1f else 0f,
-        animationSpec = tween(200, easing = Motion.EaseOut),
+        animationSpec = tween(Motion.Enter, easing = Motion.EaseOut),
         label = "tile-ring",
     )
     // The frame comes on quickly with the zoom and goes off faster still, so moving along a row
@@ -216,7 +220,7 @@ fun AppTile(
         rememberInfiniteTransition(label = "jiggle").animateFloat(
             initialValue = -1.3f, targetValue = 1.3f,
             // A sine, not a triangle: linear turned back hard at each end and read as a buzz.
-            animationSpec = infiniteRepeatable(tween(130, easing = SineEasing), RepeatMode.Reverse),
+            animationSpec = infiniteRepeatable(tween(Motion.Fast, easing = SineEasing), RepeatMode.Reverse),
             label = "jiggle-angle",
         )
     } else null
@@ -401,6 +405,7 @@ fun AppTile(
                     )
                 }
                 .focusProperties { if (rowEnd) right = FocusRequester.Cancel }
+                .semantics(mergeDescendants = true) { role = Role.Button; contentDescription = app.label }
                 .focusable(enabled),
         ) {
             Spacer(Modifier.fillMaxSize().drawWithCache {

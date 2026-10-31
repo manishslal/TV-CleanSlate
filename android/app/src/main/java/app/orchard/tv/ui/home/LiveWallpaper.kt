@@ -325,7 +325,7 @@ fun LiveWallpaper(
                         return@LaunchedEffect
                     }
                     DiagLog.i("wallpaper picture takes over from the stopped film")
-                    cover.animateTo(0f, tween(320, easing = Motion.EaseOut))
+                    cover.animateTo(0f, tween(Motion.Panel, easing = Motion.EaseOut))
                 } else {
                     DiagLog.i("wallpaper film: no frame copied; back to the last picture")
                     cover.animateTo(0f, tween(600, easing = Motion.EaseOut))

@@ -1,5 +1,10 @@
 package app.orchard.tv.ui.components
 
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import android.view.KeyEvent as NativeKeyEvent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -71,6 +76,11 @@ fun Pressable(
     focusRequester: FocusRequester? = null,
     focusedScale: Float = 1.06f,
     onKey: ((KeyEvent) -> Boolean)? = null,
+    /** Fork: what a screen reader says for a control with no text of its own. */
+    label: String? = null,
+    /** Fork: a state its text does not say, such as a switch's on or off. */
+    spokenState: String? = null,
+    role: Role = Role.Button,
     content: @Composable BoxScope.(PressState) -> Unit,
 ) {
     val state = remember { PressState() }
@@ -89,7 +99,15 @@ fun Pressable(
         label = "pressable-scale",
     )
     Box(
-        modifier
+        // Fork: first, so it wraps all that follows: to a screen reader the control is one thing,
+        // its text, role and state together, on the node that takes focus.
+        Modifier
+            .semantics(mergeDescendants = true) {
+                this.role = role
+                label?.let { contentDescription = it }
+                spokenState?.let { stateDescription = it }
+            }
+            .then(modifier)
             .focusRequester(requester)
             .onFocusChanged {
                 if (it.isFocused && !state.focused) Sounds.focusMoved()

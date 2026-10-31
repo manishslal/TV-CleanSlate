@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -32,6 +33,7 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.layer.CompositingStrategy
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.toArgb
@@ -60,7 +62,7 @@ import kotlin.math.roundToInt
  * The continuous outline is a baked mask (see SmoothCorners.kt); children are clipped to a plain
  * rounded rect, which holds it.
  */
-fun Modifier.liquidGlass(corner: Dp, bottomCorners: Boolean = true): Modifier = composed {
+fun Modifier.liquidGlass(corner: Dp, bottomCorners: Boolean = true, band: Dp = 26.dp): Modifier = composed {
     val (frost, under, swap) = rememberFrostSwap(Wallpapers.frosted.takeIf { Wallpapers.backdrop != null })
     // Fork: a light panel brightens the frosted picture instead of dimming it.
     val light = LocalLightPanel.current
@@ -131,7 +133,7 @@ fun Modifier.liquidGlass(corner: Dp, bottomCorners: Boolean = true): Modifier = 
                                 drawRect(brush, alpha = t, colorFilter = tint, blendMode = BlendMode.SrcAtop)
                             } else if (lens) {
                                 // Fork: Liquid Glass: the lens shader brings its own rim and light.
-                                drawRect(ShaderBrush(LiquidLens.shader(frost, Wallpapers.backdrop, IntSize(w, h), radius, !bottomCorners, at, root, light, density)), blendMode = BlendMode.SrcIn)
+                                drawRect(ShaderBrush(LiquidLens.shader(frost, Wallpapers.backdrop, IntSize(w, h), radius, !bottomCorners, at, root, light, density, band.toPx())), blendMode = BlendMode.SrcIn)
                             } else {
                                 drawRect(brush, colorFilter = tint, blendMode = BlendMode.SrcIn)
                             }
@@ -186,6 +188,31 @@ private fun DrawScope.drawGlassEdge(size: Size, radius: Float, bottomCorners: Bo
     val h = size.height.roundToInt()
     if (w <= 0 || h <= 0) return
     drawImage(glassEdge(w, h, radius, 1.2.dp.toPx(), bottomCorners), dstSize = IntSize(w, h))
+}
+
+/**
+ * Fork: the lit edge alone, for a control too small for the lens to show: a sheen and a rim over
+ * what it holds. White light has nothing to catch on a light panel, so a faint dark line holds the
+ * edge there. One baked picture per size, so it works on every TV.
+ */
+fun Modifier.glassRim(corner: Dp): Modifier = composed {
+    val light = LocalLightPanel.current
+    drawWithCache {
+        val w = size.width.roundToInt().coerceAtLeast(1)
+        val h = size.height.roundToInt().coerceAtLeast(1)
+        val radius = corner.toPx().coerceAtMost(size.minDimension / 2)
+        val edge = glassEdge(w, h, radius, 1.2.dp.toPx())
+        val line = 1.dp.toPx()
+        onDrawWithContent {
+            drawContent()
+            if (light) drawRoundRect(
+                Color.Black.copy(alpha = 0.1f),
+                topLeft = Offset(line / 2, line / 2), size = Size(size.width - line, size.height - line),
+                cornerRadius = CornerRadius(radius), style = Stroke(line),
+            )
+            drawImage(edge, dstSize = IntSize(w, h))
+        }
+    }
 }
 
 /** The lit edge of a [w]×[h] piece of glass at full strength, white with alpha; made once per size. */

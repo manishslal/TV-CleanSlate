@@ -95,7 +95,7 @@ fun MenuRow(
 ) {
     Pressable(onClick = onClick, focusRequester = focusRequester, focusedScale = 1.03f, modifier = modifier.fillMaxWidth()) { state ->
         val bg by animateColorAsState(
-            if (state.focused) Palette.Focus else Color.Transparent, tween(140, easing = Motion.EaseOut), label = "row-bg",
+            if (state.focused) Palette.Focus else Color.Transparent, tween(Motion.Quick, easing = Motion.EaseOut), label = "row-bg",
         )
         val fg = when {
             state.focused -> if (destructive) Color(0xFFD70015) else Palette.OnFocus
@@ -202,8 +202,8 @@ fun AppMenu(
     ) {
         AnimatedVisibility(
             visible = visible,
-            enter = fadeIn(tween(160, easing = Motion.EaseOut)) + scaleIn(tween(220, easing = Motion.EaseOut), initialScale = 0.92f, transformOrigin = origin),
-            exit = fadeOut(tween(120, easing = Motion.EaseOut)) + scaleOut(tween(120, easing = Motion.EaseOut), targetScale = 0.96f, transformOrigin = origin),
+            enter = fadeIn(tween(Motion.Quick, easing = Motion.EaseOut)) + scaleIn(tween(Motion.Enter, easing = Motion.EaseOut), initialScale = 0.92f, transformOrigin = origin),
+            exit = fadeOut(tween(Motion.Fast, easing = Motion.EaseOut)) + scaleOut(tween(Motion.Fast, easing = Motion.EaseOut), targetScale = 0.96f, transformOrigin = origin),
         ) {
             Column(
                 Modifier
@@ -236,6 +236,7 @@ fun AppMenu(
                                 MenuRow(Glyph.Move, stringResource(R.string.menu_move), { onMove(shownApp.key) }, focusRequester = first)
                             }
                             MenuRow(Glyph.Folder, stringResource(R.string.menu_to_folder), { page = MenuPage.Folders }, trailing = "›")
+                            MenuBreak()
                             if (shownApp.source != null) {
                                 // A pinned TV input: no app info or uninstall, and "remove" unpins it.
                                 MenuRow(Glyph.Input, stringResource(R.string.menu_source_device), { page = MenuPage.Device }, trailing = "›")
@@ -259,6 +260,7 @@ fun AppMenu(
                                 { onBootTarget(shownApp.key) },
                             )
                             if (shownApp.removable) {
+                                MenuBreak()
                                 MenuRow(Glyph.Trash, stringResource(R.string.menu_uninstall), { onUninstall(shownApp.key) }, destructive = true)
                             }
                         }
@@ -307,6 +309,10 @@ fun AppMenu(
     }
 }
 
+/** Fork: the gap between a menu's groups: arranging, this app, removing it. */
+@Composable
+private fun MenuBreak() = Spacer(Modifier.height(10.dp))
+
 /** A small, flat copy of a tile for lists. */
 @Composable
 fun MiniTile(app: AppEntry, focused: Boolean, modifier: Modifier = Modifier) {
@@ -328,78 +334,6 @@ fun MiniTile(app: AppEntry, focused: Boolean, modifier: Modifier = Modifier) {
     }
 }
 
-/** Hidden apps, to put back on Home. Reached from Control Center. */
-@Composable
-fun HiddenAppsSheet(
-    visible: Boolean,
-    apps: List<AppEntry>,
-    onUnhide: (String) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val first = remember { FocusRequester() }
-    BackHandler(enabled = visible, onBack = onDismiss)
-    LaunchedEffect(visible, apps.size) {
-        if (visible) {
-            withFrameNanos { }
-            runCatching { first.requestFocus() }
-        }
-    }
-    AnimatedVisibility(
-        visible = visible,
-        enter = fadeIn(tween(200, easing = Motion.EaseOut)) + scaleIn(tween(300, easing = Motion.Drawer), initialScale = 0.94f),
-        exit = fadeOut(tween(150, easing = Motion.EaseOut)) + scaleOut(tween(150, easing = Motion.EaseOut), targetScale = 0.97f),
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        Box(Modifier.fillMaxSize().dismissOnTap(onDismiss).background(Color.Black.copy(alpha = 0.35f)), contentAlignment = Alignment.Center) {
-            Column(
-                Modifier
-                    .width(660.dp)
-                    .consumeTaps()
-                    // The canvas is 540 dp tall: past three rows the grid scrolls inside the sheet.
-                    .heightIn(max = 480.dp)
-                    .liquidGlass(28.dp)
-                    .padding(28.dp),
-            ) {
-                BasicText(stringResource(R.string.hidden_title), style = Type.LargeTitle)
-                BasicText(
-                    stringResource(if (apps.isEmpty()) R.string.hidden_empty else R.string.hidden_hint),
-                    style = Type.Callout, modifier = Modifier.padding(top = 4.dp, bottom = 20.dp),
-                )
-                // Focus moving to a row out of view scrolls it in (Compose brings focused items into view).
-                Column(
-                    Modifier
-                        .weight(1f, fill = false)
-                        .verticalScroll(rememberScrollState())
-                        // Room for the focused tile's 1.1x scale, so the edge rows are not clipped.
-                        .padding(horizontal = 8.dp, vertical = 8.dp),
-                ) {
-                apps.chunked(4).forEachIndexed { r, row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(20.dp), modifier = Modifier.padding(bottom = 18.dp)) {
-                        row.forEachIndexed { c, app ->
-                            Pressable(
-                                onClick = { onUnhide(app.key) },
-                                focusRequester = if (r == 0 && c == 0) first else null,
-                                focusedScale = 1.1f,
-                            ) { state ->
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    MiniTile(app, state.focused, Modifier.size(132.dp, 74.dp))
-                                    Spacer(Modifier.height(8.dp))
-                                    BasicText(
-                                        app.label, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                                        style = Type.Caption.copy(color = if (state.focused) Palette.Label else Palette.SecondaryLabel),
-                                        modifier = Modifier.width(132.dp),
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-                }
-            }
-        }
-    }
-}
-
 /**
  * A line at the top of the screen that confirms a choice and goes away by itself (HomeViewModel
  * .notify): glass, like the menus, falling in from the top edge.
@@ -410,8 +344,8 @@ fun NoticeBanner(text: String?, modifier: Modifier = Modifier) {
     AnimatedVisibility(
         visible = text != null,
         modifier = modifier,
-        enter = fadeIn(tween(200, easing = Motion.EaseOut)) + slideInVertically(tween(320, easing = Motion.EaseOut)) { -it / 2 },
-        exit = fadeOut(tween(200, easing = Motion.EaseOut)) + slideOutVertically(tween(240, easing = Motion.EaseOut)) { -it / 3 },
+        enter = fadeIn(tween(Motion.Enter, easing = Motion.EaseOut)) + slideInVertically(tween(Motion.Panel, easing = Motion.EaseOut)) { -it / 2 },
+        exit = fadeOut(tween(Motion.Enter, easing = Motion.EaseOut)) + slideOutVertically(tween(Motion.Enter, easing = Motion.EaseOut)) { -it / 3 },
     ) {
         Row(
             Modifier

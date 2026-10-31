@@ -1,5 +1,7 @@
 package app.orchard.tv.settings
 
+import app.orchard.tv.wallpaper.ScreensaverMode
+import app.orchard.tv.wallpaper.Wallpapers
 import app.orchard.tv.news.Headlines
 import app.orchard.tv.news.NewsTopic
 import app.orchard.tv.apps.TileArtFactory
@@ -24,6 +26,28 @@ import java.security.MessageDigest
  * that motion is what the eye follows. With the D-pad remotes these TVs ship with, the icon only
  * grows, and owners lost track of it. High Contrast adds a white frame and is the default here.
  */
+/**
+ * Fork: Home Mode, set beside Personalize. Full and Efficient set what measurably costs memory or
+ * frames (docs/PERFORMANCE.md); Custom is what the owner set. Changing one of those settings by
+ * hand makes the mode Custom, and coming back to Custom restores them.
+ */
+enum class HomeMode(val key: String) {
+    Full("full"), Custom("custom"), Efficient("efficient");
+
+    companion object {
+        fun of(key: String?) = entries.firstOrNull { it.key == key } ?: Custom
+    }
+}
+
+/** Fork: how tiles are drawn ([AerialSettings.tileStyle]): System follows Dark and Light. */
+enum class TileStyle(val key: String) {
+    System("system"), Glass("glass"), Full("full");
+
+    companion object {
+        fun of(key: String?) = entries.firstOrNull { it.key == key }
+    }
+}
+
 /** Fork: how Home looks ([AerialSettings.appearance]). */
 enum class Appearance(val key: String) {
     Dark("dark"), Light("light"), Auto("auto");
@@ -181,9 +205,15 @@ object AerialSettings {
     var liquidGlass by mutableStateOf(true); private set
 
     /**
-     * Fork: whether Home is dark right now, from [appearance]: tiles as dark glass with the logo
-     * alone, the wallpaper dimmed. Auto changes it at sunset and sunrise ([followSun]).
+     * Fork: whether Home is dark right now, from [appearance]: panels, the all-apps sheet and the
+     * wallpaper's dim follow it. Auto changes it at sunset and sunrise ([followSun]).
      */
+    var darkNow by mutableStateOf(true); private set
+
+    /** Fork: Tile Style: System goes with [darkNow], or always dark glass, or always each app's own colors. */
+    var tileStyle by mutableStateOf(TileStyle.System); private set
+
+    /** Fork: whether tiles are dark glass with the logo alone right now, from [tileStyle]. */
     var darkTiles by mutableStateOf(true); private set
 
     /** Fork: a card of technology headlines over the screensaver. */
@@ -278,9 +308,13 @@ object AerialSettings {
         clockStyle = ClockStyle.of(prefs.getString("fork_clock_style", null) ?: if (prefs.getBoolean("fork_flip_clock", true)) null else ClockStyle.Plain.key)
         // Before Auto it was a switch.
         appearance = Appearance.of(prefs.getString("fork_appearance", null) ?: if (prefs.getBoolean("fork_dark_tiles", true)) null else Appearance.Light.key)
-        darkTiles = appearance.darkNow()
-        TileArtFactory.dark = darkTiles
+        darkNow = appearance.darkNow()
+        // Before System it was a switch, which keeps meaning what was chosen.
+        tileStyle = TileStyle.of(prefs.getString("fork_tile_style", null))
+            ?: if (prefs.contains("fork_tile_glass")) (if (prefs.getBoolean("fork_tile_glass", true)) TileStyle.Glass else TileStyle.Full) else TileStyle.System
+        applyTiles()
         headlines = prefs.getBoolean("fork_headlines", true)
+        homeMode = HomeMode.of(prefs.getString("fork_home_mode", null))
         newsTopics = prefs.getString("fork_news_topics", null)?.split(',')?.mapNotNull { NewsTopic.of(it) }?.toSet()?.takeIf { it.isNotEmpty() }
             ?: setOf(NewsTopic.Tech)
         newsShuffle = prefs.getBoolean("fork_news_shuffle", false)
@@ -400,6 +434,7 @@ object AerialSettings {
 
     fun chooseLiquidGlass(on: Boolean) {
         liquidGlass = on
+        becameCustom()
         app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("fork_liquid_glass", on) }
     }
 
@@ -419,12 +454,78 @@ object AerialSettings {
         followSun()
     }
 
-    /** Fork: brings [darkTiles] in line with [appearance] now: on a choice, and each minute for Auto. */
+    /** Fork: brings [darkNow] in line with [appearance] now: on a choice, and each minute for Auto. */
     fun followSun() {
-        val dark = appearance.darkNow()
-        if (dark == darkTiles) return
-        darkTiles = dark
+        darkNow = appearance.darkNow()
+        applyTiles()
+    }
+
+    /** Fork: Home Mode ([HomeMode]). */
+    var homeMode by mutableStateOf(HomeMode.Custom); private set
+    private var applyingMode = false
+
+    /** Fork: a setting the modes set was changed by hand: that is Custom now. */
+    fun becameCustom() {
+        if (applyingMode || homeMode == HomeMode.Custom) return
+        homeMode = HomeMode.Custom
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString("fork_home_mode", HomeMode.Custom.key) }
+    }
+
+    /** Fork: moves to [mode]. Leaving Custom keeps what it was, for coming back to. */
+    fun chooseHomeMode(mode: HomeMode) {
+        if (mode == homeMode) return
+        val prefs = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (homeMode == HomeMode.Custom) prefs.edit {
+            putBoolean("fork_custom_glass", liquidGlass)
+            putString("fork_custom_effects", effects.key)
+            putString("fork_custom_wallpaper", Wallpapers.selectedId)
+            putString("fork_custom_saver", Wallpapers.screensaver.key)
+        }
+        applyingMode = true
+        try {
+            when (mode) {
+                HomeMode.Full -> {
+                    chooseLiquidGlass(true)
+                    chooseEffects(Effects.Full)
+                    Wallpapers.select(Wallpapers.LIVE)
+                    Wallpapers.chooseScreensaver(ScreensaverMode.Aerial)
+                }
+                HomeMode.Efficient -> {
+                    chooseLiquidGlass(false)
+                    chooseEffects(Effects.Lite)
+                    // A still picture of the owner's stays: only moving ones cost so much.
+                    if (Wallpapers.moves()) Wallpapers.select(Wallpapers.LATEST_DAILY)
+                    Wallpapers.chooseScreensaver(ScreensaverMode.Clock)
+                }
+                HomeMode.Custom -> {
+                    chooseLiquidGlass(prefs.getBoolean("fork_custom_glass", liquidGlass))
+                    chooseEffects(Effects.of(prefs.getString("fork_custom_effects", effects.key)))
+                    prefs.getString("fork_custom_wallpaper", null)?.let(Wallpapers::select)
+                    ScreensaverMode.entries.firstOrNull { it.key == prefs.getString("fork_custom_saver", null) }?.let(Wallpapers::chooseScreensaver)
+                }
+            }
+        } finally {
+            applyingMode = false
+        }
+        homeMode = mode
+        prefs.edit { putString("fork_home_mode", mode.key) }
+    }
+
+    fun chooseTileStyle(choice: TileStyle) {
+        tileStyle = choice
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString("fork_tile_style", choice.key) }
+        applyTiles()
+    }
+
+    /** The factory first: a change of [darkTiles] reloads the tiles, which it then draws. */
+    private fun applyTiles() {
+        val dark = when (tileStyle) {
+            TileStyle.System -> darkNow
+            TileStyle.Glass -> true
+            TileStyle.Full -> false
+        }
         TileArtFactory.dark = dark
+        darkTiles = dark
     }
 
     /** Fork: a topic on or off; the last one stays on. */
@@ -476,6 +577,7 @@ object AerialSettings {
 
     fun chooseEffects(choice: Effects) {
         effects = choice
+        becameCustom()
         app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString("effects", choice.key) }
     }
 

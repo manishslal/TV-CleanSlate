@@ -74,8 +74,8 @@ fun PinPad(visible: Boolean, mode: PinMode?, onDone: () -> Unit, onCancel: () ->
     if (mode != null) shown = mode
     AnimatedVisibility(
         visible = visible,
-        enter = fadeIn(tween(200, easing = Motion.EaseOut)) + scaleIn(tween(300, easing = Motion.Drawer), initialScale = 0.94f),
-        exit = fadeOut(tween(150, easing = Motion.EaseOut)) + scaleOut(tween(150, easing = Motion.EaseOut), targetScale = 0.97f),
+        enter = fadeIn(tween(Motion.Enter, easing = Motion.EaseOut)) + scaleIn(tween(Motion.Panel, easing = Motion.Drawer), initialScale = 0.94f),
+        exit = fadeOut(tween(Motion.Quick, easing = Motion.EaseOut)) + scaleOut(tween(Motion.Quick, easing = Motion.EaseOut), targetScale = 0.97f),
         modifier = Modifier.fillMaxSize(),
     ) {
         // Each opening starts empty: the panel leaves composition while hidden.
@@ -233,7 +233,7 @@ private val ARROWS = mapOf(
 @Composable
 private fun PinKey(onClick: () -> Unit, focusRequester: FocusRequester? = null, width: Dp = 64.dp, content: @Composable (Color) -> Unit) {
     Pressable(onClick = onClick, focusRequester = focusRequester, focusedScale = 1.08f) { state ->
-        val bg by animateColorAsState(if (state.focused) Palette.Focus else Palette.Fill, tween(140, easing = Motion.EaseOut), label = "pin-key")
+        val bg by animateColorAsState(if (state.focused) Palette.Focus else Palette.Fill, tween(Motion.Quick, easing = Motion.EaseOut), label = "pin-key")
         Box(Modifier.size(width, 48.dp).clip(RoundedCornerShape(12.dp)).background(bg), contentAlignment = Alignment.Center) {
             content(if (state.focused) Palette.OnFocus else Palette.Label)
         }

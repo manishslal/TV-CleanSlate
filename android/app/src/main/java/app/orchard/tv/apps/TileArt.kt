@@ -129,6 +129,11 @@ object TileArtFactory {
     /** How large a logo is, as the side of the square of the same area, in tile heights. */
     private const val LOGO = 0.5f
 
+    // Fork: the LG's 176 x 84 box and 8000 area on its 252 x 142 tile ([fromLogo]).
+    private const val LOGO_MAX_W = 176f / 252f
+    private const val LOGO_MAX_H = 84f / 142f
+    private const val LOGO_AREA = 8000f / (252f * 142f)
+
     /** The resolution an icon is sampled at to find its logo. */
     private const val SAMPLE = 256
 
@@ -327,6 +332,26 @@ object TileArtFactory {
         // Fork: a dark tile is grey whatever the app, so its tint is taken from the icon as drawn
         // by the app: the brand color Home's glow behind the grid shows (HomeScreen).
         return if (dark) made.withTint(Color(brandTint(icon))) else made
+    }
+
+    /**
+     * Fork: a logo from the pack on a dark tile. Every
+     * logo covers the same area, inside a box 70% of the tile's width and 59% of its height, so
+     * wide and square logos carry the same weight. Fully kept: it is real artwork, not an icon's
+     * plate to strip. [icon] gives only the brand color behind the grid.
+     */
+    fun fromLogo(logo: Bitmap, icon: Drawable): TileArt {
+        val ratio = logo.width.toFloat() / logo.height
+        val tall = minOf(H * LOGO_MAX_H, kotlin.math.sqrt(W * H * LOGO_AREA / ratio))
+        val wide = minOf(W * LOGO_MAX_W, tall * ratio)
+        val high = wide / ratio
+        val left = (W - wide) / 2f
+        val top = (H - high) / 2f
+        val fore = layer {
+            drawBitmap(logo, null, RectF(left, top, left + wide, top + high), Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG))
+        }
+        logo.recycle()
+        return finish(colorTile(GRAPHITE_BOTTOM, GRAPHITE_BOTTOM), fore, keepDark = true).withTint(Color(brandTint(icon)))
     }
 
     /** Fork: the icon's own color, saturated parts weighing most; transparent for a grey or black-and-white icon. */
@@ -867,11 +892,11 @@ object TileArtFactory {
         layer.setPixels(px, 0, W, 0, 0, W, H)
     }
 
-    private fun finish(back: Bitmap, fore: Bitmap?): TileArt {
+    private fun finish(back: Bitmap, fore: Bitmap?, keepDark: Boolean = false): TileArt {
         // Fork: on a dark tile, what is near black in a logo is the icon's own dark plate (Peacock's
         // square, HBO Max's navy) and would show as a box: it goes, fading out by its lightness.
         // A dark part of a logo would not read on the dark tile anyway.
-        if (dark && fore != null) knockOutDark(fore)
+        if (dark && fore != null && !keepDark) knockOutDark(fore)
         val composed = if (fore == null) back else back.copy(Bitmap.Config.ARGB_8888, true).also {
             Canvas(it).drawBitmap(fore, 0f, 0f, null)
         }
