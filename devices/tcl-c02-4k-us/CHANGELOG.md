@@ -27,7 +27,7 @@
   ```
 - Plain `adb install -r` worked. The script granted the usual permissions and ran `compile -m speed`. No KEEP_ADB.
 - `set-home-activity` returns Success, but Android 9 ignores it here. `tvlauncher` is a higher-priority system HOME candidate, and the resolver picks the top candidate without looking at the preferred-activity setting when one outranks the rest. So Home Guard (accessibility) did the work until cleanup: Home key from Settings → tvlauncher showed for ~5 s → Home came back.
-- `install.sh` falsely said "Home Guard is not running". The fork labels the service "Home Home Guard", and the script's check only matched `Aerial`/`app.orchard.tv`. Fixed in `tools/install.sh` and `tools/selftest.sh` on `main`.
+- `install.sh` falsely said "Home Guard is not running". The fork labels the service "Home Home Guard", and the script's check only matched `Aerial`/`app.orchard.tv`. Fixed in `tools/install.sh` and `tools/selftest.sh` on the fork.
 - Liquid glass needs API 33. On API 28 it falls back to the frosted panels; the Control Center screenshot showed the light frosted panel.
 
 ### Cleanup (owner approved items 1–10 + screensaver, 2026-10-29 ~20:38)
