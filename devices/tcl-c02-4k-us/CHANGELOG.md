@@ -1,8 +1,8 @@
-# Changelog — TCL Android TV ("<device-name>")
+# Changelog — TCL Android TV
 
 **Device:** TCL `Smart TV`, product `C02_4K_US`, device `BeyondTV`, Realtek RTD2851 (`rtd285o`), 32-bit ARM (armeabi-v7a), 2 GB RAM (MemTotal 2,097,152 kB), 1920×1080 UI at 320 dpi, /data 10 GB (6.5 GB free)
 **OS:** Android TV 9 (SDK 28), build PPR1.180610.011 (TCL AP12), fingerprint `TCL/C02_4K_US/BeyondTV:9/PPR1.180610.011/AP12:user/release-keys`, security patch 2021-09-05, bootloader locked, TCL client type `TCL-NA-RT2851-S1`
-**IP:** <tv-ip> on Wi-Fi "<wifi-name>", mDNS `Android-4.local`, Cast name "<device-name>", ADB mDNS `<adb-name>`
+**IP:** <tv-ip> on Wi-Fi "<wifi-name>"
 **ADB:** plaintext 5555 already open. The owner accepted "Allow USB debugging?" once on the TV. No pairing code.
 **Rooted:** No
 
@@ -18,7 +18,7 @@
 - `com.tcl.appstatecontroller` fetches an app on/off list from TCL's servers at every boot and applies it (log tag `AppStateUtils`). It **re-enables `com.tcl.smartalexa` and `com.tcl.usercenter`** after `pm disable-user`. Its other entries are UK/AU apps that aren't on this TV.
 
 ### Install: Home (`io.manish.home`)
-- Fork `android`, branch `main` (from `fork/v1-features` 2b754b4). `versionCode` 81 → **82**, `versionName` 1.67-mh2. Standard flavor. Lite isn't needed (SDK 28 ≥ minSdk 21).
+- `versionCode` 81 → **82**, `versionName` 1.67-mh2. Standard flavor. Lite isn't needed (SDK 28 ≥ minSdk 21).
 - APK sha256 `16bc0140…036ee30`.
   ```bash
   export JAVA_HOME=/opt/homebrew/opt/openjdk@17 ANDROID_HOME=/opt/homebrew/share/android-commandlinetools

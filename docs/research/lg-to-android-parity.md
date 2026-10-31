@@ -23,10 +23,10 @@ The LG-specific parts stay on LG: `home-svc.js`, the startup hooks, `bake_frost.
 ## Rules learned
 
 - Never run a command on a TV to find out what it does. A screen-off test blanked the LG.
-- Disable only, never uninstall, on Android. Never touch input, remote, keyboard, Wi-Fi or update packages. Full list: [LOGISTICS-AND-SAFETY.md](LOGISTICS-AND-SAFETY.md).
+- Disable only, never uninstall, on Android. Never touch input, remote, keyboard, Wi-Fi or update packages. Full list: [launcher-logistics.md](launcher-logistics.md).
 - Measure on the device. Blur cost 150 ms a tile move on the LG, against 25 ms without it. CPU was idle, so background apps were not the cause.
 - Video on webOS sits on a hardware plane that a page cannot read or blur.
 - Check `luna-send` needs `</dev/null`, or it can hang with no output.
 - Test on the real remote as well as with simulated keys.
 - Log every change and how to undo it, per device.
-- `android/local/` is never committed, and nothing is pushed.
+- `android/local/` is never committed.

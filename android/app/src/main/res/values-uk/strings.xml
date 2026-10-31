@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="guard_name">Home Home Guard</string>
-    <string name="guard_description">Залишає Aerial головним екраном на телевізорах, де його не можна змінити. Не читає вміст екрана.</string>
+    <string name="guard_description">Залишає Home головним екраном на телевізорах, де його не можна змінити. Не читає вміст екрана.</string>
     <string name="greeting_morning">Доброго ранку</string>
     <string name="greeting_afternoon">Добрий день</string>
     <string name="greeting_evening">Добрий вечір</string>
@@ -14,8 +14,8 @@
     <string name="cc_home_default">Встановлено як головний екран</string>
     <string name="cc_home_guarded">Home Guard увімкнено</string>
     <string name="cc_home_not_default">Не головний екран за замовчуванням</string>
-    <string name="cc_setup_title">Зробіть Aerial головним екраном</string>
-    <string name="cc_setup_body">Якщо Aerial встановлено лише з APK, він відкривається, але кнопка «Додому», вмикання та вихід зі сну досі ведуть до попереднього лаунчера.</string>
+    <string name="cc_setup_title">Зробіть Home головним екраном</string>
+    <string name="cc_setup_body">Якщо Home встановлено лише з APK, він відкривається, але кнопка «Додому», вмикання та вихід зі сну досі ведуть до попереднього лаунчера.</string>
     <string name="cc_setup_guard">Увімкнути Home Guard</string>
     <string name="cc_setup_guard_where">Спеціальні можливості</string>
     <string name="cc_setup_home">Вибрати застосунок головного екрана за замовчуванням</string>
@@ -137,9 +137,9 @@
     <string name="st_plate_none">Немає</string>
     <string name="st_sounds">Звуки</string>
     <string name="st_sounds_hint">Звук під час переміщення фокуса, вибору та натискання «Назад», як на Apple TV.</string>
-    <string name="st_sounds_tv_hint">Власні звуки клавіш телевізора, як у його меню. Якщо їх вимкнено в налаштуваннях телевізора, звуку не буде: тоді виберіть Aerial.</string>
+    <string name="st_sounds_tv_hint">Власні звуки клавіш телевізора, як у його меню. Якщо їх вимкнено в налаштуваннях телевізора, звуку не буде: тоді виберіть Home.</string>
     <string name="st_sounds_tv">ТВ</string>
-    <string name="st_sounds_aerial">Aerial</string>
+    <string name="st_sounds_aerial">Home</string>
     <string name="st_on">Увімк.</string>
     <string name="st_off">Вимк.</string>
     <string name="st_hidden_apps">Приховані застосунки</string>
@@ -159,8 +159,8 @@
     <string name="cc_inputs_settings">Налаштування джерел</string>
     <string name="cc_inputs_pin">Показувати на головному екрані (будь-яка кількість)</string>
     <string name="cc_inputs_boot">Під час вмикання телевізора (одне)</string>
-    <string name="cc_inputs_boot_none">Нічого, залишатися в Aerial</string>
-    <string name="cc_inputs_boot_hint">Перемикатися на це джерело під час вмикання телевізора або виходу зі сну. Кнопка «Додому» все одно повертає в Aerial.</string>
+    <string name="cc_inputs_boot_none">Нічого, залишатися в Home</string>
+    <string name="cc_inputs_boot_hint">Перемикатися на це джерело під час вмикання телевізора або виходу зі сну. Кнопка «Додому» все одно повертає в Home.</string>
     <string name="cc_inputs_pin_hint">Закріплені джерела з’являються плитками на початку головного екрана; виберіть одне, щоб одразу перемкнутися. Утримуйте плитку, щоб перемістити або прибрати її.</string>
     <string name="menu_unpin_source">Прибрати з головного екрана</string>
     <string name="menu_source_device">Підключений пристрій</string>
@@ -181,12 +181,12 @@
     <string name="cc_update_scan_else">Не вдається встановити? Відскануйте телефоном, щоб побачити інші способи оновлення.</string>
     <string name="cc_update_install">Завантажити й встановити</string>
     <string name="cc_update_downloading">Завантаження… %d%%</string>
-    <string name="cc_update_opened">Інсталятор відкрито: підтвердьте оновлення в ньому. Коли все завершиться, виберіть «Готово», щоб повернутися в Aerial з усіма збереженими налаштуваннями.</string>
-    <string name="cc_update_permission">Дозвольте Aerial встановлювати застосунки у налаштуваннях, що щойно відкрилися, потім поверніться й знову виберіть «Завантажити й встановити».</string>
+    <string name="cc_update_opened">Інсталятор відкрито: підтвердьте оновлення в ньому. Коли все завершиться, виберіть «Готово», щоб повернутися в Home з усіма збереженими налаштуваннями.</string>
+    <string name="cc_update_permission">Дозвольте Home встановлювати застосунки у налаштуваннях, що щойно відкрилися, потім поверніться й знову виберіть «Завантажити й встановити».</string>
     <string name="cc_update_storage_permission">Для збереження оновлення цьому телевізору потрібен доступ до сховища. Дозвольте доступ до файлів у запиті, потім знову виберіть «Завантажити й встановити».</string>
     <string name="cc_update_failed_download">Завантаження не завершилося (пробували і сайт, і GitHub). Перевірте мережу й повторіть спробу або оновіться командою нижче.</string>
     <string name="cc_update_failed_blocked">Цей телевізор не дозволяє застосункам встановлювати інші застосунки. Оновіться командою нижче.</string>
-    <string name="cc_update_failed_signature">Aerial на цьому телевізорі підписаний інакше, ніж офіційний, тому оновити його поверх неможливо.</string>
+    <string name="cc_update_failed_signature">Home на цьому телевізорі підписаний інакше, ніж офіційний, тому оновити його поверх неможливо.</string>
     <string name="cc_update_failed_older">Новішої версії на сайті ще немає. Повторіть спробу пізніше.</string>
     <string name="st_pin">Батьківський PIN-код</string>
     <string name="st_pin_off">Вимк.</string>
@@ -229,7 +229,7 @@
     <string name="ss_videos">Відео</string>
     <string name="ss_videos_hint">Додайте MP4 або MOV зі сторінки на телефоні. Перегляд без мережі; якщо відео недоступні, показуються фото.</string>
     <string name="ss_system">Системна</string>
-    <string name="ss_system_hint">Заставка самого телевізора, як задумав виробник (наприклад, картини Xiaomi). Aerial свою не показує.</string>
+    <string name="ss_system_hint">Заставка самого телевізора, як задумав виробник (наприклад, картини Xiaomi). Home свою не показує.</string>
     <string name="wp_videos_note">Ваші відео, надіслані з телефона: без звуку, одне за одним. Рухаються як аерозйомка і зупиняються на поточному кадрі.</string>
     <string name="wp_videos_rotate">Мої відео по черзі</string>
     <string name="wp_video_note">Ваше відео, надіслане з телефона: без звуку, по колу. Рухається як аерозйомка і зупиняється на поточному кадрі.</string>

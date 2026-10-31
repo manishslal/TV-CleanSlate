@@ -14,7 +14,7 @@ Read first:
 ```bash
 export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 ./gradlew assembleStandardRelease testStandardReleaseUnitTest
-PKG=io.manish.home APK_FILE=app/build/outputs/apk/standard/release/app-standard-release.apk TV=<tv-ip>:5555 tools/install.sh
+BUILD=1 TV=<tv-ip>:5555 tools/install.sh
 adb -s <tv-ip>:5555 shell cmd package compile -m speed -f io.manish.home
 ```
 
@@ -40,3 +40,4 @@ Always pass `PKG` and `APK_FILE` to `tools/install.sh`. Without them it fetches 
 - Don't overwrite other entries in `enabled_accessibility_services`.
 - Don't commit `local/`.
 - Don't commit logo artwork.
+- `docs/README.md` says which docs are in Chinese and which came from upstream.

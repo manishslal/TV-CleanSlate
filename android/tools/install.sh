@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install Aerial on a TV over ADB and make it the home screen.
+# Install Android Home on a TV over ADB and make it the home screen.
 #
 #   TV=<tv-ip> tools/install.sh               # standard build (declares HOME)
 #   TV=<tv-ip> tools/install.sh guard         # for firmwares that refuse to install a launcher
@@ -8,10 +8,9 @@
 #   TV=<tv-ip> tools/install.sh lite          # Aerial Lite; chosen by itself on Android 4.0-4.4,
 #                                             # refused on 5.0+ (FORCE_LITE=1 to try it there)
 #
-# The APK comes from the latest release (aerial.qust.me's copy, else GitHub), so only adb is needed
-# (and python3 on TCL TVs).
-#   BUILD=1        build it from this checkout instead (JDK 17 + Android SDK)
-#   APK_FILE=<apk> install this file instead
+# Fork: this script never downloads upstream Aerial. Say which APK to install:
+#   BUILD=1        build it from this checkout (JDK 17 + Android SDK)
+#   APK_FILE=<apk> install this file
 #
 # Takeover, gentlest first. Nothing is uninstalled or disabled:
 #   1. Ask Android: HOME role / preferred home activity. Works on stock Android TV and Google TV.
@@ -31,12 +30,15 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 : "${TV:?set TV to the TV IP address, e.g. TV=<tv-ip> $0}"
-REPO=pengchujin/aerial-tv
 command -v adb >/dev/null || { echo "adb not found. macOS: brew install android-platform-tools; Linux: install android-tools / adb." >&2; exit 1; }
 FLAVOR="${1:-standard}"
 case "$FLAVOR" in standard|guard|repair|lite) ;; *) echo "flavor must be standard, guard or lite (or repair)" >&2; exit 1 ;; esac
-# Fork: PKG=io.manish.home for the fork build; its classes keep the app.orchard.tv namespace (NS).
-PKG="${PKG:-app.orchard.tv}"
+if [ "$FLAVOR" != repair ] && [ -z "${APK_FILE:-}" ] && [ "${BUILD:-0}" != 1 ]; then
+  echo "Say which APK to install: BUILD=1 to build from this checkout, or APK_FILE=<apk>." >&2
+  exit 1
+fi
+# Fork: the app ID is io.manish.home; its classes keep the app.orchard.tv namespace (NS).
+PKG="${PKG:-io.manish.home}"
 NS=app.orchard.tv
 GUARD="$PKG/$NS.guard.HomeGuardService"
 
@@ -145,13 +147,6 @@ if [ "$FLAVOR" = lite ] || [ "$OLD_ANDROID" = 1 ]; then
   [ "$FLAVOR" = lite ] || echo "This TV runs Android $(adb shell getprop ro.build.version.release | tr -d '\r'): installing Aerial Lite, the version for Android 4.0-4.4 (first release, a beta)."
   if [ -n "${APK_FILE:-}" ]; then APK=$APK_FILE
   elif [ "${BUILD:-0}" = 1 ]; then ./gradlew -q --console=plain :lite:assembleRelease; APK=lite/build/outputs/apk/release/lite-release.apk
-  else
-    APK="${TMPDIR:-/tmp}/aerial-lite.apk"
-    for url in "https://aerial.qust.me/download/aerial-lite.apk" "https://github.com/$REPO/releases/latest/download/aerial-lite.apk" ""; do
-      [ -n "$url" ] || { echo "Could not download aerial-lite.apk" >&2; exit 1; }
-      echo "Downloading $url" >&2
-      curl -fL --progress-bar --connect-timeout 10 -o "$APK" "$url" && break
-    done
   fi
   echo "Installing $APK"
   OUT=$(adb install -r "$APK" 2>&1 | tr -d '\r') || true
@@ -176,7 +171,7 @@ if [ "$FLAVOR" = repair ]; then
   exit 1
 fi
 
-# Path of the APK for a flavor: APK_FILE, a local build, or the latest release.
+# Path of the APK for a flavor: APK_FILE or a local build.
 build() {
   local flavor=$1
   if [ -n "${APK_FILE:-}" ] && [ "$flavor" = "$FLAVOR" ]; then
@@ -186,13 +181,7 @@ build() {
     ./gradlew -q --console=plain "$task"
     echo "app/build/outputs/apk/$flavor/release/app-$flavor-release.apk"
   else
-    local out="${TMPDIR:-/tmp}/aerial-$flavor.apk" url
-    for url in "https://aerial.qust.me/download/aerial-$flavor.apk" \
-               "https://github.com/$REPO/releases/latest/download/aerial-$flavor.apk"; do
-      echo "Downloading $url" >&2
-      if curl -fL --progress-bar --connect-timeout 10 -o "$out" "$url"; then echo "$out"; return; fi
-    done
-    echo "Could not download aerial-$flavor.apk" >&2
+    echo "No APK for $flavor: use BUILD=1 or APK_FILE=<apk>." >&2
     return 1
   fi
 }

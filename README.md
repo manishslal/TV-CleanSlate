@@ -1,5 +1,8 @@
 # TV CleanSlate
 
+[![Android build](https://github.com/manishslal/TV-CleanSlate/actions/workflows/android.yml/badge.svg)](https://github.com/manishslal/TV-CleanSlate/actions/workflows/android.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 **A calm, ad-free Home for the TVs you already own, plus a safe way to clear out what came with them.**
 
 TV CleanSlate replaces the ad-filled home screen on Android TV and Google TV devices, brings the same look to a rooted LG webOS TV, and documents how to debloat each device one reversible step at a time. Everything here was tested on real hardware.
@@ -25,19 +28,31 @@ It stands on the work of other open source projects. The Android app is a fork o
 | **Android Home** | A Home app for Android TV and Google TV, built with Kotlin and Jetpack Compose | [android/](android/README.md) |
 | **webOS Home** | The same look as a web app, for a rooted LG TV | [webos/](webos/README.md) |
 | **Device kit** | Scripts to back up a TV, switch launchers and restore stock | [scripts/](scripts/README.md) |
-| **Debloat guides** | Step-by-step guides for Android TV, Google TV and Fire TV | [guides/](guides/) |
+| **Guides** | Setup, safety, troubleshooting and agent-ready debloat prompts | [guides/](guides/getting-started.md) |
 | **Device logs** | What was changed on each TV and how to undo it | [devices/](devices/README.md) |
 
-## Android Home features
+## Features
 
-- **Personalize panel** grouped into Look, Home Screen, and Apps and Access
-- **Liquid glass** on the dock, buttons and sliders on Android 13 and newer, with a lit-edge version on older TVs
-- **Light, Dark and Auto themes**, with tile styles that can follow the theme
-- **Flip-card clock**, weather and optional headlines
-- **Aerial film wallpapers and screensaver**, or your own videos through Plex
-- **Home Guard**, which brings Home back when the system tries to reclaim it
-- **Hidden apps, folders and a parental PIN**
-- **Home Mode**: Full, Efficient, or Custom as soon as you change a setting yourself
+| Feature | Android Home | webOS Home |
+|---|---|---|
+| Aerial film wallpapers | Yes | Yes |
+| Flip-card clock, date and weather | Yes | Yes |
+| Dark glass tiles and focus glow | Yes | Yes |
+| Personalize panel | Yes | Yes |
+| Liquid Glass | Android 13+ | No |
+| Light, Dark and Auto (sunset to sunrise) themes | Yes | Yes |
+| Screensaver with headlines by topic | Yes | Yes |
+| Plex videos and photos | Yes | No |
+| Home Guard, which keeps Home from being replaced | Yes | Uses CleanYourTV |
+| Folders, hidden apps and tile moves | Yes | Yes |
+| Parental PIN | Yes | Not checked on a real remote |
+| HDMI inputs in Control Center | Yes | Yes |
+| Phone setup page on your network | Yes | No |
+| Home Mode | Yes | Lite effects only |
+| Screen reader labels | Yes | No |
+| Five languages (English, Chinese, Russian, Ukrainian, Kazakh) | Yes | English |
+
+Android Home runs on Android 5.0 and newer. Most testing here was on Android 9 to 14.
 
 ### Home Mode, measured
 
@@ -61,33 +76,47 @@ Measured on an onn 4K Streaming Box with 2 GB of RAM. Full method: [PERFORMANCE.
 | NVIDIA SHIELD TV (2019 tube) | Android TV 11 | Android Home | Yes | [Log](devices/nvidia-shield-tube/CHANGELOG.md) |
 | TCL C02_4K_US | Android TV 9 | Android Home | Yes | [Log](devices/tcl-c02-4k-us/CHANGELOG.md) |
 | LG 50UP8000PUA | webOS 6.5, rooted | webOS Home | Yes | [Log](devices/lg-50up8000pua/CHANGELOG.md) |
-| Hisense SmartTV 4K | Android TV 12 | No | Yes | [Log](devices/hisense-smarttv-4k/CHANGELOG.md) |
-| Fire TV Stick 4K (2nd gen) | Fire OS | No | Yes | [Log](devices/fire-tv-stick-4k-gen2/CHANGELOG.md) |
+| Hisense SmartTV 4K | Android TV 12 | No | **No**, changes don't last | [Log](devices/hisense-smarttv-4k/CHANGELOG.md) |
+| Fire TV Stick 4K (2nd gen) | Fire OS 8 | No | Yes | [Log](devices/fire-tv-stick-4k-gen2/CHANGELOG.md) |
 
 Details, limits and a machine-readable list: [docs/SUPPORTED_DEVICES.md](docs/SUPPORTED_DEVICES.md) and [devices/devices.json](devices/devices.json). The Android app also carries Aerial's notes for many other TVs in [android/docs/devices/](android/docs/devices/).
 
 ## Quick start
 
-You need ADB, JDK 17 and the Android SDK, with network debugging turned on for the TV.
+You need ADB, JDK 17, the Android SDK, and network debugging turned on for the TV. No prebuilt APK is published yet, so you build your own.
 
 ```bash
 git clone https://github.com/manishslal/TV-CleanSlate.git
 cd TV-CleanSlate/android
-./gradlew assembleStandardRelease
-PKG=io.manish.home APK_FILE=app/build/outputs/apk/standard/release/app-standard-release.apk TV=<tv-ip>:5555 tools/install.sh
+BUILD=1 TV=<tv-ip>:5555 tools/install.sh
 ```
 
-No prebuilt APK is published yet. Without your own signing key in `android/local/`, the build uses the debug key.
+The full walkthrough is in [Getting started](guides/getting-started.md). Stuck? See [Troubleshooting](guides/troubleshooting.md).
 
-Before changing a TV, read the [safety guide](guides/safety-and-logistics.md) and run the [backup script](scripts/README.md).
+## Privacy
+
+There are no ads, accounts or analytics. Android Home only contacts these services, and only for the features you use:
+
+| Service | Used for |
+|---|---|
+| Apple | Aerial films |
+| Open-Meteo | Weather and sunset times |
+| ipinfo.io | Approximate location for weather |
+| Microsoft Bing | Photo of the day |
+| Google News | Headlines |
+| plex.tv and your Plex server | Your videos and photos |
+
+It doesn't contact Aerial's servers or check for app updates.
 
 ## Safety rules
 
-- Disable packages, never uninstall them, so every change can be undone.
+- Disable packages instead of uninstalling them, so every change can be undone.
 - Never touch input, remote, keyboard, Wi-Fi or update packages.
 - Change a few things at a time and reboot to check.
 - Never copy a debloat list from one model to another.
 - Log every change and how to undo it.
+
+Read the full [safety guide](guides/safety.md) first.
 
 Rooting an LG TV can void support and is at your own risk. This project comes with no warranty.
 

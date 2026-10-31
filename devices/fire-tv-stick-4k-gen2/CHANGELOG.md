@@ -1,4 +1,4 @@
-# Changelog — Fire TV Stick Fire TV Stick 4K (2nd Gen)
+# Changelog — Fire TV Stick 4K (2nd Gen)
 
 **Device:** Fire TV Stick 4K (2nd Gen), model `AFTKM` (codename "karat")
 **Fire OS:** 8.1.8.2 (RS8182/3811) | Home: 7311000.1
@@ -121,4 +121,4 @@ adb shell "pm enable com.amazon.shoptv.firetv.client; pm enable com.amazon.shopt
 - Regressions: 1 unresolved, likely-pre-existing (Settings→Search launcher glitch, not conclusively tied to any disabled package)
 - All Rule 4 physical tests (Home button, HDMI-CEC, Alexa remote, Prime Video, Netflix/DRM, on-screen keyboard, casting) passed across all 3 batches
 
-**Status: Fire TV Stick Fire TV Stick 4K (2nd Gen) — COMPLETE.** Moving to next device family (Google TV / Android TV) per user request; Rule 9 OTA-freeze question was never answered/actioned (left enabled, no action taken).
+**Status: Fire TV Stick 4K (2nd Gen) — COMPLETE.** Moving to next device family (Google TV / Android TV) per user request; Rule 9 OTA-freeze question was never answered/actioned (left enabled, no action taken).

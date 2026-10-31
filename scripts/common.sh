@@ -7,4 +7,4 @@ need_tv() {
   A() { adb -s "$TV" shell "$@" | tr -d '\r'; }
 }
 HOME_INTENT="-a android.intent.action.MAIN -c android.intent.category.HOME"
-STOCK_PKG=com.google.android.apps.tv.launcherx   # Google TV (Onn). Android TV 9-11 stock is com.google.android.tvlauncher
+STOCK_PKG=${STOCK_PKG:-com.google.android.apps.tv.launcherx}   # Google TV. Android TV 9-11: STOCK_PKG=com.google.android.tvlauncher

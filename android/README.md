@@ -6,6 +6,7 @@ The TV CleanSlate Home app for Android TV and Google TV. It is a fork of [Aerial
 - Design standard: [DESIGN.md](DESIGN.md)
 - Performance results: [docs/PERFORMANCE.md](docs/PERFORMANCE.md)
 - Credits: [NOTICE.md](NOTICE.md)
+- Docs index: [docs/README.md](docs/README.md)
 - Upstream's own READMEs: [English](docs/upstream/README.en.md), [Chinese](docs/upstream/README.zh.md)
 
 ## Build
@@ -21,11 +22,11 @@ Without `local/signing.properties` the release build uses the debug key. To sign
 ## Install
 
 ```bash
-PKG=io.manish.home APK_FILE=app/build/outputs/apk/standard/release/app-standard-release.apk TV=<tv-ip>:5555 tools/install.sh
+BUILD=1 TV=<tv-ip>:5555 tools/install.sh
 adb -s <tv-ip>:5555 shell cmd package compile -m speed -f io.manish.home
 ```
 
-Always pass `PKG` and `APK_FILE`. Without them, `install.sh` fetches upstream Aerial.
+To install an APK you already built, use `APK_FILE=<apk>` instead of `BUILD=1`. Full steps: [Getting started](../guides/getting-started.md).
 
 ## Logo pack (optional)
 
@@ -34,9 +35,7 @@ If `../logos/dark/` holds your own logos, the build includes them for Dark Glass
 ## Undo
 
 ```bash
-adb shell settings put secure enabled_accessibility_services null
-adb shell settings delete secure screensaver_components
-adb uninstall io.manish.home
+TV=<tv-ip>:5555 tools/restore.sh --uninstall
 ```
 
 If you disabled the stock launcher, enable it first with `adb shell pm enable <package>`.

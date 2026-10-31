@@ -78,4 +78,4 @@ adb connect <电视IP>:<无线调试主页上的端口>   # 和上面不是同�
 有用户用手机上的「甲壳虫 ADB 助手」「超级小爱」装成功过，本仓库没有逐一实测。
 大致步骤和电脑一样：手机连同一个 Wi-Fi，连到 `<电视IP>:5555`，在电视上选「始终允许」，
 再用工具安装 APK、授予权限。手机工具一般不能执行全部命令，装好后最好再用电脑或 Agent 跑一遍
-[验收](../../site/agent.md#验收必须做)。
+[验收](https://github.com/pengchujin/aerial-tv/blob/main/site/agent.md#验收必须做)。

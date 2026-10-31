@@ -18,7 +18,7 @@
 Each entry gives what changed and how to undo it.
 
 ### 1. Home 1.67-mh3 installed (2026-10-30; reboot verified)
-- Fork `android`, branch `main`, uncommitted. versionCode 83, standard flavor, release build, APK sha256 `035fa85e7897…`, with the logo pack.
+- versionCode 83, standard flavor, release build, APK sha256 `035fa85e7897…`, with the logo pack.
 - Keeps Android's design. Added from the LG work: Personalize in a right-side panel, logo pack on Dark Glass tiles, and App Tiles separate from Appearance.
 - `PKG=io.manish.home APK_FILE=app/build/outputs/apk/standard/release/app-standard-release.apk TV=<tv-ip>:5555 tools/install.sh`, then `cmd package compile -m speed -f io.manish.home`.
 - Set by the installer: Home Guard in `enabled_accessibility_services`, screensaver `io.manish.home/app.orchard.tv.dream.AerialDream`, plus the usual grants (fine location, WRITE_SECURE_SETTINGS, overlay, write settings, install packages, usage stats, notification listener).
@@ -51,7 +51,7 @@ All with `pm disable-user --user 0`. Undo one with `adb shell pm enable <package
 - Network ADB stays on for now: Developer options → Network debugging. It is plaintext, so turn it off when finished.
 
 ### 3. Home 1.67-mh4 installed (2026-10-30; not yet checked on screen)
-- Fork `android`, branch `main`, uncommitted. versionCode 84, standard flavor, release build, APK sha256 `b61bba54a092…`. Build and unit tests passed. Lint not rerun.
+- versionCode 84, standard flavor, release build, APK sha256 `b61bba54a092…`. Build and unit tests passed. Lint not rerun.
 - Personalize regrouped into Look, Home Screen, and Apps and Access, with each row showing its current value. Weather merged into Clock and Weather; tile settings moved to Layout and Tiles.
 - Each setting is one line and one focus stop: switches, Left and Right values, and lists for more than four choices or open-ended ones. Notes sit at the panel's foot at higher contrast.
 - Text scale 12/14/16/20/26. Wallpaper is a two-column grid. Hidden Apps is a page inside the panel. Home shows "More Apps" above the grid. The tile menu has three groups.

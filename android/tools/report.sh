@@ -3,7 +3,7 @@
 # a GitHub issue (the "机型适配 / Device support" form).
 #
 #   TV=<tv-ip> tools/report.sh
-#   curl -fsSL https://aerial.qust.me/tools/report.sh | TV=<tv-ip> bash
+#   TV=<tv-ip> tools/report.sh
 #
 # Writes aerial-report-<model>.md in the current folder and prints it (on macOS also copies it).
 # Reads only: nothing on the TV is changed, except that Aerial is started if it was not running,
@@ -14,7 +14,8 @@ set -euo pipefail
 
 : "${TV:?set TV to the TV IP address, e.g. TV=<tv-ip> $0}"
 command -v adb >/dev/null || { echo "adb not found. macOS: brew install android-platform-tools; Linux: install android-tools / adb." >&2; exit 1; }
-PKG=app.orchard.tv
+PKG=io.manish.home
+NS=app.orchard.tv
 case "$TV" in *:*) SERIAL="$TV" ;; *) SERIAL="$TV:5555" ;; esac
 export ANDROID_SERIAL="$SERIAL"
 adb connect "$SERIAL" >/dev/null
@@ -100,7 +101,7 @@ set +e
   echo '```'
   echo "accessibility (bound):"
   sh_ dumpsys accessibility | grep -E "label=|Bound services|Enabled services" | sed -E 's/^ *//' | cut -c1-300 | head -20 | mask
-  echo "notification listener: $(sh_ dumpsys notification | grep -c "$PKG/$PKG.guard.RevivalListener") mentions"
+  echo "notification listener: $(sh_ dumpsys notification | grep -c "$PKG/$NS.guard.RevivalListener") mentions"
   echo '```'
 
   echo
@@ -129,14 +130,14 @@ set +e
 
   # Aerial's own part (Diagnostics.kt): what it sees from inside the app.
   if ! sh_ pidof "$PKG" >/dev/null; then
-    sh_ am start -n "$PKG/.MainActivity" >/dev/null
+    sh_ am start -n "$PKG/$NS.MainActivity" >/dev/null
     sleep 4
   fi
-  APP=$(sh_ dumpsys activity "$PKG/.MainActivity" report | sed -n '/^### Aerial diagnostics/,$p')
+  APP=$(sh_ dumpsys activity "$PKG/$NS.MainActivity" report | sed -n '/^### Aerial diagnostics/,$p')
   if [ -n "$APP" ]; then echo "$APP"; else echo "(Aerial's own report is missing: Aerial is older than 1.32 or is not running.)"; fi
 } > "$OUT"
 
 cat "$OUT"
 echo
 command -v pbcopy >/dev/null && pbcopy < "$OUT" && echo "Copied to the clipboard." >&2
-echo "Saved to $OUT. Read it, then paste it into https://github.com/pengchujin/aerial-tv/issues/new?template=device.yml" >&2
+echo "Saved to $OUT. Read it, then paste it into https://github.com/manishslal/TV-CleanSlate/issues/new?template=device-report.yml" >&2

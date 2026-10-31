@@ -1,3 +1,5 @@
+> **How to use this guide:** this is a prompt for an AI coding agent with ADB access. Fill in the device details, then paste the whole file into your agent. Read [safety.md](safety.md) first.
+
 # Fire TV Debloat — Master Prompt (v2, updated 2026-09-06 after Fire TV Stick)
 
 Goal: Remove Amazon's newer bloat (Luna, Fire TV Channels, Amazon Live

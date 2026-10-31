@@ -5,7 +5,7 @@
 # each input. Each check prints PASS / FAIL / SKIP with what it saw, and the end has a JSON block.
 #
 #   TV=<tv-ip> tools/selftest.sh
-#   curl -fsSL https://aerial.qust.me/tools/selftest.sh | TV=<tv-ip> bash
+#   TV=<tv-ip> tools/selftest.sh
 #
 # Optional, each asks nothing and only runs when set:
 #   STANDBY=1  put the TV in standby for 70 s and wake it (Xiaomi turns ADB off in standby; the
@@ -21,7 +21,8 @@ set -uo pipefail
 
 : "${TV:?set TV to the TV IP address, e.g. TV=<tv-ip> $0}"
 command -v adb >/dev/null || { echo "adb not found. macOS: brew install android-platform-tools; Linux: install android-tools / adb." >&2; exit 1; }
-PKG=app.orchard.tv
+PKG=io.manish.home
+NS=app.orchard.tv
 case "$TV" in *:*) SERIAL="$TV" ;; *) SERIAL="$TV:5555" ;; esac
 export ANDROID_SERIAL="$SERIAL"
 
@@ -35,7 +36,7 @@ connect || { echo "Could not connect to $SERIAL. Check that ADB debugging is on,
 # </dev/null: adb forwards stdin, which under `curl | bash` is the rest of this script.
 sh_() { adb shell "$@" </dev/null 2>/dev/null | tr -d '\r'; }
 now() { perl -MTime::HiRes=time -e 'printf "%.1f", time'; }
-config() { sh_ am broadcast -a app.orchard.tv.CONFIG -n "$PKG/.guard.ConfigReceiver" "$@" | sed -n 's/.*data="\(.*\)"$/\1/p'; }
+config() { sh_ am broadcast -a $NS.CONFIG -n "$PKG/$NS.guard.ConfigReceiver" "$@" | sed -n 's/.*data="\(.*\)"$/\1/p'; }
 
 # The package of the window with focus: mCurrentFocus, else the focused app (Android 5-9 differ).
 fg() {
@@ -92,7 +93,7 @@ else result guard FAIL "Home Guard not enabled ($ACC); default home is $HOME_TO"
 fi
 
 # 2. Home on Aerial itself.
-sh_ am start -W -n "$PKG/.MainActivity" >/dev/null; sleep 2
+sh_ am start -W -n "$PKG/$NS.MainActivity" >/dev/null; sleep 2
 sh_ input keyevent KEYCODE_HOME
 read -r secs pkg <<<"$(wait_aerial 8)"
 [ "$secs" != "-" ] && result home_on_aerial PASS "Aerial in front" || result home_on_aerial FAIL "in front after 8 s: $pkg"
@@ -178,7 +179,7 @@ else
       sleep 7
       adb exec-out screencap -p </dev/null > "$DIR/input-$i.png" 2>/dev/null
       echo "  input $i: $label ($id) -> ${opened#open_source: }; in front $(fg); screenshot $DIR/input-$i.png"
-      sh_ am start -n "$PKG/.MainActivity" >/dev/null; sleep 2
+      sh_ am start -n "$PKG/$NS.MainActivity" >/dev/null; sleep 2
     done
     result inputs PASS "$N listed; each opened, see the screenshots and tell which port each showed"
   else result inputs SKIP "$N listed; INPUTS=1 to open each"
@@ -199,6 +200,6 @@ echo '```'
 } 2>&1 | tee "$OUT"
 
 # Back on Aerial, as the TV was before.
-sh_ am start -n "$PKG/.MainActivity" >/dev/null
+sh_ am start -n "$PKG/$NS.MainActivity" >/dev/null
 echo >&2
-echo "Saved to $OUT. Paste it with tools/report.sh's output into https://github.com/pengchujin/aerial-tv/issues/new?template=device.yml" >&2
+echo "Saved to $OUT. Paste it with tools/report.sh's output into https://github.com/manishslal/TV-CleanSlate/issues/new?template=device-report.yml" >&2

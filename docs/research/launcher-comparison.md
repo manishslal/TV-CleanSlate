@@ -1,6 +1,6 @@
 # Onn 4K — Launcher Rotation Plan (prepared 2026-10-28, nothing run on the TV yet)
 
-Companion to [LOGISTICS-AND-SAFETY.md](LOGISTICS-AND-SAFETY.md). Kit is in `kit/`, repo clones in `repos/` (shallow, pinned).
+Companion to [launcher-logistics.md](launcher-logistics.md). 
 
 ## What I need from you
 1. **Which Onn?** The 2021 4K Streaming Box (2 GB RAM, 8 GB storage, Android TV 10→12 Google TV) or an Onn 4K Pro (2022/2024/2026; 3 GB RAM, Ethernet, 32 GB)? Settings → System → About shows the model. The steps differ for pairing and recovery.

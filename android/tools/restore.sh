@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Give Home back to the TV's own launcher.
 #
-#   TV=<tv-ip> tools/restore.sh              # stop taking over Home, keep Aerial installed
-#   TV=<tv-ip> tools/restore.sh --uninstall  # and remove Aerial (and Aerial Lite)
+#   TV=<tv-ip> tools/restore.sh              # stop taking over Home, keep Home installed
+#   TV=<tv-ip> tools/restore.sh --uninstall  # and remove Home
 # If you disabled the stock launcher by hand, also: adb shell pm enable <its package>
 set -euo pipefail
 : "${TV:?set TV to the TV IP address}"
 # Fork: PKG=io.manish.home for the fork build; its classes keep the app.orchard.tv namespace (NS).
-PKG="${PKG:-app.orchard.tv}"
+PKG="${PKG:-io.manish.home}"
 NS=app.orchard.tv
 GUARD="$PKG/$NS.guard.HomeGuardService"
 case "$TV" in *:*) SERIAL="$TV" ;; *) SERIAL="$TV:5555" ;; esac

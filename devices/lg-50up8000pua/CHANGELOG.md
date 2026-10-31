@@ -4,7 +4,7 @@
 - Model: 50UP8000PUA (UP8000PUA.ACC), webOS 6.5.3, machine lm21a, otaId HE_DTV_W21A_AFADATAA
 - Firmware: 03.53.45
 - Network: Ethernet at <tv-ip>, MAC <mac>. Wi-Fi also answered at <tv-ip> (same device UUID).
-- User decisions: skip all OS updates, root, install a version of our launcher, clean out the TV, block future updates.
+- Owner decisions: skip all OS updates, root, install a version of our launcher, clean out the TV, block future updates.
 
 ## Changes
 Each entry gives what changed and how to undo it.

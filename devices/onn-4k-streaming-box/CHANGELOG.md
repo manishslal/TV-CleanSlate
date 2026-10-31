@@ -80,7 +80,7 @@
 - `PKG=io.manish.home APK_FILE=… TV=… tools/install.sh` (scripts now take PKG; components use the `app.orchard.tv` class namespace). Google TV kept HOME on launcherx, so the fork's **Home Guard** took over. Screensaver = `io.manish.home/app.orchard.tv.dream.AerialDream`; RevivalListener on. No KEEP_ADB.
 - Reboot test: real reboot (uptime 64 s at check), fork in front, guard bound, Wi-Fi back on <wifi-name>. PASS.
 - Phone setup page: QR + `<tv-ip>:8791/<token>/` shown; answers on the LAN.
-- Plex: My Videos lists the NAS clips (DJI_0771, DJI_0774, …). Screensaver style set to **Videos**: 38 Plex films, `c2.amlogic.hevc.decoder` at 3840×2160 60 fps, first frames logged for 7 clips in a minute, no player errors. Picture not checked by eye (the video layer is not in screencaps).
+- Plex: My Videos lists the NAS clips . Screensaver style set to **Videos**: 38 Plex films, `c2.amlogic.hevc.decoder` at 3840×2160 60 fps, first frames logged for 7 clips in a minute, no player errors. Picture not checked by eye (the video layer is not in screencaps).
 - **Undo:** `PKG=io.manish.home TV=<tv-ip>:5555 tools/restore.sh` (from `android`), then optionally `TV=… APK_FILE=../apks/aerial-standard.apk tools/install.sh` to give Home back to upstream Aerial.
 
 ### Fork: look pass (2026-10-28 ~23:45)
@@ -91,7 +91,7 @@
 
 ## 2026-10-30
 ### Home 1.67-mh4 installed
-- Box named "<device-name>", now on the DC network at <tv-ip>. Replaced 1.67-mh1. Fork `android`, branch `main`, uncommitted, versionCode 84, APK sha256 `975aa589c422…`, with the logo pack, `compile -m speed`.
+- Box moved to another network. Replaced 1.67-mh1.  uncommitted, versionCode 84, APK sha256 `975aa589c422…`, with the logo pack, `compile -m speed`.
 - Checked on the device with simulated keys: Control Center, Personalize list, Appearance, Wallpaper, Layout and Tiles, Clock and Weather, Screensaver, its Style list, Back returning focus to the row. No crash logs.
 - Testing mishaps, all put back: an early key opened Netflix; test keys changed Appearance and Tile Style. Appearance is Light and Tile Style is Full Color again.
 - Not checked: the real remote, Hidden Apps, Headlines, Plex, Passcode, Phone. Later cards in the Wallpaper grid had blank thumbnails about 1.5 s after opening; not known whether they fill in.

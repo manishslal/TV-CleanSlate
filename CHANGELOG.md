@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.67-mh9 (2026-10-31)
+
+- The app and phone page now call themselves Home, except for Aerial film names
+- `install.sh` needs `BUILD=1` or `APK_FILE`, and no longer downloads upstream Aerial
+- Install, restore, report and selftest tools default to this app
+- Bug reports point to this repository
+- Backup and launcher scripts work without a private APK folder
+- New getting started, safety and troubleshooting guides
+- Device support table corrected: Hisense debloating doesn't last
+
 ## 1.67-mh8 (2026-10-31)
 
 First public layout of TV CleanSlate.

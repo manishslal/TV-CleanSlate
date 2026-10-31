@@ -1,3 +1,5 @@
+> **How to use this guide:** this is a prompt for an AI coding agent with ADB access. Fill in the device details, then paste the whole file into your agent. Read [safety.md](safety.md) first.
+
 # Android TV / Google TV Debloat — Master Prompt (v2, updated 2026-09-06 after Hisense)
 
 I want you to debloat my Android TV / Google TV device via ADB.

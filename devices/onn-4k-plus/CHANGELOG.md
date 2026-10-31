@@ -2,7 +2,7 @@
 
 **Device:** onn. 4K Plus Streaming (device/product `coffey`), 2 GB RAM (MemTotal 1,971,788 kB), /data 11 GB (7.0 GB free at baseline)
 **OS:** Android TV 14 (SDK 34), build URO4.260304.011.B1, fingerprint `onn/coffey/coffey:14/URO4.260304.011.B1/15051976`, patch 2026-03-01, bootloader locked
-**IP:** <tv-ip> on Wi-Fi "<wifi-name>" (5 GHz). Cast name `onn.-4K-Plus-Streami…`, ADB mDNS name `<adb-name>-…`.
+**IP:** <tv-ip> on Wi-Fi "<wifi-name>" (5 GHz).
 **ADB:** plaintext **5555** was already open (`service.adb.tcp.port=5555`), so no pairing code was needed. The TV only asked "Allow debugging?" once. 5555 survived both reboots.
 **Rooted:** No
 
@@ -20,7 +20,7 @@
 - No-change reboot (uptime was 14 days): back in ~57 s, ADB on 5555, Wi-Fi reconnected, Home = launcherx. PASS.
 
 ### Phase 2: build + install the fork "Home" (io.manish.home)
-- Built `android` at `fork/v1-features` tip **da890d4** with `./gradlew assembleStandardRelease` (JDK 17). Gradle reported it up to date, matching the home box's build of the same commit.
+- Built with `./gradlew assembleStandardRelease` (JDK 17). Gradle reported it up to date, matching the home box's build of the same commit.
 - APK: `io.manish.home` versionCode 81, versionName 1.67-mh1, sha256 `df4d6c40…99d50`. Signer `CN=manishslal home launcher`, cert SHA-256 `3b544c34…c75f93`, which matches `local/home-release.jks`.
 - From `android`:
   ```bash
