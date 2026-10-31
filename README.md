@@ -19,7 +19,7 @@ It stands on the work of other open source projects. The Android app is a fork o
 |---|---|
 | ![Layout and Tiles settings](docs/images/layout.jpg) | ![Clock and Weather settings](docs/images/clock-weather.jpg) |
 
-*Brand logos in these screenshots come from a private logo pack that is not included in this repository. A normal build draws each tile from the app's own icon.*
+*The city shown on screen is blurred. Brand logos in these screenshots come from a private logo pack that is not included in this repository. A normal build draws each tile from the app's own icon.*
 
 ## What's here
 
