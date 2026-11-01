@@ -11,6 +11,14 @@ Logos for dark tiles, shared by every Home launcher. Each brand has one file, an
 - LG webOS: `webos/build.py` exports each logo at 504 x 276 at most, as `logo-<brand>.webp`.
 - Android/Google TV: `android/app/build.gradle.kts` copies the PNG and WebP masters and `manifest.json` into the build, only into `build/`. SVGs must be rendered to PNG first.
 
+## Logos we still need
+
+Apps seen on a TV with no logo in the pack. Add to this list whenever a tile falls back to plain text or the app's own icon.
+
+| App | Seen on | IDs |
+|---|---|---|
+| IPTV Smarters Pro | Samsung UN50MU6070 | Tizen `rKpKZvmSog.IPTVSmartersPro` |
+
 ## Making your own logo
 
 In Photoshop or any editor, export the mark white on transparent, cropped tight, at least 1024 px on its long side, as `dark/<brand>.png`. Keep it flat, with no shadow or plate. Add the brand to `manifest.json` with no source field, so the build doesn't replace your file. Clear turns any color in it into a gray shade automatically.

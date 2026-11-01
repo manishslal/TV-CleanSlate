@@ -75,6 +75,10 @@ body.right #clock { justify-content: flex-end; }
 #clock.flip .half, #clock.plain .half { background: none; }
 #clock.flip .ft::after, #clock.flip .fb::after { display: none; }
 body.light.down .colon { color: var(--onsheet); }
+/* Light cards, as on Android. The screensaver keeps dark cards for a dark room. */
+body.light:not(.idle) #clock.cards .card { background: #ebebe7; color: #141517; }
+body.light:not(.idle) #clock.cards .half.top { background: linear-gradient(#fcfcfa, #f2f2ef); }
+body.light:not(.idle) #clock.cards .half.bot { background: linear-gradient(#ebebe7, #e0e0db); }
 .colon { font-size: calc(92 * var(--u)); line-height: calc(118 * var(--u)); }
 #line { margin-top: calc(26 * var(--u)); font-family: Board, sans-serif; letter-spacing: .05em; color: var(--ink); font-size: calc(34 * var(--u)); text-transform: uppercase; text-shadow: 0 calc(2 * var(--u)) calc(18 * var(--u)) rgba(0,0,0,.7); }
 #line span { opacity: .78; }
@@ -107,6 +111,8 @@ body.cleartiles .tile.f .plate { filter: brightness(1.12); }
 body.cleartiles .tile.f .plate::after { box-shadow: inset 0 0 0 calc(2 * var(--u)) rgba(255,255,255,.7), inset 0 1px 0 rgba(255,255,255,.3); }
 /* Dark is the tile's own look, whatever the appearance */
 body.glasstiles .plate { background: rgba(24,24,26,.82); color: #fff; }
+/* one ink on every pack logo, as on Android */
+body.glasstiles .plate.mark img { filter: brightness(0) invert(1); }
 body.glasstiles .plate b, body.light.glasstiles .plate b { color: var(--ink); }
 body.light.glasstiles .plate.input img { filter: brightness(3); }
 .plate.mark img, .plate.mark canvas { position: static; }
@@ -120,6 +126,8 @@ body.light .plate b { color: #1d1d1f; }
 .minis img { position: static; width: calc(84 * var(--u)); height: calc(58 * var(--u)); object-fit: contain; }
 .name { margin-top: calc(18 * var(--u)); text-align: center; font-size: calc(21 * var(--u)); opacity: 0; color: var(--onwall); text-shadow: 0 1px calc(8 * var(--u)) var(--onwall-shadow); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 body.names .name, .tile.f .name { opacity: 1; }
+/* clears the focus ring, which reaches 24 below the plate */
+.tile.f .name { transform: translateY(calc(14 * var(--u))); }
 body.down #grid .name { color: var(--onsheet); text-shadow: 0 1px calc(6 * var(--u)) var(--onsheet-shadow); }
 .tile.f { z-index: 2; }
 .tile.f .plate { transform: scale(1.15); box-shadow: 0 0 0 calc(5 * var(--u)) var(--ringgap), 0 0 0 calc(13 * var(--u)) var(--ring), 0 calc(18 * var(--u)) calc(30 * var(--u)) var(--halo, var(--lift)); }
@@ -145,7 +153,9 @@ body.modal #scrim { opacity: 1; visibility: visible; }
 .row .bar { width: calc(190 * var(--u)); height: calc(10 * var(--u)); border-radius: calc(5 * var(--u)); background: var(--hair); overflow: hidden; margin-left: calc(14 * var(--u)); }
 .row .bar i { display: block; height: 100%; background: currentColor; }
 .row.f { background: var(--focus); color: var(--onfocus); }
-.row.f .v { color: inherit; opacity: .72; }
+.row.f .v, body.light .row.f .v { color: inherit; opacity: .72; }
+.row.f .bar { background: rgba(0,0,0,.45); }
+body.light .row.f .bar { background: rgba(255,255,255,.35); }
 .row.note { background: none; color: var(--dim); font-size: calc(21 * var(--u)); min-height: 0; line-height: 1.4; }
 .row input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: inherit; font: inherit; }
 #fgrid { display: grid; grid-template-columns: repeat(5, calc(252 * var(--u))); grid-auto-rows: calc(186 * var(--u)); column-gap: calc(46 * var(--u)); row-gap: calc(14 * var(--u)); justify-content: center; align-content: center; }
@@ -625,7 +635,7 @@ function paint() {
   if (r < row) row = r;
   if (!down) row = 0;
   document.body.classList.toggle('down', down);
-  $('grid').style.transform = 'translateY(' + (down ? 170 - row * PITCH : 849) * window.innerWidth / 1920 + 'px)';
+  $('grid').style.transform = 'translateY(' + (down ? 170 - row * PITCH : 835) * window.innerWidth / 1920 + 'px)';
   var t = tiles[focus];
   document.getElementById('glow').style.display = down ? 'none' : '';
   if (t && zone === 'grid' && !down) $('glow').style.background = 'radial-gradient(70% 70% at 50% 100%, ' + tint(t.id) + ', transparent 72%)';

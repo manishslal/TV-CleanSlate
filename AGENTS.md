@@ -8,12 +8,12 @@ TV CleanSlate is a monorepo: a Home app for Android and Google TV, a web version
 |---|---|
 | `android/` | Kotlin and Jetpack Compose app, a fork of Aerial. Read `android/AGENTS.md` before changing it. |
 | `webos/` | Web Home for rooted LG TVs. Read `webos/README.md`. |
-| `tizen/` | Plan and read-only check for Samsung TVs. Not yet tested on a TV. |
+| `tizen/` | Web Home for Samsung TVs, built from `webos/`. Running on one TV. |
 | `scripts/` | ADB scripts for backup, launcher switching and restore. |
 | `guides/` | Setup, safety, troubleshooting and debloat prompts. Follow `safety.md` on any real TV. |
 | `devices/` | One folder per tested device, plus `devices.json`. |
 | `logos/` | `manifest.json` only. Artwork stays private. |
-| `docs/` | `SUPPORTED_DEVICES.md`, `ARCHITECTURE.md`, images and research. |
+| `docs/` | `SUPPORTED_DEVICES.md`, `ARCHITECTURE.md`, `LESSONS.md`, images and research. |
 
 ## Commands
 
@@ -35,6 +35,7 @@ python3 webos/build.py                          # from the repo root; needs Pill
 - Read the focused element before pressing OK when driving a TV remotely.
 - Change a few things, reboot and check, then log the change and its undo in `devices/<device>/CHANGELOG.md`.
 - Don't enter pairing codes or passwords. The owner does that.
+- After each TV, add what it taught us to `docs/LESSONS.md`, list new logo gaps in `logos/README.md`, and bring every fix to the other Home versions.
 
 ## Rules for the repository
 

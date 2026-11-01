@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Samsung Tizen: a web Home built from webOS Home, running on one 2017 TV
+- webOS: Dark shows one ink on every logo, as Android does
+- webOS: the clock has light cards in Light, and the screensaver keeps dark cards
+- webOS: the focused tile's name clears the focus ring
+- webOS: progress bars in focused menu rows are easier to see
+
 ## 1.67-mh23 (2026-11-01)
 
 - Fire OS: Home opens before Amazon's launcher after a restart, and the Home button returns to it

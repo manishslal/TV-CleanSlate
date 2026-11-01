@@ -9,7 +9,10 @@
       "com.peacocktv.peacockandroid",
       "com.peacock.peacockfiretv"
     ],
-    "plate": "#000000"
+    "plate": "#000000",
+    "tizen": [
+      "gzcc4LRFBF.Peacock"
+    ]
   },
   "plex": {
     "title": "Plex",
@@ -20,7 +23,10 @@
     "android": [
       "com.plexapp.android"
     ],
-    "plate": "#1F2326"
+    "plate": "#1F2326",
+    "tizen": [
+      "kIciSQlYEM.plex"
+    ]
   },
   "hbo-max": {
     "title": "HBO Max",
@@ -33,7 +39,10 @@
       "com.hbo.hbonow"
     ],
     "plate": "#5822B4",
-    "ink": "#FFFFFF"
+    "ink": "#FFFFFF",
+    "tizen": [
+      "5b8c3eb16b.BeamCTVDev"
+    ]
   },
   "youtube": {
     "title": "YouTube",
@@ -46,7 +55,10 @@
       "com.amazon.firetv.youtube"
     ],
     "plate": "#FF0000",
-    "ink": "#FFFFFF"
+    "ink": "#FFFFFF",
+    "tizen": [
+      "9Ur5IzDKqV.TizenYouTube"
+    ]
   },
   "netflix": {
     "title": "Netflix",
@@ -57,7 +69,10 @@
     "android": [
       "com.netflix.ninja"
     ],
-    "plate": "#000000"
+    "plate": "#000000",
+    "tizen": [
+      "RN1MCdNq8t.Netflix"
+    ]
   },
   "hulu": {
     "title": "Hulu",
@@ -70,7 +85,10 @@
       "com.hulu.plus"
     ],
     "plate": "#1CE783",
-    "ink": "#0B0C0F"
+    "ink": "#0B0C0F",
+    "tizen": [
+      "LBUAQX1exg.Hulu"
+    ]
   },
   "disney-plus": {
     "title": "Disney+",
@@ -82,7 +100,10 @@
       "com.disney.disneyplus"
     ],
     "plate": "#0B1A5C",
-    "size": 1.2
+    "size": 1.2,
+    "tizen": [
+      "MCmYXNxgcu.DisneyPlus"
+    ]
   },
   "prime-video": {
     "title": "Prime Video",
@@ -96,7 +117,10 @@
       "com.amazon.avod"
     ],
     "plate": "#0F5F9E",
-    "ink": "#FFFFFF"
+    "ink": "#FFFFFF",
+    "tizen": [
+      "evKhCgZelL.AmazonIgnitionLauncher2"
+    ]
   },
   "paramount-plus": {
     "title": "Paramount+",
@@ -109,7 +133,10 @@
     ],
     "plate": "#0050C8",
     "ink": "#FFFFFF",
-    "size": 1.25
+    "size": 1.25,
+    "tizen": [
+      "rJyOSqC6Up.CBSAllAccess"
+    ]
   },
   "apple-tv": {
     "title": "Apple TV",
@@ -122,7 +149,10 @@
       "com.apple.atve.amazon.appletv"
     ],
     "plate": "#000000",
-    "ink": "#FFFFFF"
+    "ink": "#FFFFFF",
+    "tizen": [
+      "Y6A54cEa22.AppleTV"
+    ]
   },
   "spotify": {
     "title": "Spotify",
@@ -135,7 +165,10 @@
     ],
     "simple": "spotify",
     "plate": "#1DB954",
-    "ink": "#000000"
+    "ink": "#000000",
+    "tizen": [
+      "rJeHak5zRg.Spotify"
+    ]
   },
   "tivimate": {
     "title": "TiviMate",
@@ -175,7 +208,10 @@
     ],
     "simple": "tubi",
     "ink": "#FFFFFF",
-    "plate": "#7408FF"
+    "plate": "#7408FF",
+    "tizen": [
+      "3KA0pm7a7V.TubiTV"
+    ]
   },
   "crunchyroll": {
     "title": "Crunchyroll",
@@ -374,7 +410,10 @@
     ],
     "simple": "youtubetv",
     "plate": "#FF0000",
-    "ink": "#FFFFFF"
+    "ink": "#FFFFFF",
+    "tizen": [
+      "PvWgqxV3Xa.YouTubeTV"
+    ]
   },
   "iheart": {
     "title": "Iheart",
@@ -463,7 +502,10 @@
     ],
     "commons": "ESPN_wordmark.svg",
     "plate": "#D00000",
-    "ink": "#FFFFFF"
+    "ink": "#FFFFFF",
+    "tizen": [
+      "XtU8fQk2gN.ESPN"
+    ]
   },
   "sling": {
     "title": "Sling",
