@@ -8,6 +8,7 @@ TV CleanSlate is a monorepo: a Home app for Android and Google TV, a web version
 |---|---|
 | `android/` | Kotlin and Jetpack Compose app, a fork of Aerial. Read `android/AGENTS.md` before changing it. |
 | `webos/` | Web Home for rooted LG TVs. Read `webos/README.md`. |
+| `tizen/` | Plan and read-only check for Samsung TVs. Not yet tested on a TV. |
 | `scripts/` | ADB scripts for backup, launcher switching and restore. |
 | `guides/` | Setup, safety, troubleshooting and debloat prompts. Follow `safety.md` on any real TV. |
 | `devices/` | One folder per tested device, plus `devices.json`. |

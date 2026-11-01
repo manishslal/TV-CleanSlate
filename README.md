@@ -27,6 +27,7 @@ It stands on the work of other open source projects. The Android app is a fork o
 |---|---|---|
 | **Android Home** | A Home app for Android TV, Google TV and Fire TV, built with Kotlin and Jetpack Compose | [android/](android/README.md) |
 | **webOS Home** | The same look as a web app, for a rooted LG TV | [webos/](webos/README.md) |
+| **Samsung Tizen** | Planned: a web Home for Samsung TVs, not yet tested on one | [tizen/](tizen/README.md) |
 | **Device kit** | Scripts to back up a TV, disable the stock launcher, switch launchers and restore stock | [scripts/](scripts/README.md) |
 | **Guides** | Setup, safety, troubleshooting and agent-ready debloat prompts | [guides/](guides/getting-started.md) |
 | **Device logs** | What was changed on each TV and how to undo it | [devices/](devices/README.md) |
