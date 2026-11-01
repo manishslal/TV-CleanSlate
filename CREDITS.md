@@ -12,6 +12,12 @@ The Aerial commit history is preserved here with its original authors. Commit ha
 
 Copyright notice, as MIT requires: `Copyright (c) 2026 pengchujin`. Full text in [android/LICENSE](android/LICENSE).
 
+## Adapted
+
+| Project | Author | License | How it was used |
+|---|---|---|---|
+| [dumbtv](https://github.com/humblemuzzu/dumbtv) | dumbtv contributors | MIT | `FireKeeper` follows its Keeper method for Fire OS 6. Its tested AFTMM package lists were a reference for the Fire TV guide. |
+
 ## Used directly on devices
 
 These tools were run on our TVs. Their code is not included in this repository.
@@ -67,6 +73,17 @@ Used while redesigning the interface. Their files are not included.
 | Apple aerial films | Streamed from Apple at runtime, never stored here | Apple's terms |
 | Bing photo of the day | Fetched at runtime | Microsoft's terms |
 | Google News RSS | Headlines at runtime | Google's terms |
+
+## Logo tools
+
+Used by `logos/build_pack.py`. Their files are not included.
+
+| Project | License | Use |
+|---|---|---|
+| [Simple Icons](https://github.com/simple-icons/simple-icons) | CC0-1.0 (trademarks still belong to their owners) | Source SVGs |
+| [resvg](https://github.com/linebender/resvg) | Apache-2.0 or MIT | SVG rendering |
+| [VTracer](https://github.com/visioncortex/vtracer) | MIT | Raster to SVG tracing |
+| [Wikimedia Commons](https://commons.wikimedia.org) | Varies by file | Source SVGs not in Simple Icons |
 
 ## Trademarks
 

@@ -1,0 +1,21 @@
+# Packages Home's setup disables on this stick, one a line. Never Wi-Fi, input, remote, keyboard or update packages.
+com.amazon.ceviche
+com.amazon.connectivitydiag
+com.amazon.dp.logger
+com.amazon.hybridadidservice
+com.amazon.kso.blackbird
+com.amazon.logan
+com.amazon.privacypassservice
+com.amazon.shoptv.client
+com.amazon.shoptv.firetv.client
+com.amazon.sneakpeek
+com.amazon.storm.lightning.tutorial
+com.amazon.systemnotices
+com.amazon.tmm.tutorial
+com.amazon.tv.fw.metrics
+com.amazon.tv.releasenotes
+com.amazon.tv.website_launcher
+com.amazon.wirelessmetrics.service
+com.amznfuse.operatorredirection
+com.android.carrierconfig
+com.mediatek.atci.service

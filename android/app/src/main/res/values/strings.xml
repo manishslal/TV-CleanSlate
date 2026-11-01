@@ -16,6 +16,7 @@
     <string name="cc_muted">Muted</string>
     <string name="cc_home_default">Set as your home screen</string>
     <string name="cc_home_guarded">Home Guard is on</string>
+    <string name="cc_fire_updated">Fire OS updated. Run tools/fire-reapply.sh</string>
     <string name="cc_home_not_default">Not the default home screen</string>
     <string name="cc_setup_title">Make This Your Home Screen</string>
     <string name="cc_setup_body">Installed from the APK alone, Home opens, but Home, power-on and wake still go to the old launcher.</string>
@@ -24,8 +25,6 @@
     <string name="cc_setup_home">Choose the Default Home App</string>
     <string name="cc_setup_revival">Return After Standby</string>
     <string name="cc_setup_revival_where">Notification access</string>
-    <string name="cc_setup_scan">Or set it all up with a computer (recommended)</string>
-    <string name="cc_setup_scan_hint">Scan with your phone for this TV\'s command and a prompt for an AI agent.</string>
     <string name="cc_back">Back</string>
     <string name="cc_no_inputs">No inputs found on this TV</string>
 
@@ -158,12 +157,6 @@
     <string name="st_focus_standard">Standard</string>
     <string name="st_focus_high_hint">A white frame around the selected app, easy to spot from across the room.</string>
     <string name="st_focus_standard_hint">As on Apple TV out of the box: the selected app only lifts.</string>
-    <string name="st_effects">Effects</string>
-    <string name="st_effects_auto">Auto</string>
-    <string name="st_effects_full">Full</string>
-    <string name="st_effects_lite">Lite</string>
-    <string name="st_effects_hint">Lite draws plain panels and the selected app without its sheen, and keeps the screen at 60 Hz: for TVs that stutter.</string>
-    <string name="st_effects_auto_lite_hint">This TV has little memory or an older Android, so Auto uses Lite.</string>
     <string name="cc_inputs_settings">Input Settings</string>
     <string name="cc_inputs_pin">Show on Home (any number)</string>
     <string name="cc_inputs_boot">When the TV Turns On (one)</string>
@@ -181,21 +174,7 @@
     <string name="device_computer">Computer</string>
     <string name="device_set_top_box">Set-top Box</string>
     <string name="device_speaker">Soundbar</string>
-    <string name="cc_update_available">New Version: %s</string>
     <string name="cc_update_title">Home %s</string>
-    <string name="cc_update_current">This TV has Home %s.</string>
-    <string name="cc_update_keeps">Your apps, layout, wallpaper and settings stay as they are.</string>
-    <string name="cc_update_scan">Scan with a phone to see how to update (copy the install command, or hand it to an AI agent).</string>
-    <string name="cc_update_scan_else">Cannot install? Scan with a phone for other ways to update.</string>
-    <string name="cc_update_install">Download and Install</string>
-    <string name="cc_update_downloading">Downloading… %d%%</string>
-    <string name="cc_update_opened">The installer is open: confirm the update there. When it is done, choose Done to come back to Home, with every setting kept.</string>
-    <string name="cc_update_permission">Allow Home to install apps in the settings that just opened, then come back and choose Download and Install again.</string>
-    <string name="cc_update_storage_permission">This TV needs storage access to save the update. Allow the file permission request, then choose Download and Install again.</string>
-    <string name="cc_update_failed_download">The download did not finish (both the website and GitHub were tried). Check the network and try again, or update with the command below.</string>
-    <string name="cc_update_failed_blocked">This TV does not let apps install other apps. Update with the command below.</string>
-    <string name="cc_update_failed_signature">The Home on this TV is signed differently from the official one, so it cannot be updated over.</string>
-    <string name="cc_update_failed_older">The website does not have a newer version yet. Try again in a while.</string>
     <string name="st_pin">Parental PIN</string>
     <string name="st_pin_off">Off</string>
     <string name="st_pin_on">On</string>
@@ -250,8 +229,8 @@
     <string name="ss_show_time_hint">The time over the aerial and photo screensavers. The time and place name move a little now and then, so nothing stays on the same pixels.</string>
     <!-- Fork additions (FORK.md) -->
     <string name="fk_time_format">Time Format</string>
-    <string name="fk_time_12">12-hour</string>
-    <string name="fk_time_24">24-hour</string>
+    <string name="fk_time_12">12-Hour</string>
+    <string name="fk_time_24">24-Hour</string>
     <string name="fk_units">Temperature</string>
     <string name="fk_units_f">°F</string>
     <string name="fk_units_c">°C</string>
@@ -261,14 +240,13 @@
     <string name="fk_tiles_auto">Auto</string>
     <string name="fk_tiles_color">Light</string>
     <string name="fk_app_tiles">App Tiles</string>
-    <string name="fk_app_tiles_hint">Dark Glass shows each app\'s logo on dark glass. Full Color keeps each app\'s own colors. It works in any appearance.</string>
-    <string name="fk_tiles_glass">Dark Glass</string>
-    <string name="fk_tiles_full">Full Color</string>
+    <string name="fk_app_tiles_hint">Dark shows each app\'s logo on a dark tile. Color keeps each app\'s own colors. It works in any appearance.</string>
+    <string name="fk_tiles_glass">Dark</string>
+    <string name="fk_tiles_full">Color</string>
     <string name="fk_flip">Clock</string>
     <string name="fk_flip_cards">Cards</string>
-    <string name="fk_flip_on">Flip</string>
     <string name="fk_flip_off">Plain</string>
-    <string name="fk_flip_hint">The time turns over digit by digit, like a departure board; Cards puts each digit on its own flap.</string>
+    <string name="fk_flip_hint">Cards puts each digit on a flap that turns over, like a departure board. Plain shows just the time.</string>
     <string name="fk_loc_change">Change</string>
     <string name="fk_loc_hint">City name</string>
     <string name="fk_loc_auto">Automatic</string>
@@ -333,10 +311,24 @@
     <string name="fk_more_apps">More Apps</string>
     <string name="fk_label_tile_style">Tile Style</string>
     <string name="fk_label_mode">Mode</string>
+    <string name="fk_tiles_clear">Clear</string>
     <string name="fk_tiles_system">System</string>
-    <string name="fk_tile_style_hint">System follows Mode: dark glass in Dark, each app\'s own colors in Light. Dark Glass and Full Color stay as they are.</string>
+    <string name="fk_tile_style_hint">System follows Mode. Clear is glass like the dock, Dark stays dark, and Color uses each app\'s colors.</string>
     <string name="fk_home_mode">Home Mode</string>
     <string name="fk_mode_full">Full</string>
     <string name="fk_mode_custom">Custom</string>
     <string name="fk_mode_efficient">Efficient</string>
+    <string name="fk_mode_auto">Auto</string>
+    <string name="st_focus_invert">Invert</string>
+    <string name="st_focus_invert_hint">The selected app swaps its logo and tile colors.</string>
+    <string name="fk_focus_glow">Focus Glow</string>
+    <string name="fk_focus_glow_hint">How far the glow reaches around the selected app. Small is the white ring alone.</string>
+    <string name="fk_size_small">Small</string>
+    <string name="fk_size_medium">Medium</string>
+    <string name="fk_size_large">Large</string>
+    <string name="fk_wallpaper_tint">Wallpaper Tint</string>
+    <string name="fk_wallpaper_tint_hint">A wash over the wallpaper on Home, for bright pictures.</string>
+    <string name="fk_tint_dim">Dim</string>
+    <string name="fk_tint_warm">Warm</string>
+    <string name="fk_tint_cool">Cool</string>
 </resources>

@@ -49,10 +49,10 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.lifecycleScope
 import app.orchard.tv.apps.AppEntry
 import app.orchard.tv.apps.CustomIcons
-import app.orchard.tv.apps.IconLibrary
 import app.orchard.tv.apps.AppNames
 import app.orchard.tv.apps.SourceLooks
 import app.orchard.tv.apps.TileArtFactory
+import app.orchard.tv.guard.FireKeeper
 import app.orchard.tv.guard.GuardSetup
 import app.orchard.tv.guard.HomeGuardService
 import app.orchard.tv.ui.home.HomeScreen
@@ -80,7 +80,6 @@ import app.orchard.tv.system.SystemProbe
 import app.orchard.tv.system.HisenseSources
 import app.orchard.tv.system.LaunchFallback
 import app.orchard.tv.system.settingsLaunchIntent
-import app.orchard.tv.update.Updates
 import app.orchard.tv.weather.Weather
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -115,7 +114,6 @@ class MainActivity : ComponentActivity() {
             vm.refreshNetwork()
             Wallpapers.refreshDailyIfStale(networkCameUp = true)
             Weather.refreshIfStale(networkCameUp = true)
-            Updates.checkIfStale()
         }
         override fun onLost(network: Network) = runOnUiThread { vm.refreshNetwork() }
         override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) = runOnUiThread { vm.refreshNetwork() }
@@ -189,6 +187,7 @@ class MainActivity : ComponentActivity() {
             return
         }
         super.onCreate(savedInstanceState)
+        FireKeeper.start(this)
         startReal(savedInstanceState)
     }
 
@@ -215,9 +214,7 @@ class MainActivity : ComponentActivity() {
         val uhd = UhdCanvas.scale(this)
         Wallpapers.init(this)
         Weather.init(this)
-        Updates.init(this)
         CustomIcons.init(this)
-        IconLibrary.init(this)
         SourceLooks.init(this)
         AppNames.init(this)
         AerialSettings.init(this)
@@ -748,7 +745,6 @@ class MainActivity : ComponentActivity() {
         Wallpapers.refreshDailyIfStale()
         Wallpapers.rotateIfDue()
         Weather.refreshIfStale()
-        Updates.checkIfStale()
     }
 
     override fun onResume() {
@@ -765,7 +761,6 @@ class MainActivity : ComponentActivity() {
         restartIdleTimer()
         GuardSetup.setHomeInFront(this, true)
         HomeGuardService.onAerialResumed()
-        Updates.onHomeResumed()
         vm.refreshSystem()
         // Back in front by any route (Home was handled in onNewIntent, which runs first; Back from
         // the app lands here directly), so the next Home press is a Home-on-Home again.
@@ -808,6 +803,15 @@ class MainActivity : ComponentActivity() {
             return
         }
         openedAppSinceHome = true
+        if (FireKeeper.isAmazonHome(app.packageName)) FireKeeper.pause()
+        if (FireKeeper.applies && FireKeeper.isAmazonSettingsTile(app.packageName)) {
+            runCatching { startActivity(Intent(android.provider.Settings.ACTION_SETTINGS)) }
+            return
+        }
+        if (FireKeeper.applies && FireKeeper.isAmazonHome(app.packageName)) {
+            runCatching { startActivity(FireKeeper.amazonHomeIntent()) }
+            return
+        }
         // The stock launcher (Xiaomi's PatchWall, with the maker's own iQIYI / Mango content) opens
         // through the system Home action where it can; see HomeGuardService.openStockLauncher.
         if (HomeGuardService.isStockHome(app.packageName) &&

@@ -98,7 +98,7 @@ fun MenuRow(
             if (state.focused) Palette.Focus else Color.Transparent, tween(Motion.Quick, easing = Motion.EaseOut), label = "row-bg",
         )
         val fg = when {
-            state.focused -> if (destructive) Color(0xFFD70015) else Palette.OnFocus
+            state.focused -> if (destructive) Palette.Destructive else Palette.OnFocus
             destructive -> Palette.Red
             else -> Palette.Label
         }

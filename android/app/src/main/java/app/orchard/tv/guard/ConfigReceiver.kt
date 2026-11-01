@@ -10,7 +10,6 @@ import app.orchard.tv.system.DeviceProfile
 import app.orchard.tv.system.DiagLog
 import app.orchard.tv.system.HisenseSources
 import app.orchard.tv.system.SystemProbe
-import app.orchard.tv.update.Updates
 import app.orchard.tv.ui.components.UhdCanvas
 import app.orchard.tv.wallpaper.ScreensaverMode
 import app.orchard.tv.wallpaper.Wallpapers
@@ -28,9 +27,6 @@ import kotlinx.coroutines.launch
  *                                   (Home's layout, as in Personalize; for screenshots of each)
  *   ... --ei preview_apps 3         (Home shows only its first 3 tiles until Aerial restarts, or 0;
  *                                   nothing is saved, for trying a nearly empty Home)
- *   ... --ez check_update true      (look for a new version now, not within three hours)
- *   ... --ez update_test true       ("Download and Install" takes files/update-test.apk instead,
- *                                   until Aerial restarts; for trying an update before a release)
  * The manifest requires the sender to hold WRITE_SECURE_SETTINGS, which the ADB shell has and
  * ordinary apps cannot get, so no other app on the TV can flip these.
  */
@@ -132,15 +128,6 @@ class ConfigReceiver : BroadcastReceiver() {
         if (intent.hasExtra("uhd_canvas")) {
             UhdCanvas.choose(context, intent.extras?.get("uhd_canvas") as? Boolean)
         }
-        if (intent.hasExtra("update_test")) {
-            Updates.testApk = if (intent.getBooleanExtra("update_test", false)) {
-                java.io.File(context.getExternalFilesDir(null) ?: context.filesDir, "update-test.apk")
-            } else null
-        }
-        if (intent.getBooleanExtra("check_update", false)) {
-            Updates.init(context)
-            Updates.checkIfStale(force = true)
-        }
         if (intent.hasExtra("keep_adb")) GuardSetup.setKeepAdb(context, intent.getBooleanExtra("keep_adb", false))
         // ... --ei adb_probe_port <port>   (verify the keep_adb toggle without closing a working
         //                                 link, until Aerial restarts; issue #454)
@@ -154,7 +141,8 @@ class ConfigReceiver : BroadcastReceiver() {
         }
         // Fork: what the performance measurements change, one setting a run (docs/PERFORMANCE.md).
         // ... --es glass liquid|frosted --es effects auto|full|lite --es clock_style cards|flip|plain
-        //     --ez headlines false --es tile_style system|glass|full --es wallpaper <id>
+        //     --ez headlines false --es tile_style system|clear|glass|full --es appearance auto|dark|light --es wallpaper <id>
+        //     --es focus_style standard|high_contrast|invert --es focus_glow small|medium|large --es wallpaper_tint off|dim|warm|cool
         if (LOOK_EXTRAS.any { intent.hasExtra(it) }) {
             AerialSettings.init(context)
             Wallpapers.init(context)
@@ -163,8 +151,12 @@ class ConfigReceiver : BroadcastReceiver() {
             intent.getStringExtra("effects")?.let { key -> app.orchard.tv.settings.Effects.of(key).let(AerialSettings::chooseEffects) }
             intent.getStringExtra("clock_style")?.let { key -> app.orchard.tv.settings.ClockStyle.of(key).let(AerialSettings::chooseClockStyle) }
             if (intent.hasExtra("headlines")) AerialSettings.chooseHeadlines(intent.getBooleanExtra("headlines", true))
+            intent.getStringExtra("appearance")?.let { key -> app.orchard.tv.settings.AerialSettings.chooseAppearance(app.orchard.tv.settings.Appearance.of(key)) }
             intent.getStringExtra("tile_style")?.let { key -> app.orchard.tv.settings.TileStyle.of(key)?.let(AerialSettings::chooseTileStyle) }
             intent.getStringExtra("wallpaper")?.let { Wallpapers.select(it) }
+            intent.getStringExtra("focus_style")?.let { AerialSettings.chooseFocusStyle(app.orchard.tv.settings.FocusStyle.of(it)) }
+            intent.getStringExtra("focus_glow")?.let { AerialSettings.chooseFocusGlow(app.orchard.tv.settings.FocusGlow.of(it)) }
+            intent.getStringExtra("wallpaper_tint")?.let { AerialSettings.chooseWallpaperTint(app.orchard.tv.settings.WallpaperTint.of(it)) }
         }
         if (intent.getBooleanExtra("show_look", false)) {
             AerialSettings.init(context)
@@ -186,4 +178,4 @@ class ConfigReceiver : BroadcastReceiver() {
     }
 }
 
-private val LOOK_EXTRAS = listOf("home_mode", "glass", "effects", "clock_style", "headlines", "tile_style", "wallpaper")
+private val LOOK_EXTRAS = listOf("appearance", "home_mode", "glass", "effects", "clock_style", "headlines", "tile_style", "wallpaper", "focus_style", "focus_glow", "wallpaper_tint")

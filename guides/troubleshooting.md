@@ -8,6 +8,7 @@
 | Play Protect blocks the install | Choose Install anyway on the TV, or build with a current target SDK. |
 | Pressing Home opens the old launcher | Run `TV=<tv-ip> tools/install.sh repair` to restart Home Guard. |
 | Home Guard stops after an update or reboot | Run `repair`. Then check that `enabled_accessibility_services` still lists it. |
+| Fire TV: Home's menu says Fire OS was updated | Run `TV=<tv-ip> tools/fire-reapply.sh` to restore the debloat, permissions and screensaver. |
 | Home feels slow | Choose Efficient in Control Center. Moving wallpapers cost the most. Run the `compile -m speed` step again after updates. |
 | Glass looks flat | Liquid Glass needs Android 13. Older TVs get frosted glass. |
 | Tiles show plain icons | That's normal without a logo pack. See [logos/](../logos/README.md). |

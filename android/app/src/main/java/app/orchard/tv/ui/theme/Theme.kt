@@ -48,6 +48,14 @@ object Palette {
     val Green = Color(0xFF30D158)
     val Orange = Color(0xFFFF9F0A)
     val Red = Color(0xFFFF453A)
+    val Blue = Color(0xFF0A84FF)
+    val Destructive = Color(0xFFD70015)
+
+    /** Fork: the clock board's ink, and its cards' faces: top lit, top dark, bottom lit, bottom dark, split, pin. */
+    val BoardInk = Color(0xFFEFE7D2)
+    val DarkCard = listOf(Color(0xF22A2B2E), Color(0xF2202124), Color(0xF21B1C1E), Color(0xF2141517), Color(0xFF060607), Color(0xFF45474B))
+    val LightCard = listOf(Color(0xFFFCFCFA), Color(0xFFF2F2EF), Color(0xFFEBEBE7), Color(0xFFE0E0DB), Color(0xFF9B9B96), Color(0xFFB9B9B4))
+    val LightCardInk = Color(0xFF141517)
 
     /**
      * tvOS draws a focused control as a near-white plate with dark content. Fork: on a light
@@ -59,8 +67,8 @@ object Palette {
     /** The dark values, for drawing outside composition. */
     object Dark {
         val Label = Color(0xFFFFFFFF)
-        val SecondaryLabel = Color(0xB8EBEBF5)
-        val TertiaryLabel = Color(0x99EBEBF5)
+        val SecondaryLabel = Color(0xF2EBEBF5)
+        val TertiaryLabel = Color(0xCCEBEBF5)
         val Glass = Color(0xE6202022)
         val Fill = Color(0x2E787880)
         val FillStrong = Color(0x52787880)
@@ -72,8 +80,8 @@ object Palette {
     /** Fork: Apple's light system colors, for a light panel. */
     object Light {
         val Label = Color(0xFF1D1D1F)
-        val SecondaryLabel = Color(0xD93C3C43)
-        val TertiaryLabel = Color(0xCC3C3C43)
+        val SecondaryLabel = Color(0xFF2C2C30)
+        val TertiaryLabel = Color(0xFF2C2C30)
         val Glass = Color(0xEBF2F2F7)
         val Fill = Color(0x29787880)
         val FillStrong = Color(0x3D787880)

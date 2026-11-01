@@ -7,6 +7,7 @@ ADB scripts for Android TV and Google TV. All take the TV's address.
 | `01-preflight-backup.sh <tv-ip>` | Saves device info, packages and settings to `backups/`, which git ignores | No |
 | `02-install-launchers.sh <tv-ip> [name]` | Installs launchers listed in `launchers.conf` | Yes |
 | `03-switch-launcher.sh <tv-ip> <name or stock>` | Switches the active launcher | Yes |
+| `04-disable-stock-launcher.sh <tv-ip> <home component>` | Disables Google TV's launcher and setup wizard, with safety checks | Yes |
 | `99-restore-stock.sh <tv-ip>` | Puts the stock launcher back | Yes |
 
 `common.sh` holds shared helpers. `launchers.conf` lists launcher names, packages and APK paths. Put APKs in `apks/` at the repo root, which git ignores.

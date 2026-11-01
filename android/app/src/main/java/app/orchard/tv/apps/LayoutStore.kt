@@ -216,9 +216,12 @@ private object Defaults {
         "com.xiaodianshi.tv.yst",          // 云视听小电视
         "com.netflix.ninja",
         "com.google.android.youtube.tv",
+        "com.amazon.firetv.youtube",
         "com.apple.atve.androidtv.appletv",
+        "com.apple.atve.amazon.appletv",
         "com.disney.disneyplus",
         "com.amazon.amazonvideo.livingroom",
+        "com.amazon.firebat",
         "com.hbo.hbonow",
         "com.spotify.tv.android",
         "com.mitv.mivideoplayer",

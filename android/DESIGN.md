@@ -15,12 +15,31 @@ For Android Home on Android and Google TV. tvOS is the reference; it deliberatel
 - Liquid Glass needs Android 13. Older TVs get frosted glass with a lit edge.
 - Real lens: panels, the top row, Control Center's round buttons and sliders, the status pill's focus.
 - Lit rim only (`glassRim`): anything too small for bending to show, such as switches.
+- The middle of a panel shows the frosted picture with 30% of the sharp one on Liquid. Light's floor is 56% grey, so dark text holds on a black wallpaper.
 - Keep the bend narrow: 26 dp on panels, 16 on the top row, 8 to 10 on controls.
 - Lite draws flat panels.
 
+## Tiles
+- A logo keeps one size and position on every tile style. Only the plate and sometimes the ink change.
+- Logos share one area, inside a box 70% of the tile's width and 50% of its height.
+
+| Style | Plate | Logo |
+|---|---|---|
+| Clear | Glass like the dock, bright in Light and dim in Dark | One ink plus one shade. Color becomes the shade, so no brand color shows |
+| Dark | Dark graphite | One ink plus one shade: white and grey, no brand color |
+| Color | The brand's color | White or the brand's ink, whichever reads |
+
+- Order of logo sources: the pack, the app's monochrome icon on Android 13+, then a logo cut from its icon.
+- Banners and baked app art are not used, because their logos have their own size.
+- Pack art is at least 1024 px on its long side and is shrunk in steps. A logo that matches its plate gets a neutral plate.
+- Firmware apps with no usable logo use Home's own glyph.
+- A focused tile glows evenly around it in the app's own color. Focus Glow sets how far; Small is the ring alone.
+- On Clear the glow stays outside the tile, and the sheen goes under the logo, so nothing covers the logo.
+- Clear tiles sit directly on the wallpaper: no glass plate under glass tiles.
+
 ## Focus
 - Plate in panels: a solid light or dark plate.
-- Ring on tiles.
+- Ring on tiles, or Invert: a solid plate with the logo's colors swapped.
 - Glass on Home's own controls, where it has the wallpaper to bend.
 
 ## Controls
@@ -39,9 +58,8 @@ For Android Home on Android and Google TV. tvOS is the reference; it deliberatel
 - Clock cards follow Mode on Home: white with black type in Light.
 - The screensaver's cards stay dark in both modes.
 
-## Tiles
-- Tile Style: System follows Mode, Dark Glass, Full Color.
-- A Dark Glass logo comes from the pack when there is one. Logos are personal use and stay out of public builds.
+- Tile Style: System follows Mode, Clear, Dark, Color. New installs start on Color and Frosted.
+- A Dark logo comes from the pack when there is one. Logos are personal use and stay out of public builds.
 
 ## Motion
 - Durations come from `Motion`: Fast 120, Quick 160, Enter 220, Panel 300 ms. Exits are quicker than entrances.

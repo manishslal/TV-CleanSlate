@@ -53,6 +53,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Color
@@ -64,6 +65,8 @@ import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.ClipOp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
@@ -85,6 +88,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
 import app.orchard.tv.apps.AppEntry
 import app.orchard.tv.apps.TileArt
+import app.orchard.tv.apps.TileArtFactory
+import app.orchard.tv.ui.components.liquidGlass
 import kotlinx.coroutines.async
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -92,7 +97,9 @@ import androidx.compose.runtime.mutableIntStateOf
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import app.orchard.tv.settings.AerialSettings
+import app.orchard.tv.settings.FocusGlow
 import app.orchard.tv.settings.FocusStyle
+import app.orchard.tv.ui.theme.Palette
 import app.orchard.tv.system.Sounds
 import app.orchard.tv.ui.components.isSelect
 import app.orchard.tv.ui.components.baked
@@ -134,7 +141,15 @@ private const val RIM_AT_REST = 0.07f
 // Fork: a little closer and thinner, so it reads as one line.
 private val RingGap = 4.dp
 private val ShadowBlur = 14.dp
-private val ShadowDrop = 12.dp
+private val GlowLarge = 26.dp
+
+/** Fork: a one-ink logo with its lights and darks swapped; alpha stays. */
+private val InvertedInk = androidx.compose.ui.graphics.ColorFilter.colorMatrix(androidx.compose.ui.graphics.ColorMatrix(floatArrayOf(
+    -1f, 0f, 0f, 0f, 255f,
+    0f, -1f, 0f, 0f, 255f,
+    0f, 0f, -1f, 0f, 255f,
+    0f, 0f, 0f, 1f, 0f,
+)))
 private val RingWidth = 2.5.dp
 
 /**
@@ -203,7 +218,7 @@ fun AppTile(
         label = "tile-lift",
     )
     val ring by animateFloatAsState(
-        targetValue = if (AerialSettings.focusStyle == FocusStyle.HighContrast) 1f else 0f,
+        targetValue = if (AerialSettings.focusStyle == FocusStyle.HighContrast || AerialSettings.focusGlow == FocusGlow.Small) 1f else 0f,
         animationSpec = tween(Motion.Enter, easing = Motion.EaseOut),
         label = "tile-ring",
     )
@@ -261,8 +276,8 @@ fun AppTile(
                 if (appear.value < 1f) { scaleX *= 0.94f + 0.06f * appear.value; scaleY *= 0.94f + 0.06f * appear.value }
             },
     ) {
-        if (lift > 0.01f && !AerialSettings.lite) {
-            // A lifted tile casts a soft shadow below it, as cards do on tvOS. The system's
+        if (lift > 0.01f && !AerialSettings.lite && AerialSettings.focusGlow != FocusGlow.Small) {
+            // Fork: a lifted tile glows evenly around it. The system's
             // elevation shadow is too faint to read on a TV; this one is baked, so it costs one
             // image draw while a tile is lifted.
             Canvas(
@@ -274,14 +289,19 @@ fun AppTile(
                         rotationX = leanX.value
                         rotationZ = wobble?.value ?: 0f
                         translationX = push.value.x
-                        translationY = push.value.y + ShadowDrop.toPx() * lift
+                        translationY = push.value.y
                         cameraDistance = 14f * density
                         alpha = lift
                         compositingStrategy = CompositingStrategy.ModulateAlpha
                     },
             ) {
-                val shadow = tileShadow(size.width.roundToInt(), size.height.roundToInt(), Corner.toPx(), ShadowBlur.toPx())
-                translate(-shadow.ext, -shadow.ext) { drawImage(shadow.image) }
+                val blur = if (AerialSettings.focusGlow == FocusGlow.Large) GlowLarge else ShadowBlur
+                val shadow = tileShadow(size.width.roundToInt(), size.height.roundToInt(), Corner.toPx(), blur.toPx())
+                // Fork: the app's own color lifts the focused tile off the wallpaper; a grey app keeps the plain shadow.
+                val halo = app.art.tint.takeIf { it.alpha > 0.5f }?.let { androidx.compose.ui.graphics.ColorFilter.tint(it, BlendMode.SrcIn) }
+                fun glow() = translate(-shadow.ext, -shadow.ext) { repeat(if (halo != null) 2 else 1) { drawImage(shadow.image, colorFilter = halo) } }
+                // A Clear tile lets what is behind it through: the glow stays outside, off the logo.
+                if (TileArtFactory.clear) clipPath(smoothRectPath(Rect(0f, 0f, size.width, size.height), Corner.toPx()), ClipOp.Difference) { glow() } else glow()
             }
         }
         Box(
@@ -301,6 +321,8 @@ fun AppTile(
                     shape = RoundedCornerShape(Corner)
                     clip = true
                 }
+                // Fork: a Clear tile is real glass where the TV can bend the wallpaper; its GPU layer is drawn again only when it moves.
+                .then(if (AerialSettings.tileLook and 8 != 0) Modifier.liquidGlass(Corner, band = 4.dp, lightPanel = TileArtFactory.clearLight, tile = true) else Modifier)
                 .focusRequester(focusRequester)
                 .onFocusChanged {
                     if (it.isFocused && !focused) Sounds.focusMoved()
@@ -440,6 +462,18 @@ fun AppTile(
                     TileFaces.version
                     // Lite: no sheen (a shader per frame) and no parallax on the focused tile.
                     val lite = AerialSettings.lite
+                    val invert = lift > 0.01f && art.fore != null && AerialSettings.focusStyle == FocusStyle.Invert
+                    val oneInk = TileArtFactory.clear || AerialSettings.darkTiles
+                    // Light from above: a soft sheen across the top, brighter where the tile leans toward it.
+                    fun sheen() {
+                        if (lift <= 0.01f || lite) return
+                        val glintX = size.width * (0.3f + leanY.value / 7f * 0.25f)
+                        val glint = RadialGradient(
+                            glintX, -size.height * 0.25f, size.width * 0.75f,
+                            Color.White.copy(alpha = (if (TileArtFactory.clear) (if (TileArtFactory.clearLight) 0.1f else 0.22f) else 0.28f) * lift).toArgb(), Color.Transparent.toArgb(), Shader.TileMode.CLAMP,
+                        )
+                        drawRect(ShaderBrush(ComposeShader(glint, shape, PorterDuff.Mode.DST_IN)), blendMode = BlendMode.Screen)
+                    }
                     scale(size.width / pw, size.height / ph, pivot = Offset.Zero) {
                         val made = face(pw, ph)
                         if (made != null) drawImage(made)
@@ -452,30 +486,37 @@ fun AppTile(
                                 drawImage(art.back, dstSize = IntSize(pw, ph), filterQuality = FilterQuality.Medium)
                             }
                         }
+                        // Fork: a focused Clear tile brightens; it never dims.
+                        if (lift > 0.01f && TileArtFactory.clear) drawRect(Color.White.copy(alpha = (if (TileArtFactory.clearLight) 0.86f else 0.05f) * lift), size = Size(pw.toFloat(), ph.toFloat()))
+                        // Fork: Invert turns the tile over: a solid plate in the logo's ink.
+                        if (invert) drawRect(if (TileArtFactory.clear && TileArtFactory.clearLight) Palette.Dark.OnFocus else Palette.Dark.Focus, alpha = lift, size = Size(pw.toFloat(), ph.toFloat()))
+                    }
+                    // Fork: on Clear the sheen goes under the logo, which stays in full ink.
+                    if (TileArtFactory.clear) sheen()
+                    scale(size.width / pw, size.height / ph, pivot = Offset.Zero) {
                         art.fore?.let { fore ->
                             val at = art.foreAt
                             // Parallax: the logo travels further than the plate when the tile leans.
                             val px = if (lite) 0f else leanY.value / 7f * pw * 0.035f
                             val py = if (lite) 0f else -leanX.value / 7f * ph * 0.035f
-                            drawImage(
+                            fun logo(alpha: Float, filter: androidx.compose.ui.graphics.ColorFilter?) = drawImage(
                                 fore,
                                 dstOffset = IntOffset((at.left * pw + px).roundToInt(), (at.top * ph + py).roundToInt()),
                                 dstSize = IntSize((at.width * pw).roundToInt(), (at.height * ph).roundToInt()),
+                                alpha = alpha,
+                                colorFilter = filter,
                                 filterQuality = FilterQuality.Medium,
                             )
+                            if (invert) {
+                                if (lift < 1f) logo(1f - lift, null)
+                                // One ink turns over, shade and all. A Color logo takes the brand's color on the white plate.
+                                logo(lift, if (oneInk) InvertedInk else androidx.compose.ui.graphics.ColorFilter.tint(if (art.tint.alpha > 0.5f && art.tint.luminance() < 0.27f) art.tint else Palette.Dark.OnFocus, BlendMode.SrcIn))
+                            } else logo(1f, null)
                         }
                     }
-                    if (lift > 0.01f && !lite) {
-                        // Light from above: a soft sheen across the top, brighter where the tile leans toward it.
-                        val glintX = size.width * (0.3f + leanY.value / 7f * 0.25f)
-                        val glint = RadialGradient(
-                            glintX, -size.height * 0.25f, size.width * 0.75f,
-                            Color.White.copy(alpha = 0.28f * lift).toArgb(), Color.Transparent.toArgb(), Shader.TileMode.CLAMP,
-                        )
-                        drawRect(ShaderBrush(ComposeShader(glint, shape, PorterDuff.Mode.DST_IN)), blendMode = BlendMode.Screen)
-                    }
+                    if (!TileArtFactory.clear) sheen()
                     // A focused tile's rim catches a little more light.
-                    if (lift > 0.01f) drawImage(rim, dstSize = full, alpha = 0.08f * lift)
+                    if (lift > 0.01f) drawImage(rim, dstSize = full, alpha = (if (TileArtFactory.clear) 0.7f else 0.08f) * lift)
                 }
             })
         }

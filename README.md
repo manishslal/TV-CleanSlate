@@ -5,7 +5,7 @@
 
 **A calm, ad-free Home for the TVs you already own, plus a safe way to clear out what came with them.**
 
-TV CleanSlate replaces the ad-filled home screen on Android TV and Google TV devices, brings the same look to a rooted LG webOS TV, and documents how to debloat each device one reversible step at a time. Everything here was tested on real hardware.
+TV CleanSlate replaces the ad-filled home screen on Android TV, Google TV and Fire TV devices, brings the same look to a rooted LG webOS TV, and documents how to debloat each device one reversible step at a time. Everything here was tested on real hardware.
 
 It stands on the work of other open source projects. The Android app is a fork of [**Aerial**](https://github.com/pengchujin/aerial-tv) by pengchujin and its contributors. See [Credits](#credits).
 
@@ -25,9 +25,9 @@ It stands on the work of other open source projects. The Android app is a fork o
 
 | Part | What it does | Start here |
 |---|---|---|
-| **Android Home** | A Home app for Android TV and Google TV, built with Kotlin and Jetpack Compose | [android/](android/README.md) |
+| **Android Home** | A Home app for Android TV, Google TV and Fire TV, built with Kotlin and Jetpack Compose | [android/](android/README.md) |
 | **webOS Home** | The same look as a web app, for a rooted LG TV | [webos/](webos/README.md) |
-| **Device kit** | Scripts to back up a TV, switch launchers and restore stock | [scripts/](scripts/README.md) |
+| **Device kit** | Scripts to back up a TV, disable the stock launcher, switch launchers and restore stock | [scripts/](scripts/README.md) |
 | **Guides** | Setup, safety, troubleshooting and agent-ready debloat prompts | [guides/](guides/getting-started.md) |
 | **Device logs** | What was changed on each TV and how to undo it | [devices/](devices/README.md) |
 
@@ -37,13 +37,14 @@ It stands on the work of other open source projects. The Android app is a fork o
 |---|---|---|
 | Aerial film wallpapers | Yes | Yes |
 | Flip-card clock, date and weather | Yes | Yes |
-| Dark glass tiles and focus glow | Yes | Yes |
+| Clear, Dark and Color tiles | Yes | Yes |
+| Focus glow in the app's color | Yes | Yes |
 | Personalize panel | Yes | Yes |
 | Liquid Glass | Android 13+ | No |
 | Light, Dark and Auto (sunset to sunrise) themes | Yes | Yes |
 | Screensaver with headlines by topic | Yes | Yes |
 | Plex videos and photos | Yes | No |
-| Home Guard, which keeps Home from being replaced | Yes | Uses CleanYourTV |
+| Home Guard, which keeps Home from being replaced | Yes, FireKeeper on Fire OS 6 | Uses CleanYourTV |
 | Folders, hidden apps and tile moves | Yes | Yes |
 | Parental PIN | Yes | Not checked on a real remote |
 | HDMI inputs in Control Center | Yes | Yes |
@@ -53,6 +54,10 @@ It stands on the work of other open source projects. The Android app is a fork o
 | Five languages (English, Chinese, Russian, Ukrainian, Kazakh) | Yes | English |
 
 Android Home runs on Android 5.0 and newer. Most testing here was on Android 9 to 14.
+
+### Stock launcher off
+
+On the onn 4K Streaming Box, `scripts/04-disable-stock-launcher.sh` makes Home Android's real default and removes the stock launcher and setup wizard processes. They used 79 MB two minutes after boot, and the launcher reached 141 MB with its services after long uptime.
 
 ### Home Mode, measured
 
@@ -77,6 +82,7 @@ Measured on an onn 4K Streaming Box with 2 GB of RAM. Full method: [PERFORMANCE.
 | TCL C02_4K_US | Android TV 9 | Android Home | Yes | [Log](devices/tcl-c02-4k-us/CHANGELOG.md) |
 | LG 50UP8000PUA | webOS 6.5, rooted | webOS Home | Yes | [Log](devices/lg-50up8000pua/CHANGELOG.md) |
 | Hisense SmartTV 4K | Android TV 12 | No | **No**, changes don't last | [Log](devices/hisense-smarttv-4k/CHANGELOG.md) |
+| Fire TV Stick 4K (1st gen) | Fire OS 6.7 | Android Home with FireKeeper | Yes | [Log](devices/fire-tv-stick-4k-gen1/CHANGELOG.md) |
 | Fire TV Stick 4K (2nd gen) | Fire OS 8 | No | Yes | [Log](devices/fire-tv-stick-4k-gen2/CHANGELOG.md) |
 
 Details, limits and a machine-readable list: [docs/SUPPORTED_DEVICES.md](docs/SUPPORTED_DEVICES.md) and [devices/devices.json](devices/devices.json). The Android app also carries Aerial's notes for many other TVs in [android/docs/devices/](android/docs/devices/).

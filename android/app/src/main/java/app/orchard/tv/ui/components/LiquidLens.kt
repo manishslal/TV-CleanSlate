@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.IntSize
 
 /**
  * Fork: Liquid Glass as iOS 26 draws it, on Android 13 and later (AGSL). Inside, the panel is the
- * frosted wallpaper as before, so text reads; toward the edge the sharp wallpaper takes over, bent
+ * frosted wallpaper with a little of the sharp one, so text reads and the picture still shows; toward the edge the sharp wallpaper takes over, bent
  * inward as a thick lens bends what lies behind its rim, with red and blue parting a little there
  * and light catching the top-left edge and, fainter, the bottom-right.
  *
@@ -34,7 +34,7 @@ object LiquidLens {
     @RequiresApi(33)
     fun shader(
         frost: ImageBitmap, sharp: ImageBitmap?, size: IntSize, radius: Float, openBottom: Boolean,
-        at: Offset, root: IntSize, light: Boolean, dp: Float, bandPx: Float = BAND_DP * dp, dock: Boolean = false,
+        at: Offset, root: IntSize, light: Boolean, dp: Float, bandPx: Float = BAND_DP * dp, dock: Boolean = false, tile: Boolean = false,
     ): Shader = RuntimeShader(SOURCE).apply {
         setInputShader("frost", BitmapShader(frost.asAndroidBitmap(), Shader.TileMode.CLAMP, Shader.TileMode.CLAMP))
         val image = sharp ?: frost
@@ -49,10 +49,15 @@ object LiquidLens {
         // color: through the same milk its bending hardly showed, and white light has nothing to
         // catch on white, so the rim also falls into shade behind the highlight.
         when {
+            // Fork: a Clear tile: most of the picture comes through, as on the dock.
+            tile && light -> { setFloatUniform("tintMix", 0.44f, 0.5f); setFloatUniform("rimMix", 0.44f, 0.56f) }
+            tile -> { setFloatUniform("tintMix", 0.6f, 0.02f); setFloatUniform("rimMix", 0.66f, 0.08f) }
             dock -> { setFloatUniform("tintMix", 0.8f, 0.118f); setFloatUniform("rimMix", 0.9f, 0.06f) }
-            light -> { setFloatUniform("tintMix", 0.3f, 0.675f); setFloatUniform("rimMix", 0.68f, 0.24f) }
-            else -> { setFloatUniform("tintMix", 0.48f, 0.055f); setFloatUniform("rimMix", 0.48f, 0.055f) }
+            light -> { setFloatUniform("tintMix", 0.42f, 0.56f); setFloatUniform("rimMix", 0.68f, 0.24f) }
+            else -> { setFloatUniform("tintMix", 0.46f, 0.03f); setFloatUniform("rimMix", 0.46f, 0.03f) }
         }
+        // Fork: some of the sharp picture reaches the middle, so what lies behind the glass still shows.
+        setFloatUniform("see", if (sharp != null) 0.3f else 0f)
         // Less on a small control, where a heavy shade reads as a bevel, not as glass.
         setFloatUniform("shade", if (light) 0.14f * (bandPx / (BAND_DP * dp)).coerceAtMost(1f).let { it * it } else 0f)
         setFloatUniform("band", bandPx)
@@ -76,6 +81,7 @@ uniform float2 rimMix;
 uniform float shade;
 uniform float band;
 uniform float dp;
+uniform float see;
 
 // Signed distance to a rounded rectangle centred on 0 with half-size b: negative inside.
 float box(float2 p, float2 b, float r) {
@@ -107,7 +113,7 @@ half4 main(float2 p) {
         sharp.eval(bent * sharpScale).g,
         sharp.eval((bent + n * split) * sharpScale).b
     );
-    half3 inner = frost.eval(root * frostScale).rgb;
+    half3 inner = mix(frost.eval(root * frostScale).rgb, sharp.eval(root * sharpScale).rgb, see);
     // The panel's tint in the middle, the rim's toward the edge.
     float r = smoothstep(0.0, 1.0, k) * 0.8;
     half3 col = mix(inner * tintMix.x + tintMix.y, rim * rimMix.x + rimMix.y, r);

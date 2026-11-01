@@ -16,6 +16,14 @@ Measured on the onn 4K Streaming Box (2 GB RAM, Android 14, 1080p UI), 2026-10-3
 
 Against Full, Efficient saves 86 MB at idle and 125 MB with a panel open. Full plays a film behind Home, so most of its cost is the film.
 
+## Shared plates and normal heap (v1.67-mh10)
+
+Custom mode, Home idle, three runs on 2026-10-31: 126, 130 and 134 MB, against 158 MB on 2026-10-30. Runs were a day apart, not side by side, so treat the 28 MB drop as approximate.
+
+Clear tiles (v1.67-mh11), three runs in Light: 131, 137 and 137 MB, about 4 MB above the same day's Dark Glass or Full Color runs.
+
+Clear tiles with Liquid Glass (v1.67-mh13 tuning), Onn, Android 14: 138 to 142 MB against about 118 MB for the build before it, typical frame during focus moves 38 ms against about 29 ms. Efficient mode turns it off.
+
 ## One setting at a time
 
 | Setting | Effect |

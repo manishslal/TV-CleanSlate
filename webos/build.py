@@ -38,8 +38,11 @@ pack = here / '../logos'
 out = here / 'logo'
 out.mkdir(exist_ok=True)
 logos = {}
+plates = {}
 for brand, m in json.loads((pack / 'manifest.json').read_text()).items():
     src = pack / m['file']
+    if not src.exists():
+        continue
     if src.suffix == '.svg':
         name = f'logo-{brand}.svg'
         (out / name).write_bytes(src.read_bytes())
@@ -48,10 +51,11 @@ for brand, m in json.loads((pack / 'manifest.json').read_text()).items():
         im = Image.open(src)
         im.thumbnail((504, 276), Image.LANCZOS)
         im.save(out / name, 'WEBP', quality=92, alpha_quality=100, method=6)
-    logos.update({i: name for i in m['webos']})
+    logos.update({i: name for i in m.get('webos', [])})
+    plates.update({i: [m.get('plate'), m.get('ink')] for i in m.get('webos', []) if m.get('plate')})
 
 s = (here / 'index.src.html').read_text()
-for name, data in (('__VIDEOS__', videos), ('__ICONS__', icons), ('__TOPICS__', topics), ('__LOGOS__', logos), ('__FROST__', json.loads((here / 'frost.json').read_text()))):
+for name, data in (('__VIDEOS__', videos), ('__ICONS__', icons), ('__TOPICS__', topics), ('__LOGOS__', logos), ('__PLATES__', plates), ('__FROST__', json.loads((here / 'frost.json').read_text()))):
     s = s.replace(name, json.dumps(data, separators=(',', ':')))
 (here / 'index.html').write_text(s)
 print(len(videos), 'videos', len(icons), 'icons', len(topics), 'topics', len(s), 'bytes')

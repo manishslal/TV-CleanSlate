@@ -62,10 +62,10 @@ import kotlin.math.roundToInt
  * The continuous outline is a baked mask (see SmoothCorners.kt); children are clipped to a plain
  * rounded rect, which holds it.
  */
-fun Modifier.liquidGlass(corner: Dp, bottomCorners: Boolean = true, band: Dp = 26.dp): Modifier = composed {
+fun Modifier.liquidGlass(corner: Dp, bottomCorners: Boolean = true, band: Dp = 26.dp, lightPanel: Boolean? = null, tile: Boolean = false): Modifier = composed {
     val (frost, under, swap) = rememberFrostSwap(Wallpapers.frosted.takeIf { Wallpapers.backdrop != null })
     // Fork: a light panel brightens the frosted picture instead of dimming it.
-    val light = LocalLightPanel.current
+    val light = lightPanel ?: LocalLightPanel.current
     val tint = if (light) LightPanelTint else PanelTint
     val plain = if (light) Palette.Light.Glass else Palette.Dark.Glass
     var at by remember { mutableStateOf(Offset.Zero) }
@@ -133,7 +133,7 @@ fun Modifier.liquidGlass(corner: Dp, bottomCorners: Boolean = true, band: Dp = 2
                                 drawRect(brush, alpha = t, colorFilter = tint, blendMode = BlendMode.SrcAtop)
                             } else if (lens) {
                                 // Fork: Liquid Glass: the lens shader brings its own rim and light.
-                                drawRect(ShaderBrush(LiquidLens.shader(frost, Wallpapers.backdrop, IntSize(w, h), radius, !bottomCorners, at, root, light, density, band.toPx())), blendMode = BlendMode.SrcIn)
+                                drawRect(ShaderBrush(LiquidLens.shader(frost, if (tile) null else Wallpapers.backdrop, IntSize(w, h), radius, !bottomCorners, at, root, light, density, band.toPx(), tile = tile)), blendMode = BlendMode.SrcIn)
                             } else {
                                 drawRect(brush, colorFilter = tint, blendMode = BlendMode.SrcIn)
                             }
@@ -256,7 +256,7 @@ private fun liteGlass(frost: ImageBitmap, light: Boolean): Color = synchronized(
             val c = small.getPixel(x, y)
             r += android.graphics.Color.red(c); g += android.graphics.Color.green(c); b += android.graphics.Color.blue(c)
         }
-        fun dim(sum: Float) = ((sum / 144f) * (if (light) 0.3f else 0.48f) + (if (light) 172f else 14f)).coerceIn(0f, 255f) / 255f
+        fun dim(sum: Float) = ((sum / 144f) * (if (light) 0.42f else 0.46f) + (if (light) 143f else 8f)).coerceIn(0f, 255f) / 255f
         Color(dim(r), dim(g), dim(b))
     }
 }
@@ -265,15 +265,15 @@ private val liteColors = HashMap<Pair<ImageBitmap, Boolean>, Color>()
 
 /** Fork: a light panel, the frosted picture faint under milky white, so dark text reads on night skies. */
 private val LightPanelTint = ColorFilter.colorMatrix(ColorMatrix(floatArrayOf(
-    0.3f, 0f, 0f, 0f, 172f,
-    0f, 0.3f, 0f, 0f, 172f,
-    0f, 0f, 0.3f, 0f, 176f,
+    0.42f, 0f, 0f, 0f, 143f,
+    0f, 0.42f, 0f, 0f, 143f,
+    0f, 0f, 0.42f, 0f, 146f,
     0f, 0f, 0f, 1f, 0f,
 )))
 
 private val PanelTint = ColorFilter.colorMatrix(ColorMatrix(floatArrayOf(
-    0.48f, 0f, 0f, 0f, 14f,
-    0f, 0.48f, 0f, 0f, 14f,
-    0f, 0f, 0.48f, 0f, 14f,
+    0.46f, 0f, 0f, 0f, 8f,
+    0f, 0.46f, 0f, 0f, 8f,
+    0f, 0f, 0.46f, 0f, 8f,
     0f, 0f, 0f, 1f, 0f,
 )))

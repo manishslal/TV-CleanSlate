@@ -110,6 +110,7 @@ import app.orchard.tv.ui.theme.Glyph
 import app.orchard.tv.ui.theme.GlyphIcon
 import app.orchard.tv.ui.theme.LocalReducedMotion
 import app.orchard.tv.ui.theme.Motion
+import app.orchard.tv.settings.WallpaperTint
 import app.orchard.tv.ui.theme.Palette
 import app.orchard.tv.ui.theme.Type
 import app.orchard.tv.weather.Weather
@@ -279,6 +280,17 @@ fun HomeBackground(
         val dim by animateFloatAsState(if (AerialSettings.darkNow) DARK_DIM else 0f, tween(400, easing = Motion.EaseInOut), label = "appearance-dim")
         if (dim > 0.005f) Canvas(Modifier.fillMaxSize()) {
             drawRect(Color.Black, alpha = dim * (1f - toSaver()))
+        }
+        // Fork: the owner's wash over a bright picture. The glass keeps its own frost.
+        val (washColor, washAlpha) = when (AerialSettings.wallpaperTint) {
+            WallpaperTint.Off -> Color.Black to 0f
+            WallpaperTint.Dim -> Color.Black to 0.28f
+            WallpaperTint.Warm -> Palette.Orange to 0.14f
+            WallpaperTint.Cool -> Palette.Blue to 0.14f
+        }
+        val wash by animateFloatAsState(washAlpha, tween(400, easing = Motion.EaseInOut), label = "wallpaper-tint")
+        if (wash > 0.005f) Canvas(Modifier.fillMaxSize()) {
+            drawRect(washColor, alpha = wash * (1f - toSaver()))
         }
     }
 }
@@ -889,7 +901,7 @@ fun StatusPill(
                 NetKind.Ethernet -> Glyph.Ethernet
                 NetKind.Offline -> Glyph.Offline
             }
-            GlyphIcon(glyph, fg, 17.dp, level = network.level)
+            GlyphIcon(glyph, fg, 22.dp, level = network.level)
             if (network.vpn) VpnBadge(fg)
             if (showTime) {
                 FlipText(timeText(now), style = Type.Headline.copy(color = fg))

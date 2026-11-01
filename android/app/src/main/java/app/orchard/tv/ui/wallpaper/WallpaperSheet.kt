@@ -101,8 +101,10 @@ import app.orchard.tv.settings.ClockStyle
 import android.content.res.Configuration
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.Role
+import app.orchard.tv.settings.FocusGlow
 import app.orchard.tv.settings.FocusStyle
 import app.orchard.tv.settings.TileStyle
+import app.orchard.tv.settings.WallpaperTint
 import app.orchard.tv.settings.UiSounds
 import app.orchard.tv.settings.Effects
 import app.orchard.tv.system.Sounds
@@ -325,7 +327,8 @@ private fun LayoutPage() {
             AerialSettings.HOME_COLUMNS.map { it to it.toString() },
             AerialSettings.homeColumns, AerialSettings::chooseHomeColumns,
         )
-        SwitchRow(R.string.fk_label_plate, stringResource(R.string.st_plate_hint), AerialSettings.homePlate, AerialSettings::chooseHomePlate)
+        // Clear tiles are glass already.
+        if (AerialSettings.tileStyle != TileStyle.Clear) SwitchRow(R.string.fk_label_plate, stringResource(R.string.st_plate_hint), AerialSettings.homePlate, AerialSettings::chooseHomePlate)
         // Two rows show the second row whole; only one row has a peek to hide.
         if (AerialSettings.oneRowHome) SwitchRow(R.string.fk_label_peek, stringResource(R.string.st_peek_hint), AerialSettings.peekNextRow, AerialSettings::choosePeekNextRow)
     }
@@ -348,7 +351,7 @@ private fun AppearancePage() {
         )
         ValueRow(
             R.string.fk_label_tile_style, stringResource(R.string.fk_tile_style_hint),
-            listOf(TileStyle.System to R.string.fk_tiles_system, TileStyle.Glass to R.string.fk_tiles_glass, TileStyle.Full to R.string.fk_tiles_full),
+            listOf(TileStyle.System to R.string.fk_tiles_system, TileStyle.Clear to R.string.fk_tiles_clear, TileStyle.Glass to R.string.fk_tiles_glass, TileStyle.Full to R.string.fk_tiles_full),
             AerialSettings.tileStyle, AerialSettings::chooseTileStyle,
         )
         // Fork: only where the TV can draw Liquid Glass (Android 13 and later).
@@ -359,9 +362,23 @@ private fun AppearancePage() {
         )
         ValueRow(
             R.string.st_focus_style,
-            stringResource(if (AerialSettings.focusStyle == FocusStyle.HighContrast) R.string.st_focus_high_hint else R.string.st_focus_standard_hint),
-            listOf(FocusStyle.HighContrast to R.string.st_focus_high, FocusStyle.Standard to R.string.st_focus_standard),
+            stringResource(when (AerialSettings.focusStyle) {
+                FocusStyle.HighContrast -> R.string.st_focus_high_hint
+                FocusStyle.Standard -> R.string.st_focus_standard_hint
+                FocusStyle.Invert -> R.string.st_focus_invert_hint
+            }),
+            listOf(FocusStyle.HighContrast to R.string.st_focus_high, FocusStyle.Standard to R.string.st_focus_standard, FocusStyle.Invert to R.string.st_focus_invert),
             AerialSettings.focusStyle, AerialSettings::chooseFocusStyle,
+        )
+        ValueRow(
+            R.string.fk_focus_glow, stringResource(R.string.fk_focus_glow_hint),
+            listOf(FocusGlow.Small to R.string.fk_size_small, FocusGlow.Medium to R.string.fk_size_medium, FocusGlow.Large to R.string.fk_size_large),
+            AerialSettings.focusGlow, AerialSettings::chooseFocusGlow,
+        )
+        ValueRow(
+            R.string.fk_wallpaper_tint, stringResource(R.string.fk_wallpaper_tint_hint),
+            listOf(WallpaperTint.Off to R.string.st_off, WallpaperTint.Dim to R.string.fk_tint_dim, WallpaperTint.Warm to R.string.fk_tint_warm, WallpaperTint.Cool to R.string.fk_tint_cool),
+            AerialSettings.wallpaperTint, AerialSettings::chooseWallpaperTint,
         )
     }
     Group(R.string.fk_sec_motion) {
@@ -370,15 +387,6 @@ private fun AppearancePage() {
             stringResource(if (AerialSettings.uiSounds == UiSounds.Tv) R.string.st_sounds_tv_hint else R.string.st_sounds_hint),
             listOf(UiSounds.Tv to R.string.st_sounds_tv, UiSounds.Aerial to R.string.st_sounds_aerial, UiSounds.Off to R.string.st_off),
             AerialSettings.uiSounds, { AerialSettings.chooseUiSounds(it); Sounds.prepare() },
-        )
-        ValueRow(
-            R.string.st_effects,
-            stringResource(
-                if (AerialSettings.effects == Effects.Auto && AerialSettings.lowEnd) R.string.st_effects_auto_lite_hint
-                else R.string.st_effects_hint,
-            ),
-            listOf(Effects.Auto to R.string.st_effects_auto, Effects.Full to R.string.st_effects_full, Effects.Lite to R.string.st_effects_lite),
-            AerialSettings.effects, AerialSettings::chooseEffects,
         )
     }
 }
@@ -400,7 +408,7 @@ private fun ClockPage() {
         )
         ValueRow(
             R.string.ss_kind, stringResource(R.string.fk_flip_hint),
-            listOf(ClockStyle.Cards to R.string.fk_flip_cards, ClockStyle.Flip to R.string.fk_flip_on, ClockStyle.Plain to R.string.fk_flip_off),
+            listOf(ClockStyle.Cards to R.string.fk_flip_cards, ClockStyle.Plain to R.string.fk_flip_off),
             AerialSettings.clockStyle, AerialSettings::chooseClockStyle,
         )
         ValueRow(
@@ -810,7 +818,7 @@ private fun SwitchRow(key: Any, label: String, hint: String?, on: Boolean, choos
 }
 
 /** The knob on a filled track: the track's opposite. */
-private fun knobOn(track: Color) = if (track.luminance() > 0.5f) Color(0xFF1D1D1F) else Color.White
+private fun knobOn(track: Color) = if (track.luminance() > 0.5f) Palette.Dark.OnFocus else Color.White
 
 /** Up to four choices, or a list for more. */
 @Composable
@@ -965,7 +973,7 @@ private fun PlaceRow(place: Weather.Place, onClick: () -> Unit) {
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             BasicText(place.name, style = Type.Body.copy(color = fg))
-            BasicText(place.detail, style = Type.Callout.copy(color = fg.copy(alpha = 0.6f)), maxLines = 1)
+            BasicText(place.detail, style = Type.Callout.copy(color = fg.copy(alpha = 0.72f)), maxLines = 1)
         }
     }
 }

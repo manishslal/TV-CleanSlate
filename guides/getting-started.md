@@ -57,9 +57,33 @@ Move up to the Wi-Fi button at the top right and press OK to open Control Center
 
 ## 6. Optional: clean up the TV
 
+## Home on Fire TV
+
+Fire OS keeps the Home button for Amazon, and the HOME role has no effect. `tools/install.sh` detects Fire OS 6 and installs the guard build with `FireKeeper`. It needs `BUILD=1`.
+
+- Fire OS 6 never binds a third-party accessibility service, so Home Guard can't run there. `FireKeeper` reads usage stats and moves Home's task to the front.
+- Amazon's launcher stays enabled. Disabling it can leave a stick with no home screen.
+- Hold Home for Amazon's quick menu. Home's Amazon tile and Settings pause `FireKeeper` until the next Home press or app.
+- After a reboot, the notification listener starts Home before Amazon's launcher. On a Fire TV Stick 4K (1st gen), Amazon's home shows for about a second. Don't rely on `BOOT_COMPLETED`, which can take 2 minutes there.
+- Home's screensaver replaces Amazon's. The setup sets it as the system screensaver, and `FireKeeper` restores it if Fire OS changes it.
+- After a Fire OS update, run `TV=<tv-ip> tools/fire-reapply.sh`. It restores the debloat, privacy settings, permissions and screensaver. Home's menu shows a reminder until you run it. Add `check` to report without changing anything.
+- Before installing, run `TV=<tv-ip> tools/logo-audit.sh`. It lists apps with no logo, usually because the platform uses a different package ID.
+
+Fire OS 7 and 8 use Home Guard, but this project hasn't tested Home on them.
+
 Debloating is separate from Home. Follow the [Android and Google TV guide](debloat-android-google-tv.md), or the [Fire TV guide](debloat-fire-tv.md), one small batch at a time.
 
-## 7. Turn off network debugging
+## 7. Optional: disable the stock launcher on Google TV
+
+This is where most of the memory saving comes from.
+
+```bash
+scripts/04-disable-stock-launcher.sh <tv-ip> io.manish.home/app.orchard.tv.MainActivity
+```
+
+The script stops if your Wi-Fi depends on the setup wizard, and undoes the change if Android won't accept your Home. Reboot afterwards, then check Home, Settings, Wi-Fi and the remote. On some devices the YouTube button on the remote may stop working.
+
+## 8. Turn off network debugging
 
 Do this in Developer options when you finish.
 

@@ -122,6 +122,8 @@ object AppCatalog {
      * declares a standard app category, so they are listed by package, each checked on its TV.
      */
     private val SYSTEM_TILES = mapOf(
+        // Fork: Android TV's own; its gear breaks apart in one ink.
+        "com.android.tv.settings" to SystemTile.Settings,
         // Xiaomi MiTV-MFTR0
         "com.xiaomi.mitv.settings" to SystemTile.Settings,
         "com.mitv.gallery" to SystemTile.Photos,
@@ -235,6 +237,8 @@ object AppCatalog {
         }
         if (skyworthHomes) found.remove("com.example.android.home")
         found.remove(context.packageName)
+        // Fork: Amazon's stubs and plumbing, which Amazon's own home never shows as apps.
+        if (android.os.Build.MANUFACTURER == "Amazon") found.keys.removeAll(FIRE_UNLISTED)
 
         val byCategory = HashMap<String, SystemTile>()
         for ((category, tile) in SYSTEM_CATEGORIES) {
@@ -326,6 +330,25 @@ object AppCatalog {
             .map { it.activityInfo }
     }
 
+    private val FIRE_UNLISTED = setOf(
+        "com.amazon.bueller.music",
+        "com.amazon.bueller.photos",
+        "com.amazon.cloud9",
+        "com.amazon.ftv.profilepicker",
+        "com.amazon.ftv.screensaver",
+        "com.amazon.gamehub",
+        "com.amazon.hedwig",
+        "com.amazon.imdb.tv.android.app",
+        "com.amazon.minitv.android.app",
+        "com.amazon.shoptv.firetv.client",
+        "com.amazon.ssm",
+        "com.amazon.tahoe",
+        "com.amazon.vizzini.ftvcds",
+        "com.android.documentsui",
+        "com.android.providers.downloads.ui",
+        "com.imdb.livingroom.firetv",
+    )
+
     /**
      * loadIcon and loadBanner pick the density bucket of the screen: a 96 px icon at 320 dpi, 72 px
      * at TCL's 240 dpi, stretched to a 198 px tile it looks soft (Xiaomi MiTV4-ANSM0, issue #17).
@@ -351,37 +374,23 @@ object AppCatalog {
             res.getDrawableForDensity(id, android.util.DisplayMetrics.DENSITY_XXXHIGH, null)
         }.getOrNull()
         val label = ai.loadLabel(pm).toString().trim().ifEmpty { pi.packageName }
-        val bannerId = ai.banner.takeIf { it != 0 } ?: pi.activities?.firstOrNull { it.bannerResource != 0 }?.bannerResource ?: 0
-        val banner = drawable(bannerId)?.takeIf { it.intrinsicWidth >= it.intrinsicHeight * 4 / 3 }
         val recipe = TileRecipes.of(pi.packageName)
         val drawn = recipe?.glyph?.let { TileArtFactory.glyphTile(recipe.top ?: 0, recipe.bottom ?: 0, it) }
-        val art = drawn ?: if (banner != null && recipe?.useIcon != true && !TileArtFactory.dark) TileArtFactory.fromBanner(banner)
-            else TileArtFactory.fromIcon(drawable(ai.icon) ?: return null, recipe)
+        val art = drawn ?: TileArtFactory.fromIcon(drawable(ai.icon) ?: return null, recipe)
         label to art
     }.getOrNull()
 
-    /**
-     * The app's banner. Banner first: it is the artwork the app designed for a TV. ActivityInfo
-     * falls back to the application's banner by itself. A "banner" that is not wide is the app's
-     * square icon declared again (遥遥电视助手 on Xiaomi MiTV-MFTR0); covering the tile with it
-     * blows the logo up past the edges.
-     */
-    private fun banner(pm: PackageManager, info: ActivityInfo, leanback: Boolean): android.graphics.drawable.Drawable? =
-        (if (leanback) densest(pm, info, info.bannerResource) ?: runCatching { info.loadBanner(pm) }.getOrNull() else null)
-            ?.takeIf { it.intrinsicWidth >= it.intrinsicHeight * 4 / 3 }
-
-    /** The tile drawn from the app's own art: its recipe's glyph, its banner, or its icon. */
-    private fun fromApp(pm: PackageManager, info: ActivityInfo, banner: android.graphics.drawable.Drawable?, recipe: TileRecipe?): TileArt {
+    /** The tile drawn from the app's own art: its recipe's glyph or its icon. */
+    private fun fromApp(pm: PackageManager, info: ActivityInfo, recipe: TileRecipe?): TileArt {
         // Fork: real artwork from the logo pack comes before anything processed from the icon.
-        val logo = if (TileArtFactory.dark) LogoPack.load(info.packageName) else null
+        val logo = LogoPack.load(info.packageName)
         if (logo != null) return TileArtFactory.fromLogo(logo, densest(pm, info, info.iconResource) ?: info.loadIcon(pm))
-        return drawnFromApp(pm, info, banner, recipe)
+        return drawnFromApp(pm, info, recipe)
     }
 
-    private fun drawnFromApp(pm: PackageManager, info: ActivityInfo, banner: android.graphics.drawable.Drawable?, recipe: TileRecipe?): TileArt = when {
+    private fun drawnFromApp(pm: PackageManager, info: ActivityInfo, recipe: TileRecipe?): TileArt = when {
         recipe?.glyph != null -> TileArtFactory.glyphTile(recipe.top ?: 0, recipe.bottom ?: 0, recipe.glyph)
-        // Fork: dark tiles take the logo from the icon, which can go on in white; a banner is a picture.
-        banner != null && recipe?.useIcon != true && !TileArtFactory.dark -> TileArtFactory.fromBanner(banner)
+        // Fork: every style draws the logo from the icon at one size. A banner is a picture of its own size.
         else -> TileArtFactory.fromIcon(densest(pm, info, info.iconResource) ?: info.loadIcon(pm), recipe)
     }
 
@@ -393,7 +402,7 @@ object AppCatalog {
         val pm = context.packageManager
         val info = pm.getActivityInfo(entry.component, 0)
         LogoPack.use(context)
-        fromApp(pm, info, banner(pm, info, entry.leanback), TileRecipes.of(entry.packageName))
+        fromApp(pm, info, TileRecipes.of(entry.packageName))
     }.getOrNull()
 
     private fun entry(
@@ -404,7 +413,7 @@ object AppCatalog {
         // A picture chosen on the phone page changes the tile as much as an update does.
         // Drawn as the stock launcher or not is part of it too: the same package can be either.
         val stamp = runCatching { pm.getPackageInfo(pkg, 0).lastUpdateTime }.getOrDefault(0L) + CustomIcons.stamp(pkg) +
-            IconLibrary.stamp(pkg) + (if (stockHome) 1 else 0) + (if (TileArtFactory.dark) 2 else 0)
+            (if (stockHome) 1 else 0) + (if (TileArtFactory.dark) 2 else 0) + (if (TileArtFactory.clear) 4 else 0) + (if (TileArtFactory.clearLight) 8 else 0) + (if (TileArtFactory.clearLens) 16 else 0)
         val system = (info.applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
         val inMemory = synchronized(cache) { cache[pkg] }?.takeIf { it.stamp == stamp && it.width == TileArtFactory.W }
         if (inMemory == null && later) {
@@ -423,15 +432,11 @@ object AppCatalog {
             art = cached.art
         } else {
             label = runCatching { info.loadLabel(pm).toString().trim() }.getOrDefault("").ifEmpty { pkg }
-            val banner = banner(pm, info, leanback)
             // A launcher declared only as a Home has an icon for phones at best (TCL's cyberui: the
             // default robot), so it is drawn as Aerial's own.
             val own = if (stockHome) SystemTile.Home
-                else if (system) SYSTEM_TILES[pkg] ?: byCategory[pkg]?.takeIf { banner == null } else null
+                else if (system) SYSTEM_TILES[pkg] ?: byCategory[pkg]?.takeIf { !leanback || info.bannerResource == 0 } else null
             val custom = CustomIcons.load(pkg)
-            // Aerial's own tiles for the firmware's apps keep their look; any other app's
-            // ready-made picture comes before what Aerial would draw from its banner or icon.
-            val library = if (custom == null && (own == null || IconLibrary.pick(pkg) == IconLibrary.Pick.Library)) IconLibrary.load(pkg) else null
             val recipe = TileRecipes.of(pkg)
             // A tile that cannot be drawn used to drop the app from Home altogether, without a word
             // in the log (com.fongmi.androidtv on TCL MT5879, issue #415). Its icon then, or
@@ -439,9 +444,8 @@ object AppCatalog {
             art = runCatching {
                 when {
                     custom != null -> TileArtFactory.fromBanner(android.graphics.drawable.BitmapDrawable(android.content.res.Resources.getSystem(), custom))
-                    library != null -> TileArtFactory.fromBanner(android.graphics.drawable.BitmapDrawable(android.content.res.Resources.getSystem(), library))
                     own != null -> TileArtFactory.forSystem(own)
-                    else -> fromApp(pm, info, banner, recipe)
+                    else -> fromApp(pm, info, recipe)
                 }
             }.recoverCatching {
                 Log.w(TAG, "could not draw the tile of $pkg; using its icon", it)

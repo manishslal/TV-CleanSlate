@@ -20,6 +20,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import app.orchard.tv.BuildConfig
 import app.orchard.tv.R
+import app.orchard.tv.guard.FireKeeper
 import app.orchard.tv.guard.HomeGuardService
 
 enum class NetKind { Wifi, Ethernet, Offline }
@@ -177,7 +178,7 @@ object SystemProbe {
         )?.activityInfo?.packageName
         return when {
             resolved == context.packageName -> HomeStatus.Default
-            HomeGuardService.isRunning -> HomeStatus.Guarded
+            HomeGuardService.isRunning || FireKeeper.isRunning -> HomeStatus.Guarded
             else -> HomeStatus.NotDefault
         }
     }

@@ -14,14 +14,11 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"
         tools:ignore="CoarseFineLocation" />
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
-    <!-- Installing a new version from Control Center (update/Updates.kt). On TVs without the
-         "install unknown apps" page (TCL) tools/install.sh allows it over ADB. -->
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-    <!-- Some Android 5/6 TV firmwares deny even their app-specific external cache without these.
-         Requested at runtime on Android 6 only when the update directory is not writable (#592). -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="23" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="23" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Fork: FireKeeper moves Home's task to the front on Fire OS 6. -->
+    <uses-permission android:name="android.permission.REORDER_TASKS" android:maxSdkVersion="25" />
+    <uses-permission android:name="android.permission.READ_LOGS" android:maxSdkVersion="25"
+        tools:ignore="ProtectedPermissions" />
     <!-- Both granted only over ADB by tools/install.sh, never requested in the app:
          - WRITE_SECURE_SETTINGS lets Aerial turn Home Guard back on after firmwares that
            force-stop third-party apps on standby (Xiaomi) have switched it off.
@@ -68,7 +65,8 @@
     </queries>
 
     <!-- largeHeap: up to Android 7 bitmaps live on the Java heap, and LeTV X3-55 Pro (Android 5.0.1)
-         ran out of it drawing Home (issue #328). -->
+         ran out of it drawing Home (issue #328). From Android 8 they live outside it, so
+         Home keeps the normal heap there (res/values-v26). -->
     <application
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
@@ -77,7 +75,7 @@
         android:allowBackup="false"
         android:supportsRtl="true"
         android:hardwareAccelerated="true"
-        android:largeHeap="true"
+        android:largeHeap="@bool/large_heap"
         android:networkSecurityConfig="@xml/network_security_config">
 
         <!-- The HOME intent filter is added by the "standard" flavor (src/standard).
@@ -108,16 +106,6 @@
             </intent-filter>
         </activity>
 
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.files"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/update_files" />
-        </provider>
-
         <receiver
             android:name=".guard.BootReceiver"
             android:directBootAware="true"
@@ -138,10 +126,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </service>
-
-        <receiver
-            android:name=".update.UpdateResult"
-            android:exported="false" />
 
         <receiver
             android:name=".guard.ConfigReceiver"
@@ -185,6 +169,7 @@
                 android:resource="@xml/revival_account" />
         </service>
 
+        <service android:name=".guard.FireKeeper" android:directBootAware="true" android:exported="false" />
         <service
             android:name=".guard.HomeGuardService"
             android:directBootAware="true"

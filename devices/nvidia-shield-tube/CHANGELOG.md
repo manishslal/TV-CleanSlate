@@ -66,3 +66,13 @@ All with `pm disable-user --user 0`. Undo one with `adb shell pm enable <package
 - Temperatures: CPU 73 °C, GPU 71 °C, thermal status 0 (no throttling).
 - TiviMate used about one core out of four in a background job with Home in front, for at least 20 seconds of sampling. Likely a playlist or guide refresh, not confirmed.
 - System log: repeated `system_server_wtf` entries from 16:18 to 16:21, mostly JobScheduler "Can't cancel all jobs for system uid", plus firmware noise. The timing overlaps the cleanup. No visible effect.
+
+### 5. Home 1.67-mh11 installed (2026-10-31)
+- Installed while asleep, so the LG input did not change. Home Guard bound. Exported Dark tile sheet looks right. Not checked on screen.
+- Undo: reinstall an earlier build.
+
+### 6. Home 1.67-mh12 installed (2026-10-31)
+- Installed while asleep. Not checked on screen.
+
+### 7. Home 1.67-mh15 installed (2026-10-31)
+- Installed while asleep. Not checked on screen. Clear uses frosted glass here: Liquid Glass needs Android 13.

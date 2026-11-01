@@ -38,6 +38,9 @@ class BootReceiver : BroadcastReceiver() {
 
     private fun onBoot(context: Context, action: String) {
         GuardSetup.ensureEnabled(context)
+        // Fork: on the first of the two broadcasts. BOOT_COMPLETED can come 2 minutes later on a
+        // Fire TV Stick 4K, and there is no lock screen to wait for.
+        FireKeeper.start(context)
         if (action == Intent.ACTION_LOCKED_BOOT_COMPLETED) return
         GuardSetup.rescanIfMissing(context)
         // Also when Aerial is the default Home: some firmwares start their own launcher at boot

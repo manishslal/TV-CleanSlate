@@ -60,7 +60,7 @@ class TileArt(
 
 /** Firmware apps Aerial draws its own tile for, each in the color that tells the kind apart. */
 enum class SystemTile(top: Long, bottom: Long, val glyph: Glyph) {
-    Settings(0xFF8E8E93, 0xFF48484A, Glyph.Gear),
+    Settings(0xFF636366, 0xFF2C2C2E, Glyph.Gear),
     Photos(0xFFFFB340, 0xFFFF5E3A, Glyph.Photo),
     Media(0xFF3A3A3C, 0xFF111113, Glyph.Play),
     Store(0xFF40B0FF, 0xFF0A5FD8, Glyph.Bag),
@@ -118,7 +118,22 @@ object TileArtFactory {
      * Fork: every plate Aerial draws is dark glass instead of the app's color, and apps with a
      * banner are drawn from their icon so the logo can go on in white (AerialSettings.darkTiles).
      */
-    @Volatile var dark = true
+    var dark: Boolean
+        get() = shaping.get() ?: chosenDark
+        set(value) { chosenDark = value }
+    @Volatile private var chosenDark = true
+
+    /** Set while a Color tile takes its logo from the dark pipeline, on this thread only. */
+    private val shaping = ThreadLocal<Boolean?>()
+
+    /** Fork: tiles of clear glass, logo in the middle: the dark pipeline's logo on a plate that shows what is behind it. */
+    @Volatile var clear = false
+
+    /** Clear tiles on light panels: a brighter plate, and dark ink for a light logo. */
+    @Volatile var clearLight = false
+
+    /** Clear tiles with a real lens under them: their plate is only a veil over it. */
+    @Volatile var clearLens = false
     private const val DARK_TOP = 0xFF2C2C2E.toInt()
 
     // Fork: logo lightness (0 to 1) below which a dark tile drops it ([knockOutDark]), and above which it keeps it whole.
@@ -127,11 +142,11 @@ object TileArtFactory {
     private const val DARK_BOTTOM = 0xFF141416.toInt()
 
     /** How large a logo is, as the side of the square of the same area, in tile heights. */
-    private const val LOGO = 0.5f
+    private const val LOGO = 0.63f
 
     // Fork: the LG's 176 x 84 box and 8000 area on its 252 x 142 tile ([fromLogo]).
     private const val LOGO_MAX_W = 176f / 252f
-    private const val LOGO_MAX_H = 84f / 142f
+    private const val LOGO_MAX_H = 0.5f
     private const val LOGO_AREA = 8000f / (252f * 142f)
 
     /** The resolution an icon is sampled at to find its logo. */
@@ -206,8 +221,8 @@ object TileArtFactory {
             }
             return finish(colorTile(top, bottom), fore)
         }
-        val back = colorTile(top, bottom)
-        Canvas(back).apply {
+        // Fork: on its own layer, so the mark and its name take the style's ink as a logo does.
+        val fore = layer {
             val two = sub != null
             // Every mark in the same square box, as Aerial's glyphs: Material's own 960-unit box,
             // whose y runs from -960 to 0, or a logo's 24-unit box inset by Material's margin.
@@ -238,7 +253,7 @@ object TileArtFactory {
                 drawText(sub, W / 2f, H * 0.85f, small)
             }
         }
-        return finish(back, null)
+        return finish(colorTile(top, bottom), fore)
     }
 
     /**
@@ -275,6 +290,12 @@ object TileArtFactory {
      * one white glyph.
      */
     private fun androidx.compose.ui.graphics.drawscope.DrawScope.paintGlyph(glyph: Glyph, color: Color, shadow: Boolean) {
+        if (glyph == Glyph.Gear) {
+            // Fork: Android's Settings mark: the gear with a lit hub.
+            drawGlyph(glyph, color)
+            if (!shadow) drawCircle(Color(0xFF8FE3D9), size.minDimension * 0.078f)
+            return
+        }
         if (glyph != Glyph.CloudSun) return drawGlyph(glyph, color)
         val g = size.minDimension
         drawContext.transform.translate(-g * 0.14f, -g * 0.15f)
@@ -316,7 +337,12 @@ object TileArtFactory {
     }
 
     /** Aerial's own tile color: a diagonal gradient with soft light from the top left. */
-    private fun colorTile(top: Int, bottom: Int): Bitmap = layer {
+    private fun colorTile(top: Int, bottom: Int): Bitmap = plates.getOrPut(Triple(top, bottom, W to dark)) { drawColorTile(top, bottom) }
+
+    /** Fork: most tiles share a plate, so they share its bitmap (about 280 KB each). Never recycled. */
+    private val plates = java.util.concurrent.ConcurrentHashMap<Triple<Int, Int, Pair<Int, Boolean>>, Bitmap>()
+
+    private fun drawColorTile(top: Int, bottom: Int): Bitmap = layer {
         val (a, b) = if (dark) DARK_TOP to DARK_BOTTOM else top to bottom
         drawRect(0f, 0f, W.toFloat(), H.toFloat(), Paint().apply {
             shader = LinearGradient(0f, 0f, W * 0.4f, H.toFloat(), a, b, Shader.TileMode.CLAMP)
@@ -326,7 +352,48 @@ object TileArtFactory {
         })
     }
 
+    /**
+     * Every style shows one logo: the dark pipeline's, at one size. Color puts it on the plate
+     * the app's own colors give. An icon drawn whole on its plate stays as it is.
+     */
     fun fromIcon(icon: Drawable, recipe: TileRecipe? = null): TileArt {
+        if (dark) return drawIcon(icon, recipe)
+        val color = drawIcon(icon, recipe)
+        if (color.fore == null) return color
+        shaping.set(true)
+        val shaped = try { drawIcon(icon, recipe) } finally { shaping.remove() }
+        if (shaped.fore == null) return color
+        val back = if (recipe?.keepColors == true) color.back else readable(color.back)
+        return TileArt(back, shaped.fore, shaped.foreAt, color.tint, color.backdrop)
+    }
+
+    /** Fork: halves down to under twice [width]. One big shrink skips pixels and leaves jagged edges. */
+    private fun shrunk(logo: Bitmap, width: Float): Bitmap {
+        var out = logo
+        while (out.width >= width * 2f) {
+            val next = Bitmap.createScaledBitmap(out, out.width / 2, (out.height / 2).coerceAtLeast(1), true)
+            if (out !== logo) out.recycle()
+            out = next
+        }
+        return out
+    }
+
+    /** Fork: a plate too light for a white logo is deepened until the logo reaches 4.5:1. Hue stays. */
+    private fun readable(back: androidx.compose.ui.graphics.ImageBitmap): androidx.compose.ui.graphics.ImageBitmap {
+        val src = back.asAndroidBitmap()
+        // The brightest of the plate, which is its lit top-left corner.
+        val l = listOf(1 to 1, 2 to 1, 1 to 2, 2 to 2).maxOf { (x, y) ->
+            androidx.core.graphics.ColorUtils.calculateLuminance(src.getPixel(src.width * x / 8, src.height * y / 8)).toFloat()
+        }
+        val most = 1.05f / 4.5f - 0.05f
+        if (l <= most) return back
+        val out = src.copy(Bitmap.Config.ARGB_8888, true)
+        val alpha = 1f - kotlin.math.exp(kotlin.math.ln(most / l) / 2.2f)
+        Canvas(out).drawColor(android.graphics.Color.argb((alpha * 255).roundToInt(), 0, 0, 0))
+        return out.asImageBitmap()
+    }
+
+    private fun drawIcon(icon: Drawable, recipe: TileRecipe?): TileArt {
         val art = if (recipe?.top == null && Build.VERSION.SDK_INT >= 26 && icon is AdaptiveIconDrawable && icon.foreground != null) adaptive(icon) else null
         val made = art ?: plate(icon, recipe) ?: legacy(icon, recipe)
         // Fork: a dark tile is grey whatever the app, so its tint is taken from the icon as drawn
@@ -335,23 +402,29 @@ object TileArtFactory {
     }
 
     /**
-     * Fork: a logo from the pack on a dark tile. Every
-     * logo covers the same area, inside a box 70% of the tile's width and 59% of its height, so
-     * wide and square logos carry the same weight. Fully kept: it is real artwork, not an icon's
-     * plate to strip. [icon] gives only the brand color behind the grid.
+     * Fork: a logo from the pack. It sits in the same place at the same size on every tile style,
+     * so only colors change between Dark and Color: a dark plate, or the brand's plate
+     * with the logo in the brand's ink. Every logo covers the same area, inside a box 70% of the
+     * tile's width and 59% of its height, so wide and square logos carry the same weight. Fully
+     * kept: it is real artwork, not an icon's plate to strip. [icon] gives only the brand color
+     * behind the grid.
      */
-    fun fromLogo(logo: Bitmap, icon: Drawable): TileArt {
+    fun fromLogo(pack: LogoPack.Logo, icon: Drawable): TileArt {
+        val logo = pack.bitmap
         val ratio = logo.width.toFloat() / logo.height
-        val tall = minOf(H * LOGO_MAX_H, kotlin.math.sqrt(W * H * LOGO_AREA / ratio))
-        val wide = minOf(W * LOGO_MAX_W, tall * ratio)
+        val tall = minOf(H * LOGO_MAX_H * pack.size, kotlin.math.sqrt(W * H * LOGO_AREA / ratio) * pack.size)
+        val wide = minOf(W * LOGO_MAX_W * maxOf(1f, kotlin.math.sqrt(pack.size)), tall * ratio)
         val high = wide / ratio
         val left = (W - wide) / 2f
         val top = (H - high) / 2f
         val fore = layer {
-            drawBitmap(logo, null, RectF(left, top, left + wide, top + high), Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG))
+            drawBitmap(shrunk(logo, wide), null, RectF(left, top, left + wide, top + high), Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG).apply {
+                if (!dark) pack.ink?.let { colorFilter = android.graphics.PorterDuffColorFilter(it, android.graphics.PorterDuff.Mode.SRC_IN) }
+            })
         }
         logo.recycle()
-        return finish(colorTile(GRAPHITE_BOTTOM, GRAPHITE_BOTTOM), fore, keepDark = true).withTint(Color(brandTint(icon)))
+        val plate = pack.plate.takeUnless { dark } ?: GRAPHITE_BOTTOM
+        return finish(colorTile(plate, plate), fore, keepDark = true).withTint(Color(brandTint(icon)))
     }
 
     /** Fork: the icon's own color, saturated parts weighing most; transparent for a grey or black-and-white icon. */
@@ -374,6 +447,13 @@ object TileArtFactory {
      */
     @RequiresApi(26)
     private fun adaptive(icon: AdaptiveIconDrawable): TileArt? {
+        // Fork: the app's own one-color logo, where it ships one, is cleaner than anything cut from its icon.
+        if (dark && Build.VERSION.SDK_INT >= 33) icon.monochrome?.let { mono ->
+            placeLogo(mono, ::visible)?.let { (fore, _) ->
+                whiten(fore)
+                return finish(colorTile(GRAPHITE_BOTTOM, GRAPHITE_BOTTOM), fore)
+            }
+        }
         val logo = visible(raster(icon.foreground, SAMPLE), SAMPLE) ?: return null
         // A logo inside the 66-unit safe zone of the 108-unit layer spans at most about 0.61.
         if (max(logo.width(), logo.height()) > 0.7f) return null
@@ -798,7 +878,7 @@ object TileArtFactory {
      */
     private fun iconOnTile(logo: RectF, scale: Float = 1f): RectF {
         val aspect = logo.width() / logo.height()
-        val h = minOf(scale * LOGO * H / kotlin.math.sqrt(aspect), 0.66f * H, 0.62f * W / aspect)
+        val h = minOf(scale * LOGO * H / kotlin.math.sqrt(aspect), LOGO_MAX_H * H, LOGO_MAX_W * W / aspect)
         val box = h / logo.height()
         val left = W / 2f - box * logo.centerX()
         val top = H / 2f - box * logo.centerY()
@@ -830,9 +910,12 @@ object TileArtFactory {
     private fun placeLogo(d: Drawable, find: (IntArray, Int) -> RectF?, round: Boolean = false, scale: Float = 1f): Pair<Bitmap, RectF>? {
         val first = find(raster(d, SAMPLE), SAMPLE) ?: return null
         val size = iconOnTile(first, scale).width().roundToInt().coerceIn(16, 4 * H)
-        val icon = createBitmap(size, size)
-        d.setBounds(0, 0, size, size)
-        d.draw(Canvas(icon))
+        // Fork: drawn at twice the size and halved, so its edges come out smooth at any source size.
+        val large = createBitmap(size * 2, size * 2)
+        d.setBounds(0, 0, size * 2, size * 2)
+        d.draw(Canvas(large))
+        val icon = Bitmap.createScaledBitmap(large, size, size, true)
+        large.recycle()
         val px = IntArray(size * size).also { icon.getPixels(it, 0, size, 0, 0, size, size) }
         val logo = find(px, size) ?: first
         val at = iconOnTile(logo, scale)
@@ -885,6 +968,8 @@ object TileArtFactory {
             val a = c ushr 24
             if (a == 0) continue
             val l = (0.2126f * ((c shr 16) and 0xFF) + 0.7152f * ((c shr 8) and 0xFF) + 0.0722f * (c and 0xFF)) / 255f
+            // A long shadow baked into an icon (Android's Files): faint and dark. Edges of a light logo stay.
+            if (a < 110 && l < 0.5f) { px[i] = 0; continue }
             if (l >= DARK_KEPT) continue
             val keep = ((l - DARK_GONE) / (DARK_KEPT - DARK_GONE)).coerceIn(0f, 1f)
             px[i] = ((a * keep).toInt() shl 24) or (c and 0xFFFFFF)
@@ -904,6 +989,8 @@ object TileArtFactory {
         val backdrop = backdropOf(composed)
         if (composed !== back) composed.recycle()
         var foreAt = androidx.compose.ui.geometry.Rect.Zero
+        // Fork: Clear and Dark show one ink; only Color keeps a logo's own colors.
+        if (clear || (dark && shaping.get() == null)) fore?.let(::monoInk)
         val trimmed = fore?.let { layer ->
             val px = IntArray(W * H).also { layer.getPixels(it, 0, W, 0, 0, W, H) }
             var l = W; var t = H; var r = -1; var b = -1
@@ -915,12 +1002,62 @@ object TileArtFactory {
             Bitmap.createBitmap(layer, l, t, r - l + 1, b - t + 1).also { if (it !== layer) layer.recycle() }
         }
         return TileArt(
-            back = back.asImageBitmap(),
+            back = (if (clear && fore != null) clearPlate() else back).asImageBitmap(),
             fore = trimmed?.asImageBitmap(),
             foreAt = foreAt,
             tint = Color(tint),
             backdrop = backdrop.asImageBitmap(),
         )
+    }
+
+    private val clearPlates = java.util.concurrent.ConcurrentHashMap<Triple<Int, Boolean, Boolean>, Bitmap>()
+
+    /** Fork: the clear tile: white glass, lit from the top left, brighter on light panels. One bitmap for every tile. */
+    private fun clearPlate(): Bitmap = clearPlates.getOrPut(Triple(W, clearLight, clearLens)) {
+        val (a, b) = when {
+            clearLens -> if (clearLight) 0.12f to 0.12f else 0.05f to 0.05f
+            clearLight -> 0.72f to 0.5f
+            else -> 0.2f to 0.07f
+        }
+        layer {
+            drawRect(0f, 0f, W.toFloat(), H.toFloat(), Paint().apply {
+                shader = android.graphics.LinearGradient(0f, 0f, W * 0.35f, H.toFloat(), android.graphics.Color.argb((a * 255).roundToInt(), 255, 255, 255), android.graphics.Color.argb((b * 255).roundToInt(), 255, 255, 255), Shader.TileMode.CLAMP)
+            })
+        }
+    }
+
+    /**
+     * Fork: a Clear or Dark tile's logo has one ink and one shade of it, as Apple maps a clear icon: the main
+     * mark in full ink, color turned to the shade. A logo with no neutral part (Play Store) splits
+     * at its mean lightness, which keeps its shapes. Black and shadow go, so the glass shows there.
+     */
+    private fun monoInk(layer: Bitmap) {
+        val onLight = clear && clearLight
+        val ink = if (onLight) 0x1D1D1F else 0xFFFFFF
+        val shade = if (onLight) 0x56565B else 0xB8B8BD
+        val hsv = FloatArray(3)
+        val px = IntArray(W * H).also { layer.getPixels(it, 0, W, 0, 0, W, H) }
+        var neutral = 0; var colored = 0; var sum = 0f
+        for (c in px) {
+            if (c ushr 24 < 128) continue
+            android.graphics.Color.colorToHSV(c, hsv)
+            if (hsv[1] < 0.25f) { if (hsv[2] >= 0.35f) neutral++ } else { colored++; sum += hsv[2] }
+        }
+        val split = neutral * 9 < colored
+        val mean = if (colored > 0) sum / colored else 0f
+        for (i in px.indices) {
+            val c = px[i]
+            if (c ushr 24 == 0) continue
+            android.graphics.Color.colorToHSV(c, hsv)
+            val color = hsv[1] >= 0.25f
+            px[i] = when {
+                !color && hsv[2] < 0.35f -> 0
+                split -> (c and 0xFF000000.toInt()) or (if (hsv[2] >= mean) ink else shade)
+                // The shade comes in across the edge of a color, so a stripe keeps its antialiasing.
+                else -> (c and 0xFF000000.toInt()) or (androidx.core.graphics.ColorUtils.blendARGB(ink or 0xFF000000.toInt(), shade or 0xFF000000.toInt(), ((hsv[1] - 0.1f) / 0.4f).coerceIn(0f, 1f)) and 0xFFFFFF)
+            }
+        }
+        layer.setPixels(px, 0, W, 0, 0, W, H)
     }
 
     /** The tile as one picture, as Home draws it at rest: for the phone page. */

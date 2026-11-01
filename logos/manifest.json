@@ -6,8 +6,10 @@
       "com.peacock.tv"
     ],
     "android": [
-      "com.peacocktv.peacockandroid"
-    ]
+      "com.peacocktv.peacockandroid",
+      "com.peacock.peacockfiretv"
+    ],
+    "plate": "#000000"
   },
   "plex": {
     "title": "Plex",
@@ -17,7 +19,8 @@
     ],
     "android": [
       "com.plexapp.android"
-    ]
+    ],
+    "plate": "#1F2326"
   },
   "hbo-max": {
     "title": "HBO Max",
@@ -26,8 +29,11 @@
       "com.wbd.stream"
     ],
     "android": [
-      "com.wbd.stream"
-    ]
+      "com.wbd.stream",
+      "com.hbo.hbonow"
+    ],
+    "plate": "#5822B4",
+    "ink": "#FFFFFF"
   },
   "youtube": {
     "title": "YouTube",
@@ -36,8 +42,11 @@
       "youtube.leanback.v4"
     ],
     "android": [
-      "com.google.android.youtube.tv"
-    ]
+      "com.google.android.youtube.tv",
+      "com.amazon.firetv.youtube"
+    ],
+    "plate": "#FF0000",
+    "ink": "#FFFFFF"
   },
   "netflix": {
     "title": "Netflix",
@@ -47,7 +56,8 @@
     ],
     "android": [
       "com.netflix.ninja"
-    ]
+    ],
+    "plate": "#000000"
   },
   "hulu": {
     "title": "Hulu",
@@ -56,8 +66,11 @@
       "hulu"
     ],
     "android": [
-      "com.hulu.livingroomplus"
-    ]
+      "com.hulu.livingroomplus",
+      "com.hulu.plus"
+    ],
+    "plate": "#1CE783",
+    "ink": "#0B0C0F"
   },
   "disney-plus": {
     "title": "Disney+",
@@ -67,7 +80,9 @@
     ],
     "android": [
       "com.disney.disneyplus"
-    ]
+    ],
+    "plate": "#0B1A5C",
+    "size": 1.2
   },
   "prime-video": {
     "title": "Prime Video",
@@ -76,8 +91,12 @@
       "amazon"
     ],
     "android": [
-      "com.amazon.amazonvideo.livingroom"
-    ]
+      "com.amazon.amazonvideo.livingroom",
+      "com.amazon.firebat",
+      "com.amazon.avod"
+    ],
+    "plate": "#0F5F9E",
+    "ink": "#FFFFFF"
   },
   "paramount-plus": {
     "title": "Paramount+",
@@ -87,7 +106,10 @@
     ],
     "android": [
       "com.cbs.ott"
-    ]
+    ],
+    "plate": "#0050C8",
+    "ink": "#FFFFFF",
+    "size": 1.25
   },
   "apple-tv": {
     "title": "Apple TV",
@@ -96,31 +118,441 @@
       "com.apple.appletv"
     ],
     "android": [
-      "com.apple.atve.androidtv.appletv"
-    ]
+      "com.apple.atve.androidtv.appletv",
+      "com.apple.atve.amazon.appletv"
+    ],
+    "plate": "#000000",
+    "ink": "#FFFFFF"
   },
   "spotify": {
     "title": "Spotify",
-    "file": "dark/spotify.svg",
+    "file": "dark/spotify.png",
     "webos": [
       "spotify-beehive"
     ],
     "android": [
       "com.spotify.tv.android"
-    ]
+    ],
+    "simple": "spotify",
+    "plate": "#1DB954",
+    "ink": "#000000"
   },
   "tivimate": {
     "title": "TiviMate",
     "file": "dark/tivimate.png",
     "android": [
       "ar.tvplayer.tv"
-    ]
+    ],
+    "plate": "#1565C0",
+    "ink": "#FFFFFF"
   },
   "windscribe": {
     "title": "Windscribe",
-    "file": "dark/windscribe.png",
+    "file": "dark/windscribe-mark.png",
     "android": [
       "com.windscribe.vpn"
-    ]
+    ],
+    "plate": "#0B1F3A",
+    "size": 1.2
+  },
+  "twitch": {
+    "title": "Twitch",
+    "file": "dark/twitch.png",
+    "webos": [],
+    "android": [
+      "tv.twitch.android.app"
+    ],
+    "simple": "twitch",
+    "ink": "#FFFFFF",
+    "plate": "#9146FF"
+  },
+  "tubi": {
+    "title": "Tubi",
+    "file": "dark/tubi.png",
+    "webos": [],
+    "android": [
+      "com.tubitv"
+    ],
+    "simple": "tubi",
+    "ink": "#FFFFFF",
+    "plate": "#7408FF"
+  },
+  "crunchyroll": {
+    "title": "Crunchyroll",
+    "file": "dark/crunchyroll.png",
+    "webos": [],
+    "android": [
+      "com.crunchyroll.crunchyroid"
+    ],
+    "simple": "crunchyroll",
+    "ink": "#FFFFFF",
+    "plate": "#FF5E00"
+  },
+  "kodi": {
+    "title": "Kodi",
+    "file": "dark/kodi.png",
+    "webos": [],
+    "android": [
+      "org.xbmc.kodi"
+    ],
+    "simple": "kodi",
+    "ink": "#FFFFFF",
+    "plate": "#17B2E7"
+  },
+  "jellyfin": {
+    "title": "Jellyfin",
+    "file": "dark/jellyfin.png",
+    "webos": [],
+    "android": [
+      "org.jellyfin.androidtv"
+    ],
+    "simple": "jellyfin",
+    "ink": "#FFFFFF",
+    "plate": "#00A4DC"
+  },
+  "emby": {
+    "title": "Emby",
+    "file": "dark/emby.png",
+    "webos": [],
+    "android": [
+      "com.mb.android"
+    ],
+    "simple": "emby",
+    "ink": "#FFFFFF",
+    "plate": "#52B54B"
+  },
+  "youtube-music": {
+    "title": "Youtube Music",
+    "file": "dark/youtube-music.png",
+    "webos": [],
+    "android": [
+      "com.google.android.youtube.tvmusic"
+    ],
+    "simple": "youtubemusic",
+    "ink": "#FFFFFF",
+    "plate": "#FF0000"
+  },
+  "youtube-kids": {
+    "title": "Youtube Kids",
+    "file": "dark/youtube-kids.png",
+    "webos": [],
+    "android": [
+      "com.google.android.youtube.tvkids"
+    ],
+    "simple": "youtubekids",
+    "ink": "#FFFFFF",
+    "plate": "#FF0000"
+  },
+  "apple-music": {
+    "title": "Apple Music",
+    "file": "dark/apple-music.png",
+    "webos": [],
+    "android": [
+      "com.apple.android.music"
+    ],
+    "simple": "applemusic",
+    "ink": "#FFFFFF",
+    "plate": "#FA243C"
+  },
+  "steam-link": {
+    "title": "Steam Link",
+    "file": "dark/steam-link.png",
+    "webos": [],
+    "android": [
+      "com.valvesoftware.steamlink"
+    ],
+    "simple": "steam",
+    "ink": "#FFFFFF",
+    "plate": "#000000"
+  },
+  "pandora": {
+    "title": "Pandora",
+    "file": "dark/pandora.png",
+    "webos": [],
+    "android": [
+      "com.pandora.android.atv"
+    ],
+    "simple": "pandora",
+    "ink": "#FFFFFF",
+    "plate": "#224099"
+  },
+  "starz": {
+    "title": "Starz",
+    "file": "dark/starz.png",
+    "webos": [],
+    "android": [
+      "com.bydeluxe.d3.android.program.starz"
+    ],
+    "simple": "starz",
+    "ink": "#FFFFFF",
+    "plate": "#082125"
+  },
+  "nordvpn": {
+    "title": "Nordvpn",
+    "file": "dark/nordvpn.png",
+    "webos": [],
+    "android": [
+      "com.nordvpn.android"
+    ],
+    "simple": "nordvpn",
+    "ink": "#FFFFFF",
+    "plate": "#4687FF"
+  },
+  "expressvpn": {
+    "title": "Expressvpn",
+    "file": "dark/expressvpn.png",
+    "webos": [],
+    "android": [
+      "com.expressvpn.vpn"
+    ],
+    "simple": "expressvpn",
+    "ink": "#FFFFFF",
+    "plate": "#DA3940"
+  },
+  "surfshark": {
+    "title": "Surfshark",
+    "file": "dark/surfshark.png",
+    "webos": [],
+    "android": [
+      "com.surfshark.vpnclient.android"
+    ],
+    "simple": "surfshark",
+    "ink": "#FFFFFF",
+    "plate": "#1EBFBF"
+  },
+  "mullvad": {
+    "title": "Mullvad",
+    "file": "dark/mullvad.png",
+    "webos": [],
+    "android": [
+      "net.mullvad.mullvadvpn"
+    ],
+    "simple": "mullvad",
+    "ink": "#FFFFFF",
+    "plate": "#294D73"
+  },
+  "stremio": {
+    "title": "Stremio",
+    "file": "dark/stremio.png",
+    "webos": [],
+    "android": [
+      "com.stremio.one"
+    ],
+    "simple": "stremio",
+    "ink": "#FFFFFF",
+    "plate": "#685CEE"
+  },
+  "fox": {
+    "title": "Fox",
+    "file": "dark/fox.png",
+    "webos": [],
+    "android": [
+      "com.fox.foxone"
+    ],
+    "simple": "fox",
+    "plate": "#000000",
+    "ink": "#FFFFFF"
+  },
+  "roku-channel": {
+    "title": "Roku Channel",
+    "file": "dark/roku-channel.png",
+    "webos": [],
+    "android": [
+      "com.roku.web.trc"
+    ],
+    "simple": "roku",
+    "plate": "#662D91",
+    "ink": "#FFFFFF"
+  },
+  "youtube-tv": {
+    "title": "Youtube Tv",
+    "file": "dark/youtube-tv.png",
+    "webos": [],
+    "android": [
+      "com.google.android.apps.youtube.unplugged",
+      "com.google.android.youtube.tvunplugged"
+    ],
+    "simple": "youtubetv",
+    "plate": "#FF0000",
+    "ink": "#FFFFFF"
+  },
+  "iheart": {
+    "title": "Iheart",
+    "file": "dark/iheart.png",
+    "webos": [],
+    "android": [
+      "com.clearchannel.iheartradio.controller"
+    ],
+    "simple": "iheartradio",
+    "plate": "#C6002B",
+    "ink": "#FFFFFF"
+  },
+  "spectrum": {
+    "title": "Spectrum",
+    "file": "dark/spectrum.png",
+    "webos": [],
+    "android": [
+      "com.TWCableTV"
+    ],
+    "simple": "spectrum",
+    "plate": "#7B16FF",
+    "ink": "#FFFFFF"
+  },
+  "mlb": {
+    "title": "Mlb",
+    "file": "dark/mlb.png",
+    "webos": [],
+    "android": [
+      "com.bamnetworks.mobile.android.gameday.atbat"
+    ],
+    "simple": "mlb",
+    "plate": "#041E42",
+    "ink": "#FFFFFF"
+  },
+  "nhl": {
+    "title": "Nhl",
+    "file": "dark/nhl.png",
+    "webos": [],
+    "android": [
+      "com.nhl.gc1112.free"
+    ],
+    "simple": "nhl",
+    "plate": "#000000",
+    "ink": "#FFFFFF"
+  },
+  "nbc": {
+    "title": "Nbc",
+    "file": "dark/nbc.png",
+    "webos": [],
+    "android": [
+      "com.nbcuni.nbc"
+    ],
+    "simple": "nbc",
+    "plate": "#222222",
+    "ink": "#FFFFFF"
+  },
+  "mubi": {
+    "title": "Mubi",
+    "file": "dark/mubi.png",
+    "webos": [],
+    "android": [
+      "com.mubi"
+    ],
+    "simple": "mubi",
+    "plate": "#000000",
+    "ink": "#FFFFFF"
+  },
+  "tidal": {
+    "title": "Tidal",
+    "file": "dark/tidal.png",
+    "webos": [],
+    "android": [
+      "com.aspiro.tidal"
+    ],
+    "simple": "tidal",
+    "plate": "#000000",
+    "ink": "#FFFFFF"
+  },
+  "espn": {
+    "title": "Espn",
+    "file": "dark/espn.png",
+    "webos": [],
+    "android": [
+      "com.espn.score_center",
+      "com.espn.gtv"
+    ],
+    "commons": "ESPN_wordmark.svg",
+    "plate": "#D00000",
+    "ink": "#FFFFFF"
+  },
+  "sling": {
+    "title": "Sling",
+    "file": "dark/sling.png",
+    "webos": [],
+    "android": [
+      "com.sling"
+    ],
+    "commons": "Sling_TV_logo.svg",
+    "plate": "#0F75BC",
+    "ink": "#FFFFFF"
+  },
+  "pluto-tv": {
+    "title": "Pluto Tv",
+    "file": "dark/pluto-tv.png",
+    "webos": [],
+    "android": [
+      "tv.pluto.android"
+    ],
+    "commons": "Pluto_TV_logo_2024.svg",
+    "plate": "#000000",
+    "ink": "#FFFFFF"
+  },
+  "philo": {
+    "title": "Philo",
+    "file": "dark/philo.png",
+    "webos": [],
+    "android": [
+      "com.philo.philo.google"
+    ],
+    "commons": "Philo_logo.svg",
+    "plate": "#1D1D3F",
+    "ink": "#FFFFFF"
+  },
+  "amazon-music": {
+    "title": "Amazon Music",
+    "file": "dark/amazon-music.png",
+    "webos": [],
+    "android": [
+      "com.amazon.mp3"
+    ],
+    "commons": "Amazon_Music_logo.svg",
+    "plate": "#0F1111",
+    "ink": "#FFFFFF"
+  },
+  "vlc": {
+    "title": "VLC",
+    "file": "dark/vlc.png",
+    "webos": [],
+    "android": [
+      "org.videolan.vlc"
+    ],
+    "plate": "#2B2B2E",
+    "size": 1.3
+  },
+  "play-store": {
+    "title": "Play Store",
+    "file": "dark/play-store.png",
+    "webos": [],
+    "android": [
+      "com.android.vending"
+    ],
+    "plate": "#F5F5F7"
+  },
+  "amazon-shopping": {
+    "title": "Amazon",
+    "file": "dark/amazon-shopping.png",
+    "android": [
+      "com.amazon.shoptv.firetv.client",
+      "com.amazon.shoptv.client",
+      "com.amazon.venezia"
+    ],
+    "plate": "#232F3E",
+    "size": 1.15
+  },
+  "downloader": {
+    "title": "Downloader",
+    "file": "dark/downloader.png",
+    "android": [
+      "com.esaba.downloader"
+    ],
+    "plate": "#E8741A"
+  },
+  "send-files": {
+    "title": "Send Files to TV",
+    "file": "dark/send-files.png",
+    "android": [
+      "com.yablio.sendfilestotv"
+    ],
+    "plate": "#0F7480"
   }
 }

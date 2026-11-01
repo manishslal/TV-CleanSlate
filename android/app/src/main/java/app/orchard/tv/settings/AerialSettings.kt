@@ -13,7 +13,6 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.edit
 import android.os.SystemClock
 import android.provider.Settings
-import app.orchard.tv.apps.IconLibrary
 import app.orchard.tv.guard.GuardSetup
 import app.orchard.tv.system.DeviceClass
 import app.orchard.tv.wallpaper.AerialQuality
@@ -32,7 +31,7 @@ import java.security.MessageDigest
  * hand makes the mode Custom, and coming back to Custom restores them.
  */
 enum class HomeMode(val key: String) {
-    Full("full"), Custom("custom"), Efficient("efficient");
+    Auto("auto"), Full("full"), Efficient("efficient"), Custom("custom");
 
     companion object {
         fun of(key: String?) = entries.firstOrNull { it.key == key } ?: Custom
@@ -41,7 +40,7 @@ enum class HomeMode(val key: String) {
 
 /** Fork: how tiles are drawn ([AerialSettings.tileStyle]): System follows Dark and Light. */
 enum class TileStyle(val key: String) {
-    System("system"), Glass("glass"), Full("full");
+    System("system"), Clear("clear"), Glass("glass"), Full("full");
 
     companion object {
         fun of(key: String?) = entries.firstOrNull { it.key == key }
@@ -76,7 +75,7 @@ enum class Appearance(val key: String) {
 
 /** Fork: how the Home and screensaver clocks change ([AerialSettings.clockStyle]). */
 enum class ClockStyle(val key: String) {
-    Cards("cards"), Flip("flip"), Plain("plain");
+    Cards("cards"), Plain("plain");
 
     companion object {
         fun of(key: String?) = entries.firstOrNull { it.key == key } ?: Cards
@@ -84,10 +83,28 @@ enum class ClockStyle(val key: String) {
 }
 
 enum class FocusStyle(val key: String) {
-    Standard("standard"), HighContrast("high_contrast");
+    Standard("standard"), HighContrast("high_contrast"), Invert("invert");
 
     companion object {
         fun of(key: String?) = entries.firstOrNull { it.key == key } ?: HighContrast
+    }
+}
+
+/** Fork: how far a focused tile's glow reaches. Small is the white ring alone. */
+enum class FocusGlow(val key: String) {
+    Small("small"), Medium("medium"), Large("large");
+
+    companion object {
+        fun of(key: String?) = entries.firstOrNull { it.key == key } ?: Medium
+    }
+}
+
+/** Fork: a wash over the wallpaper on Home, for bright pictures. */
+enum class WallpaperTint(val key: String) {
+    Off("off"), Dim("dim"), Warm("warm"), Cool("cool");
+
+    companion object {
+        fun of(key: String?) = entries.firstOrNull { it.key == key } ?: Off
     }
 }
 
@@ -210,11 +227,23 @@ object AerialSettings {
      */
     var darkNow by mutableStateOf(true); private set
 
-    /** Fork: Tile Style: System goes with [darkNow], or always dark glass, or always each app's own colors. */
+    /** Fork: Tile Style: System goes with [darkNow], Clear, always Dark, or always Color. */
     var tileStyle by mutableStateOf(TileStyle.System); private set
+
+    /** Fork: the glow around a focused tile. */
+    var focusGlow by mutableStateOf(FocusGlow.Medium); private set
+
+    /** Fork: the wash over the wallpaper. */
+    var wallpaperTint by mutableStateOf(WallpaperTint.Off); private set
+
+    /** Fork: glass behind the top row, but not behind Clear tiles: glass on glass reads as neither. */
+    val showPlate: Boolean get() = homePlate && tileStyle != TileStyle.Clear
 
     /** Fork: whether tiles are dark glass with the logo alone right now, from [tileStyle]. */
     var darkTiles by mutableStateOf(true); private set
+
+    /** Fork: changes whenever tiles must be drawn again. */
+    var tileLook by mutableIntStateOf(0); private set
 
     /** Fork: a card of technology headlines over the screensaver. */
     var headlines by mutableStateOf(true); private set
@@ -284,7 +313,15 @@ object AerialSettings {
         started = true
         app = context.applicationContext
         val prefs = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        // Fork: a new install starts on Color tiles and Frosted glass. An installed Home keeps its choices.
+        if (prefs.all.isEmpty()) prefs.edit {
+            putString("fork_tile_style", TileStyle.Full.key)
+            putBoolean("fork_liquid_glass", false)
+            putString("fork_home_mode", HomeMode.Auto.key)
+        }
         focusStyle = FocusStyle.of(prefs.getString("focus_style", null))
+        focusGlow = FocusGlow.of(prefs.getString("fork_focus_glow", null))
+        wallpaperTint = WallpaperTint.of(prefs.getString("fork_wallpaper_tint", null))
         pinnedSources = prefs.getStringSet("pinned_sources", null)?.toSet() ?: emptySet()
         bootSource = prefs.getString("boot_source", null)
         bootApp = prefs.getString("boot_app", null)
@@ -315,6 +352,7 @@ object AerialSettings {
         applyTiles()
         headlines = prefs.getBoolean("fork_headlines", true)
         homeMode = HomeMode.of(prefs.getString("fork_home_mode", null))
+        customKept = prefs.contains("fork_custom_effects")
         newsTopics = prefs.getString("fork_news_topics", null)?.split(',')?.mapNotNull { NewsTopic.of(it) }?.toSet()?.takeIf { it.isNotEmpty() }
             ?: setOf(NewsTopic.Tech)
         newsShuffle = prefs.getBoolean("fork_news_shuffle", false)
@@ -329,6 +367,7 @@ object AerialSettings {
         screensaverMinutes = prefs.getInt("screensaver_minutes", DEFAULT_SCREENSAVER_MINUTES)
         aerialQuality = AerialQuality.of(prefs.getString("aerial_quality", null))
         effects = Effects.of(prefs.getString("effects", null))
+        applyTiles()
         lowEnd = DeviceClass.lowEnd(app)
     }
 
@@ -436,6 +475,7 @@ object AerialSettings {
         liquidGlass = on
         becameCustom()
         app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("fork_liquid_glass", on) }
+        applyTiles()
     }
 
     fun chooseFlapSound(on: Boolean) {
@@ -463,6 +503,11 @@ object AerialSettings {
     /** Fork: Home Mode ([HomeMode]). */
     var homeMode by mutableStateOf(HomeMode.Custom); private set
     private var applyingMode = false
+    private var customKept by mutableStateOf(false)
+
+    /** Fork: what Home Mode offers. Custom appears once something was set by hand, and then stays for coming back to. */
+    val homeModes: List<HomeMode>
+        get() = listOf(HomeMode.Auto, HomeMode.Full, HomeMode.Efficient) + if (customKept || homeMode == HomeMode.Custom) listOf(HomeMode.Custom) else emptyList()
 
     /** Fork: a setting the modes set was changed by hand: that is Custom now. */
     fun becameCustom() {
@@ -475,6 +520,7 @@ object AerialSettings {
     fun chooseHomeMode(mode: HomeMode) {
         if (mode == homeMode) return
         val prefs = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (homeMode == HomeMode.Custom) customKept = true
         if (homeMode == HomeMode.Custom) prefs.edit {
             putBoolean("fork_custom_glass", liquidGlass)
             putString("fork_custom_effects", effects.key)
@@ -484,6 +530,10 @@ object AerialSettings {
         applyingMode = true
         try {
             when (mode) {
+                HomeMode.Auto -> {
+                    chooseLiquidGlass(false)
+                    chooseEffects(Effects.Auto)
+                }
                 HomeMode.Full -> {
                     chooseLiquidGlass(true)
                     chooseEffects(Effects.Full)
@@ -521,11 +571,15 @@ object AerialSettings {
     private fun applyTiles() {
         val dark = when (tileStyle) {
             TileStyle.System -> darkNow
-            TileStyle.Glass -> true
+            TileStyle.Clear, TileStyle.Glass -> true
             TileStyle.Full -> false
         }
+        TileArtFactory.clear = tileStyle == TileStyle.Clear
+        TileArtFactory.clearLight = !darkNow
+        TileArtFactory.clearLens = tileStyle == TileStyle.Clear && liquidGlass && !lite && android.os.Build.VERSION.SDK_INT >= 33
         TileArtFactory.dark = dark
         darkTiles = dark
+        tileLook = (if (dark) 1 else 0) + (if (TileArtFactory.clear) 2 else 0) + (if (TileArtFactory.clearLight && TileArtFactory.clear) 4 else 0) + (if (TileArtFactory.clearLens) 8 else 0)
     }
 
     /** Fork: a topic on or off; the last one stays on. */
@@ -579,6 +633,17 @@ object AerialSettings {
         effects = choice
         becameCustom()
         app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString("effects", choice.key) }
+        applyTiles()
+    }
+
+    fun chooseFocusGlow(glow: FocusGlow) {
+        focusGlow = glow
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString("fork_focus_glow", glow.key) }
+    }
+
+    fun chooseWallpaperTint(tint: WallpaperTint) {
+        wallpaperTint = tint
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString("fork_wallpaper_tint", tint.key) }
     }
 
     fun chooseFocusStyle(style: FocusStyle) {

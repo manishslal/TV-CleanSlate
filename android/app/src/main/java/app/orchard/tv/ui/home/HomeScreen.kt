@@ -533,9 +533,9 @@ fun HomeScreen(
         val inGrid = focusedRow >= if (oneRow) 1 else 2
         val saverFadeOffscreen = remember { DiagLog.saverFadeOffscreen(appContext) }
         // With every name shown, the top row's go on its glass plate, which grows to hold them.
-        val plateNames = AerialSettings.showAllNames && AerialSettings.homePlate
+        val plateNames = AerialSettings.showAllNames && AerialSettings.showPlate
         val peek = AerialSettings.peekNextRow
-        val hasPlate = AerialSettings.homePlate
+        val hasPlate = AerialSettings.showPlate
         val largeClock = AerialSettings.largeClock
         val clockRightNow = AerialSettings.clockRight
         val metrics = remember(maxWidth, maxHeight, columns, oneRow, plateNames, peek, hasPlate, largeClock, clockRightNow) {
@@ -667,7 +667,7 @@ fun HomeScreen(
             // there are, which sit at its left: sized to three apps it read as a stray panel (#284).
             // In two rows it holds both: under the top row alone, the second sat beside it on the
             // bare wallpaper, as if left off the shelf.
-            val plate = if (apps.isEmpty() || !AerialSettings.homePlate) null else with(density) {
+            val plate = if (apps.isEmpty() || !AerialSettings.showPlate) null else with(density) {
                 val second = if (metrics.shelfRows > 1) metrics.shelfSecond else 0.dp
                 Rect(
                     (metrics.margin - PlatePadH).toPx(),
@@ -784,7 +784,7 @@ fun HomeScreen(
                         stringResource(R.string.fk_more_apps),
                         style = Type.OnWallpaper.Headline.copy(shadow = Shadow(Color.Black.copy(alpha = 0.6f), blurRadius = 8f)),
                         modifier = Modifier
-                            .offset(x = metrics.margin, y = headY - 30.dp)
+                            .offset(x = metrics.margin, y = headY - 36.dp)
                             .graphicsLayer { alpha = (scroll.value / collapsePx * 1.6f - 0.6f).coerceIn(0f, 1f) },
                     )
                 }

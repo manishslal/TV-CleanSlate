@@ -1,0 +1,11 @@
+# Packages Fire OS re-enables or protects: blocked from running in the background instead.
+com.amazon.hedwig
+com.amazon.perfcollection
+com.amazon.tigris
+com.amazon.tv.developer.dataservice
+com.amazon.ale
+com.amazon.katoch
+com.amazon.client.metrics
+com.amazon.device.metrics
+com.amazon.device.crashmanager
+com.amazon.device.logmanager

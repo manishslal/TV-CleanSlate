@@ -17,14 +17,13 @@ android {
         // Android 5.0. Compose 1.10 and later need 6.0, so the Compose BOM below stays on 1.9.
         minSdk = 21
         targetSdk = 34
-        versionCode = 89
-        versionName = "1.67-mh9"
+        versionCode = 103
+        versionName = "1.67-mh23"
         // `./gradlew -Pdiag ...`: a build for one reporter's TV whose logcat shows no app lines;
         // see system/DiagLog.kt.
         val diag = project.hasProperty("diag")
         buildConfigField("boolean", "DIAG", diag.toString())
         // Fork: no calls to the upstream author's server (updates, icon library, setup page).
-        buildConfigField("boolean", "UPSTREAM_SERVER", "false")
         resValue("string", "account_type", "io.manish.home")
         if (diag) versionNameSuffix = "-diag"
     }

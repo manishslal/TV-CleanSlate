@@ -53,7 +53,7 @@ fun DrawScope.drawGlyph(glyph: Glyph, color: Color, level: Float = 1f) = drawGly
 private fun glyphPath(glyph: Glyph, level: Float): String? {
     return when (glyph) {
         Glyph.Wifi -> when {
-            level < 0.34f -> GlyphPaths.WIFI_1
+            // Fork: never WIFI_1 alone, a bare dot that reads as a speck on a TV.
             level < 0.67f -> GlyphPaths.WIFI_2
             else -> GlyphPaths.WIFI
         }

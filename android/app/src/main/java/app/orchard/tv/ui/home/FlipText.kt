@@ -1,5 +1,7 @@
 package app.orchard.tv.ui.home
 
+import androidx.compose.ui.graphics.Shadow
+import app.orchard.tv.ui.theme.Palette
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.LinearEasing
@@ -57,38 +59,27 @@ import kotlin.math.roundToInt
  * colon stands between the cards, and AM/PM sits on smaller cards beside the time. With [sound]
  * (and the flap sound on) each flap clacks.
  *
- * Nothing moves at rest: a character animates only when it changes. With Clock set to Plain, or
- * the TV's animations removed, the text simply changes. Characters line up from the right, so
+ * Nothing moves at rest: a character animates only when it changes. With Clock set to Plain the
+ * text simply changes, and with the TV's animations removed a card changes without turning. Characters line up from the right, so
  * "12:59 PM" to "1:00 PM" turns the hour's last digit and lets the first one fall away.
  */
 @Composable
 fun FlipText(text: String, style: TextStyle, modifier: Modifier = Modifier, cards: Boolean = false, sound: Boolean = false, darkCards: Boolean = false) {
-    val clockStyle = AerialSettings.clockStyle
-    if (clockStyle == ClockStyle.Plain) {
+    // Only the large clocks carry cards; every other clock is plain text.
+    if (!cards || AerialSettings.clockStyle == ClockStyle.Plain) {
         BasicText(text, style = style, modifier = modifier)
         return
     }
     // Removed animations: the cards stay, and a changed character is simply there.
     val still = LocalReducedMotion.current
-    // Cards only where the clock is large enough to carry them; the small clocks just turn.
-    if (cards && clockStyle == ClockStyle.Cards) {
-        Board(text, style, modifier, still, sound, if (darkCards || AerialSettings.darkNow) DarkCards else LightCards)
-        return
-    }
-    // Tabular figures: every digit the same width, so a turning digit never nudges its neighbours.
-    val cellStyle = remember(style) { style.copy(fontFeatureSettings = "tnum") }
-    Row(modifier.baselineOf(cellStyle)) {
-        Cells(text) { c, i, leading ->
-            Flap(c, cellStyle, delayMs = i * STAGGER_MS, leading = leading, card = null, still = still, sound = false)
-        }
-    }
+    Board(text, style, modifier, still, sound, if (darkCards || AerialSettings.darkNow) DarkCards else LightCards)
 }
 
 /** Fork: the board's own type, for the date and weather lines set to match the cards (HomeChrome). */
 val BoardFont = FontFamily(Font(R.font.barlow_condensed_semibold))
 
 /** Painted flaps: warm white, not screen white. */
-val BoardInk = Color(0xFFEFE7D2)
+val BoardInk = Palette.BoardInk
 
 /** The board: the time on full-size cards, then AM/PM on half-size ones, lined up on their baseline. */
 @Composable
@@ -129,7 +120,8 @@ private fun CardRow(text: String, style: TextStyle, still: Boolean, sound: Boole
     val card = Card(width = glyph + em * CARD_PAD_H * 2, em = em, faces = faces)
     Row(modifier) {
         Cells(text) { c, i, leading ->
-            if (c == ':') BasicText(":", style = style, modifier = Modifier.padding(horizontal = em * COLON_PAD))
+            // Fork: the colon has no card and sits on the wallpaper, so Light's dark ink would vanish on a night sky.
+            if (c == ':') BasicText(":", style = if (faces === LightCards) style.copy(color = Color.White, shadow = Shadow(Color.Black.copy(alpha = 0.6f), blurRadius = 8f)) else style, modifier = Modifier.padding(horizontal = em * COLON_PAD))
             else Box(Modifier.padding(horizontal = em * CARD_GAP)) {
                 Flap(c, style, delayMs = i * STAGGER_MS, leading = leading, card = card, still = still, sound = sound)
             }
@@ -171,7 +163,7 @@ private fun Modifier.baselineOf(style: TextStyle): Modifier {
 private class Card(val width: Dp, val em: Dp, val faces: CardFaces)
 
 @Composable
-private fun Flap(target: Char, style: TextStyle, delayMs: Int, leading: Boolean, card: Card?, still: Boolean, sound: Boolean) {
+private fun Flap(target: Char, style: TextStyle, delayMs: Int, leading: Boolean, card: Card, still: Boolean, sound: Boolean) {
     // [shown] is the character at rest; [next] the one the current flap turns to.
     var shown by remember { mutableStateOf(target) }
     var next by remember { mutableStateOf(target) }
@@ -200,20 +192,18 @@ private fun Flap(target: Char, style: TextStyle, delayMs: Int, leading: Boolean,
     val q = ((p - 0.5f) / 0.5f).coerceIn(0f, 1f)
     val rise = if (q < 0.8f) lerp(90f, -8f, LandEasing.transform(q / 0.8f)) else lerp(-8f, 0f, (q - 0.8f) / 0.2f)
     Box {
-        // Cards are opaque: the flap hides what is behind it, as on a real board. Bare, the halves
-        // behind fade, so two characters never show at once.
-        val fade = flipping && card == null
+        // Cards are opaque: the flap hides what is behind it, as on a real board.
         // Behind: the new top half, and the old bottom half until the new one lands over it.
-        Half(next, style, top = true, card = card, lines = { lines }, alpha = if (fade) p * 2f else 1f) { lines = it }
-        Half(shown, style, top = false, card = card, lines = { lines }, alpha = if (fade) 2f - p * 2f else 1f, shadow = true)
+        Half(next, style, top = true, card = card, lines = { lines }, alpha = 1f) { lines = it }
+        Half(shown, style, top = false, card = card, lines = { lines }, alpha = 1f, shadow = true)
         if (flipping && p < 0.5f) {
             // The old top half falls toward the viewer, folding on the split, darkening as it turns away from the light.
-            Half(shown, style, top = true, card = card, lines = { lines }, alpha = if (card != null) 1f else 1f - p * 1.2f, rotation = -90f * fall, shade = fall)
+            Half(shown, style, top = true, card = card, lines = { lines }, alpha = 1f, rotation = -90f * fall, shade = fall)
         } else if (flipping) {
-            Half(next, style, top = false, card = card, lines = { lines }, alpha = if (card != null) 1f else 0.4f + 0.6f * q, rotation = rise, shade = 1f - q)
+            Half(next, style, top = false, card = card, lines = { lines }, alpha = 1f, rotation = rise, shade = 1f - q)
         }
         // The axle the flaps turn on: a pin at each side of the split, standing out from the card.
-        if (card != null) Canvas(Modifier.matchParentSize()) {
+        Canvas(Modifier.matchParentSize()) {
             val s = lines.split
             val w = card.em.toPx() * PIN_W
             val h = card.em.toPx() * PIN_H
@@ -237,7 +227,7 @@ private fun Half(
     c: Char,
     style: TextStyle,
     top: Boolean,
-    card: Card?,
+    card: Card,
     lines: () -> Lines,
     alpha: Float,
     rotation: Float = 0f,
@@ -246,7 +236,7 @@ private fun Half(
     onLines: ((Lines) -> Unit)? = null,
 ) {
     // Board cards use Barlow's cap height; bare text keeps the font it came with (Inter).
-    val capHalf = (if (card != null) BOARD_CAP else INTER_CAP) / 2f
+    val capHalf = BOARD_CAP / 2f
     BasicText(
         c.toString(),
         style = style,
@@ -262,17 +252,13 @@ private fun Half(
                 val s = lines().split
                 transformOrigin = TransformOrigin(0.5f, if (size.height > 0f) s / size.height else 0.5f)
             }
-            .then(if (card != null) Modifier.width(card.width) else Modifier)
+            .then(Modifier.width(card.width))
             .drawWithContent {
                 val l = lines()
                 val s = l.split
                 // Generous on the other three sides: the text's shadow reaches past its box.
                 val far = size.height * 2f
                 val (y0, y1) = if (top) -far to s else s to size.height + far
-                if (card == null) {
-                    clipRect(-far, y0, size.width + far, y1) { this@drawWithContent.drawContent() }
-                    return@drawWithContent
-                }
                 val em = card.em.toPx()
                 val padV = em * CARD_PAD_V
                 val cap = (l.baseline - s) * 2f
@@ -328,10 +314,12 @@ private const val CARD_CHARS = "0123456789AMP"
 @Immutable
 private class CardFaces(val topA: Color, val topB: Color, val bottomA: Color, val bottomB: Color, val gap: Color, val pin: Color, val ink: Color)
 
-private val DarkCards = CardFaces(Color(0xF22A2B2E), Color(0xF2202124), Color(0xF21B1C1E), Color(0xF2141517), Color(0xFF060607), Color(0xFF45474B), BoardInk)
+private fun cardFaces(c: List<Color>, ink: Color) = CardFaces(c[0], c[1], c[2], c[3], c[4], c[5], ink)
+
+private val DarkCards = cardFaces(Palette.DarkCard, BoardInk)
 
 /** Fork: Light's cards: white, black type, and a soft grey split where Dark's is black. */
-private val LightCards = CardFaces(Color(0xFFFCFCFA), Color(0xFFF2F2EF), Color(0xFFEBEBE7), Color(0xFFE0E0DB), Color(0xFF9B9B96), Color(0xFFB9B9B4), Color(0xFF141517))
+private val LightCards = cardFaces(Palette.LightCard, Palette.LightCardInk)
 
 // A card's proportions, in ems of its text, so the screensaver's smaller clock has smaller cards.
 private const val CARD_PAD_H = 0.07f
@@ -347,8 +335,6 @@ private const val PIN_H = 0.07f
 private const val SUFFIX_SCALE = 0.5f
 private const val SUFFIX_GAP = 0.12f
 
-/** Cap heights, in ems: where a digit's middle is. */
-private const val INTER_CAP = 0.727f
 private const val BOARD_CAP = 0.7f
 
 /** One flap, a minute changing. */

@@ -224,6 +224,14 @@ tcast_install() {
   return $rc
 }
 
+# Fire OS 6 keeps Home for Amazon and never binds an accessibility service. The guard build (no HOME
+# filter) goes on, and FireKeeper brings Home back through usage stats. Amazon's launcher stays.
+FIRE_KEEPER=0
+if [ "$(adb shell getprop ro.product.manufacturer | tr -d '\r')" = Amazon ] && [ "$SDK" -lt 26 ]; then
+  FIRE_KEEPER=1
+  [ "$FLAVOR" = guard ] || { echo "Fire OS 6: installing the guard build."; FLAVOR=guard; APK_FILE=${FIRE_APK_FILE:-}; }
+fi
+
 BEFORE=$(installed_code)
 APK=$(build "$FLAVOR")
 echo "Installing $APK"
@@ -320,6 +328,15 @@ fi
 # straight after the install it was left interpreted ("verify").
 sleep 5
 adb shell cmd package compile -m speed -f "$PKG" >/dev/null 2>&1 || true
+
+if [ "$FIRE_KEEPER" = 1 ]; then
+  adb shell pm grant "$PKG" android.permission.READ_LOGS 2>/dev/null || true  # Home from Amazon's Settings
+  # Android 7 has no "cmd notification". The listener is bound before Amazon's launcher starts.
+  adb shell settings put secure enabled_notification_listeners "$PKG/$NS.guard.RevivalListener"
+  tools/fire-reapply.sh
+  echo "Home is installed, and FireKeeper sends the Home button to it. Hold Home for Amazon's quick menu."
+  exit 0
+fi
 
 # With CATEGORY_DEFAULT, as Home itself is resolved: on XGIMI m7642 (Android 9) a query without it
 # lists Settings' FallbackHome too, and Android drops the default Home over the changed set (#767).

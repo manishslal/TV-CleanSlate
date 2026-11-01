@@ -3,6 +3,7 @@
 **Device:** onn. 4K Streaming Box (`YOC`, product `onn_4k_gtv`), 2 GB RAM (MemTotal 1,971,588 kB)
 **OS:** Android TV 14 (SDK 34), build URO4.260304.011.B1, patch 2026-03-01, bootloader locked
 **IP:** <tv-ip>. ADB: wireless debugging (pairing) on first connect. After reboot, ADB is reachable on **5555** (the wireless-debugging port changes each boot).
+**Latest build tested:** 1.67-mh17
 **Rooted:** No
 
 ## 2026-10-28
@@ -28,7 +29,7 @@
 - **Not switched yet.** Its "Home Screen → Free My TV" switch uses the box's own ADB (127.0.0.1:5555, approved on the TV once) to `pm disable-user`: launcherx, setupwraith, the stock screensaver (dreamx), Play Games, YouTube Music. "Original" re-enables them, and it auto-reverts after 3 crashes in 5 min.
 - The release APK checks weekly for a signed update from the repo's releases and asks before installing.
 
-- First switch attempt was refused by Free My TV: the saved Wi-Fi networks belonged to the setup wizard (setupwraith), so disabling it would erase them. With user approval, forgot the out-of-range networks over ADB (`cmd wifi forget-network 1 2 3`: Mankid-Router, Mankid-Router-5G, US-HWYV2JWR3F). The user forgets and rejoins <wifi-name> on the TV.
+- First switch attempt was refused by Free My TV: the saved Wi-Fi networks belonged to the setup wizard (setupwraith), so disabling it would erase them. With user approval, forgot the out-of-range networks over ADB (`cmd wifi forget-network 1 2 3`: <wifi-name>, <wifi-name>, <wifi-name>). The user forgets and rejoins <wifi-name> on the TV.
 
 - The user forgot and rejoined <wifi-name> in Settings. The network owner changed from `setupwraith` to `android.uid.system` (net ID 4).
 - The user flipped Home Screen → Free My TV and allowed the app's on-device USB debugging. **Switch succeeded.** Disabled (`pm disable-user`): `launcherx`, `setupwraith`, `dreamx`, `play.games`, `youtube.tvmusic`. Home = `io.freemytv/.HomeActivity`. Screensaver = `io.freemytv/.Screensaver`.
@@ -126,3 +127,38 @@ adb -s <tv-ip>:5555 shell settings put secure enabled_accessibility_services nul
 adb -s <tv-ip>:5555 uninstall io.manish.home
 ```
 Then use `scripts/99-restore-stock.sh` if anything still points away from the stock launcher.
+
+## 1.67-mh10 (2026-10-31)
+- Installed from `android` with `tools/install.sh`. Settings carried over: mode Custom, Home Guard bound, Home in front.
+- Exported Dark and Full Color tile sheets: logos match in size and position on all 20 tiles.
+- Home idle in Custom: 126, 130 and 134 MB across three runs.
+- Not checked yet: Clock page on screen with a real remote.
+- Undo: reinstall an earlier build. No settings changed.
+
+## Stock launcher test (2026-10-31)
+- Disabled `launcherx` and read the resolver without pressing Home: it chose `setupwraith/.RecoveryActivity`, priority 1, over Home at priority 0.
+- Re-enabled `launcherx` at once. The recovery screen never opened and Home stayed in front.
+
+## 1.67-mh11 (2026-10-31)
+- Installed. Clear tiles checked on screen in Light and Dark, and Full Color on the exported sheet. No crashes logged.
+- Left on Clear tiles for review. Not checked with a real remote.
+
+## 1.67-mh12 (2026-10-31)
+- Installed. Clear logos are one ink and one shade. Checked on the exported sheet and Home screen. Folders and input tiles were not checked because this box has none.
+
+## Stock launcher disabled (2026-10-31; reboot verified)
+- Shell cannot disable only `setupwraith/.RecoveryActivity`: SecurityException.
+- Wi-Fi saved by the system (`cuid=1000`), not the wizard, so the wizard package is safe to disable.
+- Disabled `launcherx`, `setupwraith` and `io.freemytv` with `pm disable-user --user 0`, then `set-home-activity`.
+- Two earlier tries came back after a reboot, because the reboot came within seconds. Waiting 40 s first made it stick.
+- After reboot: Home is the default, Wi-Fi connected, Home Guard bound, Settings opens, Home key works.
+- At 2 minutes after boot, launcher and wizard processes are gone: 79 MB of app memory in the baseline. Their share grew to 141 MB after long uptime.
+- Total Used RAM at 2 minutes barely moved, because Android fills free memory with cache.
+- Undo: `scripts/99-restore-stock.sh <tv-ip>` and `adb shell pm enable io.freemytv`.
+
+## 1.67-mh16 (2026-10-31)
+- Installed. Plex and Peacock colors, VLC cone, Netflix red and smoother edges checked on exported sheets. Clear checked on the Home grid.
+
+## 1.67-mh17 (2026-10-31)
+- Installed. Every tile style, Invert, Focus Glow, Wallpaper Tint and Control Center captured in Light and Dark, with independent QA on all but the last panel text change.
+- 73 unit tests pass and no crashes are logged. Left on Clear tiles, Light, Liquid glass, as before.

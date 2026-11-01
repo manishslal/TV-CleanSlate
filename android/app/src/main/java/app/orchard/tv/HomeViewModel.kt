@@ -17,7 +17,6 @@ import app.orchard.tv.apps.AppEntry
 import app.orchard.tv.apps.AppNames
 import app.orchard.tv.apps.LayoutOps
 import app.orchard.tv.apps.CustomIcons
-import app.orchard.tv.apps.IconLibrary
 import app.orchard.tv.apps.SourceLooks
 import app.orchard.tv.apps.FOLDER_KEY_PREFIX
 import app.orchard.tv.apps.SOURCE_KEY_PREFIX
@@ -62,7 +61,7 @@ sealed interface Overlay {
     data class Pin(val mode: PinMode, val onDone: () -> Unit) : Overlay
 }
 
-enum class CcPage { Main, Inputs, InputSettings, Update, Setup }
+enum class CcPage { Main, Inputs, InputSettings, Setup }
 
 /**
  * Tiles a cold start reads whole before showing Home (two rows and a half, as many as can show);
@@ -158,7 +157,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         // A tile picture set or removed from the phone page.
         viewModelScope.launch { snapshotFlow { CustomIcons.version }.drop(1).collect { reload() } }
         // Fork: the tile style is part of every tile's stamp, so a change redraws them all.
-        viewModelScope.launch { snapshotFlow { AerialSettings.darkTiles }.drop(1).collect { reload() } }
+        viewModelScope.launch { snapshotFlow { AerialSettings.tileLook }.drop(1).collect { reload() } }
         // Fork: once the screensaver or a panel has closed (and faded out), what it held goes back.
         viewModelScope.launch {
             snapshotFlow { screensaverVisible || overlay != Overlay.None }.drop(1).collect { busy ->
@@ -176,7 +175,6 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
         // Library pictures that arrived, or the library turned on or off.
-        viewModelScope.launch { snapshotFlow { IconLibrary.version }.drop(1).collect { reload() } }
         offerSetupOnce()
         // An input's device or name, chosen from its tile's menu or the phone page.
         viewModelScope.launch { snapshotFlow { SourceLooks.all }.drop(1).collect { if (loaded) arrange() } }
@@ -266,15 +264,6 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
                 prepareFaces()
                 DiagLog.i("$waiting more tiles in ${SystemClock.uptimeMillis() - rest} ms")
             }
-            refreshIconLibrary()
-        }
-    }
-
-    /** Ready-made pictures for the apps just loaded, in the background; Home reloads when some arrive. */
-    private fun refreshIconLibrary() {
-        val installed = all.mapTo(HashSet()) { it.packageName }
-        viewModelScope.launch {
-            if (IconLibrary.refresh(installed)) IconLibrary.changed()
         }
     }
 

@@ -8,6 +8,14 @@ out to actually be), disable unused factory apps, and speed the stick up
 — WITHOUT breaking the Home button, HDMI-CEC input switching, Alexa
 remote, Prime Video, or DRM playback.
 
+For Home on Fire OS 6, see "Home on Fire TV" in
+[getting-started.md](getting-started.md). Fire OS 6 package lists were checked
+against dumbtv's tested AFTMM lists. Treat them as candidates, not proof.
+
+On a Fire TV Stick 4K (1st gen), `tools/fire-reapply.sh` applies that model's lists from
+[its device folder](../devices/fire-tv-stick-4k-gen1/). Run it again after a Fire OS
+update. Don't use those lists on another model.
+
 RULES (follow strictly, same spirit as the Android TV version):
 
 0. PRE-FLIGHT, BEFORE TOUCHING ANY PACKAGE. Confirm ADB survives a clean
@@ -161,7 +169,7 @@ RULES (follow strictly, same spirit as the Android TV version):
    Tier C (this session's additions, low-risk once discovery-confirmed
    dormant/stub): `com.amazon.dummy.*` placeholder stubs (alarmclock,
    calendar, contacts, gallery, music, settings, soundpicker),
-   `com.amazon.tv.easyupgrade`, `com.amazon.tv.releasenotes`,
+   `com.amazon.tv.releasenotes`,
    `com.amazon.tmm.tutorial`, `com.amazon.storm.lightning.tutorial`,
    `com.amazon.perfcollection`, `com.amazon.media.recommendations`,
    `com.amazon.hybridadidservice`, `com.amazon.bueller.photos`,
@@ -185,14 +193,9 @@ RULES (follow strictly, same spirit as the Android TV version):
      settings put global animator_duration_scale 0.5
      pm trim-caches 1G
 
-9. OPTIONAL/ADVANCED/SEPARATE APPROVAL REQUIRED — do NOT do this in the
-   same pass, only if explicitly asked:
-     adb shell pm disable-user --user 0 com.amazon.device.software.ota
-   On some builds only `pm hide`/`pm unhide` works. Freezes Fire OS
-   updates (stops silent bloat/ad re-adds) but: (a) stops security
-   patches, (b) a factory reset silently re-enables updates and wipes
-   this freeze + all other disables. Ask separately, explain both
-   tradeoffs, only do if confirmed.
+9. NEVER TOUCH UPDATE PACKAGES. Leave `com.amazon.device.software.ota`,
+   `com.amazon.tv.easyupgrade` and other update packages enabled. Freezing
+   updates stops security patches. Reapply the debloat after an update instead.
 
 10. LOGGING, PER DEVICE. Separate changelog per stick:
       changelog-<room>-<model>.md

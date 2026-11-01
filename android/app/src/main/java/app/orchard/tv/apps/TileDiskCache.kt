@@ -40,10 +40,13 @@ object TileDiskCache {
     }
 
     /** Bumped when tiles are drawn differently, so a build with the same version code redraws them. */
-    private const val ART = 3 + 111 // Fork: +100, bumped on every change to how fork tiles are drawn (1: dark tiles, 2: dark plates, 3: light logos from picture icons, 4-8: picture and adaptive icons lose their plate, near black goes; 9: brand tint on dark tiles; 10: logo pack)
+    private const val ART = 3 + 126 // Fork: +100, bumped on every change to how fork tiles are drawn (1: dark tiles, 2: dark plates, 3: light logos from picture icons, 4-8: picture and adaptive icons lose their plate, near black goes; 9: brand tint on dark tiles; 10: logo pack; 11: one logo size on every style; 12: Full Color uses the dark logo, Clear tiles; 13: Clear is one ink and one shade; 14: Settings hub, Clear lens)
+
+    /** Fork: tiles on the same plate share its bitmap, as they do when first drawn (TileArtFactory). */
+    private val plates = java.util.concurrent.ConcurrentHashMap<Pair<Int, Int>, Bitmap>()
 
     fun key(stamp: Long): String =
-        "$stamp|${TileArtFactory.W}|${TileArtFactory.unified}|${TileArtFactory.dark}|${Locale.getDefault().toLanguageTag()}|${BuildConfig.VERSION_CODE}|$ART"
+        "$stamp|${TileArtFactory.W}|${TileArtFactory.unified}|${TileArtFactory.dark}|${TileArtFactory.clear}|${TileArtFactory.clearLight}|${TileArtFactory.clearLens}|${Locale.getDefault().toLanguageTag()}|${BuildConfig.VERSION_CODE}|$ART"
 
     private fun file(pkg: String) = File(dir, "$pkg.tile")
 
@@ -57,13 +60,14 @@ object TileDiskCache {
                 val label = input.readUTF()
                 val tint = Color(input.readInt())
                 val foreAt = Rect(input.readFloat(), input.readFloat(), input.readFloat(), input.readFloat())
-                fun image(): Bitmap? {
+                fun image(shared: Boolean = false): Bitmap? {
                     val size = input.readInt()
                     if (size == 0) return null
                     val bytes = ByteArray(size).also(input::readFully)
-                    return BitmapFactory.decodeByteArray(bytes, 0, size) ?: error("undecodable picture")
+                    val decode = { BitmapFactory.decodeByteArray(bytes, 0, size) ?: error("undecodable picture") }
+                    return if (shared) plates.getOrPut(bytes.contentHashCode() to size, decode) else decode()
                 }
-                val back = image() ?: return null
+                val back = image(shared = true) ?: return null
                 val fore = image()
                 val backdrop = image() ?: return null
                 label to TileArt(back.asImageBitmap(), fore?.asImageBitmap(), foreAt, tint, backdrop.asImageBitmap())

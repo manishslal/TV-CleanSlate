@@ -140,3 +140,6 @@ Each entry gives what changed and how to undo it.
 - After a forced reboot: Home takeover, update block, debloat stubs and closed telnet all came back.
 - Launching YouTube and returning Home both worked.
 - Screen capture shows the launcher. It does not capture the video plane, so the wallpaper needs checking by eye.
+
+### Source changes not deployed (2026-10-31)
+- `webos/` has Clear tiles, System, Full Color logos and the focus glow. The JavaScript passes a syntax check, but the TV did not answer SSH, so none of it has run on the TV.

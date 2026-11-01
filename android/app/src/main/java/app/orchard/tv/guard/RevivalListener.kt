@@ -23,6 +23,8 @@ class RevivalListener : NotificationListenerService() {
 
     override fun onListenerConnected() {
         Log.i("AerialGuard", "revived by the notification listener binding")
+        // Fork: bound before Amazon's launcher starts, seconds ahead of the boot broadcasts.
+        FireKeeper.start(this)
         GuardSetup.ensureEnabled(this)
         // Bound before the user is unlocked (Direct Boot): Aerial's preferences are in credential
         // storage, and reading them crashed Aerial at boot, which left the stock launcher in front

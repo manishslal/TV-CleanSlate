@@ -20,7 +20,7 @@ Follow this before changing any TV. Every step here came from real testing.
 | Device | Trap |
 |---|---|
 | Google TV | The setup wizard (`setupwraith`) may own your saved Wi-Fi networks. Disabling it can erase them. |
-| Google TV | Some disabled packages come back at the next boot. |
+| Any Android TV | A package seems to re-enable itself after a reboot. Android saves this state about 10 seconds later, so wait 40 seconds before rebooting. |
 | Hisense | Disabling packages didn't survive reboots, and one batch broke input switching. Don't debloat this model. |
 | TCL | `com.tcl.appstatecontroller` re-enables some apps at each boot. Removing them for the user with `pm uninstall -k --user 0` was the one logged exception to rule 3. |
 | LG | Don't install LG's Developer Mode app while rooted. |

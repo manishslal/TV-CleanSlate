@@ -460,6 +460,8 @@ object GuardSetup {
         ensureAdb(context)
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_SECURE_SETTINGS) != PackageManager.PERMISSION_GRANTED) return false
         keepScreensaver(context)
+        // Fork: Fire OS 6 never binds the guard; FireKeeper does this job there.
+        if (FireKeeper.applies) return false
         RevivalSync.ensure(context)
         if (standingOut(context)) { watchScreenOn(context); return false }
         val me = ComponentName(context, HomeGuardService::class.java).flattenToString()

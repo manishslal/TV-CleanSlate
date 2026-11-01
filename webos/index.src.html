@@ -97,11 +97,19 @@ body.first .plate { animation: rise .42s ease-out backwards; }
 .plate::after { content: ''; position: absolute; left: 0; right: 0; top: 0; bottom: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--hair), inset 0 1px 0 rgba(255,255,255,.22); background: linear-gradient(180deg, rgba(255,255,255,.13), rgba(255,255,255,0) 42%); }
 .plate img, .plate canvas { position: absolute; }
 .plate.clear { background: var(--cleartile); }
-/* Dark Glass is the tile's own look, whatever the appearance */
+/* Clear: glass like the dock, bright on light panels, with the logo in dark ink there */
+body.cleartiles .plate { background: linear-gradient(160deg, rgba(255,255,255,.2), rgba(255,255,255,.07)); color: #fff; }
+body.light.cleartiles .plate { background: linear-gradient(160deg, rgba(255,255,255,.72), rgba(255,255,255,.5)); color: #1d1d1f; }
+/* one ink and its shades: color goes to grey, as on Android */
+body.cleartiles .plate img, body.cleartiles .plate canvas { filter: grayscale(1) brightness(1.15); }
+body.light.cleartiles .plate img, body.light.cleartiles .plate canvas { filter: grayscale(1) invert(1) brightness(.75); }
+body.cleartiles .tile.f .plate { filter: brightness(1.12); }
+body.cleartiles .tile.f .plate::after { box-shadow: inset 0 0 0 calc(2 * var(--u)) rgba(255,255,255,.7), inset 0 1px 0 rgba(255,255,255,.3); }
+/* Dark is the tile's own look, whatever the appearance */
 body.glasstiles .plate { background: rgba(24,24,26,.82); color: #fff; }
 body.glasstiles .plate b, body.light.glasstiles .plate b { color: var(--ink); }
 body.light.glasstiles .plate.input img { filter: brightness(3); }
-.plate.mark img { position: static; }
+.plate.mark img, .plate.mark canvas { position: static; }
 .plate.plainicon img { position: static; height: 66%; }
 .plate.input img { position: static; height: 52%; margin-right: calc(14 * var(--u)); filter: brightness(3); }
 body.light .plate.input img { filter: none; }
@@ -114,11 +122,11 @@ body.light .plate b { color: #1d1d1f; }
 body.names .name, .tile.f .name { opacity: 1; }
 body.down #grid .name { color: var(--onsheet); text-shadow: 0 1px calc(6 * var(--u)) var(--onsheet-shadow); }
 .tile.f { z-index: 2; }
-.tile.f .plate { transform: scale(1.15); box-shadow: 0 0 0 calc(3 * var(--u)) var(--ringgap), 0 0 0 calc(6 * var(--u)) var(--ring), 0 calc(18 * var(--u)) calc(30 * var(--u)) var(--lift); }
+.tile.f .plate { transform: scale(1.15); box-shadow: 0 0 0 calc(5 * var(--u)) var(--ringgap), 0 0 0 calc(13 * var(--u)) var(--ring), 0 calc(18 * var(--u)) calc(30 * var(--u)) var(--halo, var(--lift)); }
 .tile.move .plate { transform: scale(1.18); box-shadow: 0 0 0 calc(3 * var(--u)) rgba(0,0,0,.75), 0 0 0 calc(7 * var(--u)) #ffd60a, 0 calc(18 * var(--u)) calc(30 * var(--u)) var(--lift); }
 .tile.push .plate { animation: push .18s ease-out; }
 @keyframes push { 40% { transform: scale(1.15) translateX(var(--dx, 0)) translateY(var(--dy, 0)); } }
-body.lite .tile.f .plate { box-shadow: 0 0 0 calc(3 * var(--u)) var(--ringgap), 0 0 0 calc(6 * var(--u)) var(--ring); }
+body.lite .tile.f .plate { box-shadow: 0 0 0 calc(5 * var(--u)) var(--ringgap), 0 0 0 calc(13 * var(--u)) var(--ring); }
 body.lite #glow { display: none; }
 
 /* panels */
@@ -197,6 +205,7 @@ var VIDEOS = __VIDEOS__;
 var ICONS = __ICONS__;
 var TOPICS = __TOPICS__;
 var LOGOS = __LOGOS__;
+var PLATES = __PLATES__;
 var FROST = __FROST__;
 
 var $ = function (id) { return document.getElementById(id); };
@@ -234,10 +243,11 @@ function theme() {
   c.toggle('big', S.largeClock);
   c.toggle('names', S.showAllNames);
   c.toggle('lite', S.effects === 'lite');
-  var glass = tileGlass();
-  c.toggle('glasstiles', glass);
+  var look = tileLook(), glass = tileGlass();
+  c.toggle('glasstiles', look === 'dark');
+  c.toggle('cleartiles', look === 'clear');
   c.toggle('dimwall', glass && darkNow());
-  if (glass !== lastGlass) { lastGlass = glass; if (allApps.length) build(); }
+  if (look !== lastGlass) { lastGlass = look; if (allApps.length) build(); }
   $('clock').className = S.clockStyle;
 }
 
@@ -491,7 +501,7 @@ function measure(p) {
   if (x1 <= x0 || y1 <= y0) { x0 = 0; y0 = 0; x1 = w - 1; y1 = h - 1; }
   return { c: clear ? '' : 'rgb(' + r + ',' + g + ',' + b + ')', x: x0 / w, y: y0 / h, w: (x1 - x0 + 1) / w, h: (y1 - y0 + 1) / h };
 }
-/* Dark Glass: the plate goes, near-black type turns white so it reads on the dark tile, and logos in one pale tone go white */
+/* Dark: the plate goes, near-black type turns white so it reads on the dark tile, and logos in one pale tone go white */
 function stripPlate(p, a) {
   var d = p.d.data, m = a.c.match(/\d+/g) || [], r = +m[0], g = +m[1], b = +m[2];
   for (var i = 0; i < d.length; i += 4) {
@@ -530,10 +540,23 @@ function fill(p, img, id) {
     }
   } catch (e) { p.className += ' plainicon'; }
 }
-function tileGlass() { return S.tiles === 'dark'; }
+function tileLook() { return S.tiles === 'system' ? (darkNow() ? 'dark' : 'full') : S.tiles; }
+function tileGlass() { return tileLook() !== 'full'; }
+/* a one-color logo in the brand's ink, for Color */
+function inked(img, ink) {
+  var cv = document.createElement('canvas');
+  cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+  var g = cv.getContext('2d');
+  g.drawImage(img, 0, 0);
+  g.globalCompositeOperation = 'source-in';
+  g.fillStyle = ink;
+  g.fillRect(0, 0, cv.width, cv.height);
+  return cv;
+}
 function tile(t) {
   var el = document.createElement('div');
   el.className = 'tile';
+  el.style.setProperty('--halo', tint(t.id));
   var p = document.createElement('div');
   p.className = 'plate';
   if (t.folder) {
@@ -550,14 +573,20 @@ function tile(t) {
     p.appendChild(plain(t.short));
   } else if (t.glyph) {
     p.innerHTML = svg(t.glyph);
-  } else if (t.icon && tileGlass() && LOGOS[t.id]) {
+  } else if (t.icon && LOGOS[t.id]) {
     /* the logo pack: real artwork, sized so wide and square logos carry the same visual weight */
     var art = document.createElement('img');
     p.className += ' mark';
     art.onload = function () {
-      var r = art.naturalWidth / art.naturalHeight, high = Math.min(84, Math.sqrt(8000 / r)), wide = Math.min(176, high * r);
-      art.style.width = 'calc(' + wide + ' * var(--u))';
-      art.style.height = 'calc(' + wide / r + ' * var(--u))';
+      /* the same box as Android: 70% of the tile's width, 50% of its height */
+      var r = art.naturalWidth / art.naturalHeight, high = Math.min(71, Math.sqrt(8000 / r)), wide = Math.min(176, high * r);
+      var look = PLATES[t.id] || [], shown = art;
+      if (!tileGlass()) {
+        if (look[0]) p.style.background = look[0];
+        if (look[1]) { shown = inked(art, look[1]); p.replaceChild(shown, art); }
+      }
+      shown.style.width = 'calc(' + wide + ' * var(--u))';
+      shown.style.height = 'calc(' + wide / r + ' * var(--u))';
     };
     art.onerror = function () { p.removeChild(art); p.appendChild(plain(t.title)); };
     art.src = LOGOS[t.id];
@@ -582,6 +611,8 @@ function tile(t) {
 }
 function hue(id) { var h = 0; for (var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 360; return 'hsl(' + h + ',55%,38%)'; }
 function tint(id) {
+  var pack = PLATES[id] && PLATES[id][0];
+  if (pack) return pack;
   var c = colors[id], m = c && c.match(/\d+/g);
   if (m && Math.max(+m[0], +m[1], +m[2]) - Math.min(+m[0], +m[1], +m[2]) > 40) return c;
   return hue(id); /* white and black tiles would only grey the picture */
@@ -744,7 +775,7 @@ function pagePersonalize() {
       toggle('Flap Sound', 'flapSound') ]; } } },
     { label: 'Appearance', icon: 'LIGHT_MODE', to: { title: 'Appearance', rows: function () { return [
       choice('Appearance', [['dark', 'Dark'], ['light', 'Light'], ['auto', 'Auto']], function () { return S.appearance; }, function (v) { S.appearance = v; }),
-      choice('App Tiles', [['full', 'Full Color'], ['dark', 'Dark Glass']], function () { return S.tiles; }, function (v) { S.tiles = v; build(); }),
+      choice('Tile Style', [['system', 'System'], ['clear', 'Clear'], ['dark', 'Dark'], ['full', 'Color']], function () { return S.tiles; }, function (v) { S.tiles = v; build(); }),
       choice('Effects', [['auto', 'Full'], ['lite', 'Lite']], function () { return S.effects; }, function (v) { S.effects = v; }),
       toggle('Show All App Names', 'showAllNames'),
       toggle('Navigation Sounds', 'uiSounds') ]; } } },
@@ -912,7 +943,7 @@ function folderKey(k) {
 var plex = read('home-plex', { id: 'home-' + Date.now(), token: '', base: '', server: '', sections: [], video: '', photo: '' });
 function plexSave() { write('home-plex', plex); }
 function plexFetch(url, method, token) {
-  var h = { Accept: 'application/json', 'X-Plex-Product': 'Home', 'X-Plex-Version': VERSION, 'X-Plex-Client-Identifier': plex.id, 'X-Plex-Platform': 'webOS', 'X-Plex-Device': 'LG TV', 'X-Plex-Device-Name': 'LG TV DC' };
+  var h = { Accept: 'application/json', 'X-Plex-Product': 'Home', 'X-Plex-Version': VERSION, 'X-Plex-Client-Identifier': plex.id, 'X-Plex-Platform': 'webOS', 'X-Plex-Device': 'LG TV', 'X-Plex-Device-Name': 'LG TV' };
   if (token) h['X-Plex-Token'] = token;
   return fetch(url, { method: method || 'GET', headers: h }).then(function (r) { return r.json(); });
 }

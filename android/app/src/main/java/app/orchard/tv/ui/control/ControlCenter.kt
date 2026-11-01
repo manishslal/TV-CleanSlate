@@ -81,6 +81,7 @@ import app.orchard.tv.R
 import app.orchard.tv.apps.SourceLooks
 import app.orchard.tv.settings.AerialSettings
 import app.orchard.tv.settings.HomeMode
+import app.orchard.tv.guard.FireKeeper
 import app.orchard.tv.system.HomeStatus
 import app.orchard.tv.system.LaunchFallback
 import app.orchard.tv.system.NetKind
@@ -100,7 +101,6 @@ import app.orchard.tv.ui.theme.GlyphIcon
 import app.orchard.tv.ui.theme.Motion
 import app.orchard.tv.ui.theme.Palette
 import app.orchard.tv.ui.theme.Type
-import app.orchard.tv.update.Updates
 import app.orchard.tv.wallpaper.PhoneServer
 import java.time.LocalDateTime
 
@@ -124,11 +124,9 @@ fun ControlCenter(
             CcPage.Main -> onClose()
             CcPage.Inputs -> vm.overlay = Overlay.ControlCenter(CcPage.Main)
             CcPage.InputSettings -> vm.overlay = Overlay.ControlCenter(CcPage.Inputs)
-            CcPage.Update, CcPage.Setup -> vm.overlay = Overlay.ControlCenter(CcPage.Main)
+            CcPage.Setup -> vm.overlay = Overlay.ControlCenter(CcPage.Main)
         }
     }
-
-    LaunchedEffect(visible) { if (visible) Updates.checkIfStale(maxAgeMs = Updates.CONTROL_CENTER_MAX_AGE_MS) }
 
     AnimatedVisibility(
         visible = visible,
@@ -181,7 +179,6 @@ fun ControlCenter(
                         CcPage.Main -> MainPage(vm, now, visible, onOpen)
                         CcPage.Inputs -> InputsPage(vm, visible, onOpen)
                         CcPage.InputSettings -> InputSettingsPage(vm, visible)
-                        CcPage.Update -> UpdatePage(vm, visible)
                         CcPage.Setup -> SetupPage(vm, visible, onOpen)
                     }
                 }
@@ -218,7 +215,7 @@ private fun MainPage(vm: HomeViewModel, now: LocalDateTime, takeFocus: Boolean, 
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 GlyphIcon(
                     when (net.kind) { NetKind.Wifi -> Glyph.Wifi; NetKind.Ethernet -> Glyph.Ethernet; NetKind.Offline -> Glyph.Offline },
-                    Palette.SecondaryLabel, 14.dp, level = net.level,
+                    Palette.SecondaryLabel, 18.dp, level = net.level,
                 )
                 BasicText(
                     when (net.kind) {
@@ -275,21 +272,15 @@ private fun MainPage(vm: HomeViewModel, now: LocalDateTime, takeFocus: Boolean, 
                 trailing = "$name ›",
             )
         }
-        Updates.available?.let { latest ->
-            MenuRow(
-                Glyph.Info,
-                stringResource(R.string.cc_update_available, latest),
-                onClick = { vm.overlay = Overlay.ControlCenter(CcPage.Update) },
-            )
-        }
-
         // Installed from the APK alone: how to finish, on the TV or with a computer.
         if (vm.homeStatus == HomeStatus.NotDefault) {
             MenuRow(Glyph.Shield, stringResource(R.string.cc_setup_title), onClick = { vm.overlay = Overlay.ControlCenter(CcPage.Setup) }, trailing = "›")
         }
 
         Spacer(Modifier.height(8.dp))
-        val (dot, text) = when (vm.homeStatus) {
+        val (dot, text) = if (FireKeeper.firmwareChanged(LocalContext.current)) {
+            Palette.Orange to stringResource(R.string.cc_fire_updated)
+        } else when (vm.homeStatus) {
             HomeStatus.Default -> Palette.Green to stringResource(R.string.cc_home_default)
             HomeStatus.Guarded -> Palette.Green to stringResource(R.string.cc_home_guarded)
             HomeStatus.NotDefault -> Palette.Orange to stringResource(R.string.cc_home_not_default)
@@ -297,84 +288,9 @@ private fun MainPage(vm: HomeViewModel, now: LocalDateTime, takeFocus: Boolean, 
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 14.dp)) {
             Box(Modifier.size(7.dp).clip(CircleShape).background(dot))
             Spacer(Modifier.width(8.dp))
-            BasicText(text, style = Type.Caption, modifier = Modifier.weight(1f))
+            BasicText(text, style = Type.Caption.copy(fontSize = 14.sp), modifier = Modifier.weight(1f))
             // Fork: the app's own name, not Aerial's.
-            BasicText(stringResource(R.string.cc_update_title, Updates.current), style = Type.Caption.copy(color = Palette.TertiaryLabel), modifier = Modifier.padding(end = 14.dp))
-        }
-    }
-}
-
-/**
- * How to move to the new version: "Download and Install" fetches the APK and opens the system
- * installer (Updates.install). For TVs whose firmware lets no app install another (see
- * Updates.Failure), and for copies older than the button, a QR code opens the website's update
- * page on a phone, with the install command for this TV to copy: typing it off the screen was
- * too much. The TV's address rides in the fragment, which the browser does not send.
- */
-@Composable
-private fun UpdatePage(vm: HomeViewModel, takeFocus: Boolean) {
-    val context = LocalContext.current
-    val first = remember { FocusRequester() }
-    LaunchedEffect(Unit) {
-        if (!takeFocus) return@LaunchedEffect
-        withFrameNanos { }
-        runCatching { first.requestFocus() }
-    }
-    DisposableEffect(Unit) { onDispose { Updates.resetInstall() } }
-    val canInstall = remember { Updates.canInstall(context) }
-    var qr by remember { mutableStateOf<ImageBitmap?>(null) }
-    LaunchedEffect(Unit) {
-        val ip = PhoneServer.lanAddress(context)
-        val url = "https://aerial.qust.me/update/#v=${Updates.current}&f=${BuildConfig.FLAVOR}" + (ip?.let { "&tv=$it" } ?: "")
-        qr = withContext(Dispatchers.Default) { PhoneServer.qr(url).asImageBitmap() }
-    }
-    Column {
-        MenuRow(
-            Glyph.ChevronLeft, stringResource(R.string.cc_update_title, Updates.available ?: Updates.current),
-            focusRequester = if (canInstall) null else first,
-            onClick = { vm.overlay = Overlay.ControlCenter(CcPage.Main) },
-        )
-        if (canInstall) {
-            val state = Updates.install
-            MenuRow(
-                Glyph.Download,
-                when (state) {
-                    is Updates.Install.Downloading -> stringResource(R.string.cc_update_downloading, (state.fraction * 100).toInt())
-                    else -> stringResource(R.string.cc_update_install)
-                },
-                focusRequester = first,
-                onClick = { Updates.install(context) },
-            )
-        }
-        Column(Modifier.padding(horizontal = 14.dp)) {
-            Spacer(Modifier.height(10.dp))
-            val status = when (val state = Updates.install) {
-                Updates.Install.Opened -> stringResource(R.string.cc_update_opened)
-                Updates.Install.NeedsPermission -> stringResource(R.string.cc_update_permission)
-                Updates.Install.NeedsStoragePermission -> stringResource(R.string.cc_update_storage_permission)
-                is Updates.Install.Failed -> stringResource(
-                    when (state.reason) {
-                        Updates.Failure.Download -> R.string.cc_update_failed_download
-                        Updates.Failure.Blocked -> R.string.cc_update_failed_blocked
-                        Updates.Failure.NotOfficial -> R.string.cc_update_failed_signature
-                        Updates.Failure.NotNewer -> R.string.cc_update_failed_older
-                    },
-                )
-                else -> stringResource(R.string.cc_update_current, Updates.current)
-            }
-            BasicText(status, style = Type.Caption)
-            Spacer(Modifier.height(16.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(104.dp).clip(RoundedCornerShape(12.dp)).background(Color.White).padding(8.dp)) {
-                    qr?.let { Image(it, contentDescription = null, contentScale = ContentScale.Fit, filterQuality = FilterQuality.None, modifier = Modifier.fillMaxSize()) }
-                }
-                Spacer(Modifier.width(16.dp))
-                Column(Modifier.weight(1f)) {
-                    BasicText(stringResource(if (canInstall) R.string.cc_update_scan_else else R.string.cc_update_scan), style = Type.Body)
-                    Spacer(Modifier.height(6.dp))
-                    BasicText(stringResource(R.string.cc_update_keeps), style = Type.Caption)
-                }
-            }
+            BasicText(stringResource(R.string.cc_update_title, BuildConfig.VERSION_NAME.substringBefore('-')), style = Type.Caption.copy(color = Palette.TertiaryLabel, fontSize = 14.sp), modifier = Modifier.padding(end = 14.dp))
         }
     }
 }
@@ -382,8 +298,7 @@ private fun UpdatePage(vm: HomeViewModel, takeFocus: Boolean) {
 /**
  * For a TV where Aerial was installed from the APK alone (a USB stick, an app store): it opens, but
  * Home, power-on and wake still go to the stock launcher (issue #213). The settings pages that can
- * fix that on the TV itself, where the TV has them, and a QR code to the website's page with this
- * TV's install command, which does all of it.
+ * fix that on the TV itself, where the TV has them.
  */
 @Composable
 private fun SetupPage(vm: HomeViewModel, takeFocus: Boolean, onOpen: (android.content.Intent) -> Unit) {
@@ -397,30 +312,12 @@ private fun SetupPage(vm: HomeViewModel, takeFocus: Boolean, onOpen: (android.co
     val guard = remember { SystemProbe.guardSettingsIntent(context) }
     val home = remember { SystemProbe.homeSettingsIntent(context) }
     val revival = remember { SystemProbe.revivalSettingsIntent(context) }
-    var qr by remember { mutableStateOf<ImageBitmap?>(null) }
-    LaunchedEffect(Unit) {
-        if (!BuildConfig.UPSTREAM_SERVER) return@LaunchedEffect
-        val ip = PhoneServer.lanAddress(context)
-        val url = "https://aerial.qust.me/update/#setup=1&v=${Updates.current}&f=${BuildConfig.FLAVOR}" + (ip?.let { "&tv=$it" } ?: "")
-        qr = withContext(Dispatchers.Default) { PhoneServer.qr(url).asImageBitmap() }
-    }
     Column {
         MenuRow(Glyph.ChevronLeft, stringResource(R.string.cc_setup_title), focusRequester = first, onClick = { vm.overlay = Overlay.ControlCenter(CcPage.Main) })
         BasicText(stringResource(R.string.cc_setup_body), style = Type.Caption, modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp))
         guard?.let { MenuRow(Glyph.Shield, stringResource(R.string.cc_setup_guard), onClick = { vm.whenUnlocked { onOpen(it) } }, trailing = stringResource(R.string.cc_setup_guard_where) + " ›") }
         home?.let { MenuRow(Glyph.Check, stringResource(R.string.cc_setup_home), onClick = { vm.whenUnlocked { onOpen(it) } }, trailing = "›") }
         revival?.let { MenuRow(Glyph.Moon, stringResource(R.string.cc_setup_revival), onClick = { vm.whenUnlocked { onOpen(it) } }, trailing = stringResource(R.string.cc_setup_revival_where) + " ›") }
-        if (BuildConfig.UPSTREAM_SERVER) Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 14.dp)) {
-            Box(Modifier.size(104.dp).clip(RoundedCornerShape(12.dp)).background(Color.White).padding(8.dp)) {
-                qr?.let { Image(it, contentDescription = null, contentScale = ContentScale.Fit, filterQuality = FilterQuality.None, modifier = Modifier.fillMaxSize()) }
-            }
-            Spacer(Modifier.width(16.dp))
-            Column(Modifier.weight(1f)) {
-                BasicText(stringResource(R.string.cc_setup_scan), style = Type.Body)
-                Spacer(Modifier.height(6.dp))
-                BasicText(stringResource(R.string.cc_setup_scan_hint), style = Type.Caption)
-            }
-        }
     }
 }
 
@@ -494,7 +391,7 @@ private fun SliderRow(
                         while (travelled <= -pitch) { step(-1); travelled += pitch }
                     }
                 }
-                .height(40.dp).liquidGlass(14.dp, band = 8.dp).background(bg).padding(horizontal = 14.dp),
+                .height(44.dp).liquidGlass(14.dp, band = 8.dp).background(bg).padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -516,7 +413,7 @@ private fun SliderRow(
 /** Fork: Home Mode ([HomeMode]): Left and Right move through them, as a value in Personalize does. */
 @Composable
 private fun HomeModeRow() {
-    val modes = HomeMode.entries
+    val modes = AerialSettings.homeModes
     val at = modes.indexOf(AerialSettings.homeMode)
     Pressable(
         onClick = {},
@@ -540,11 +437,11 @@ private fun HomeModeRow() {
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             GlyphIcon(Glyph.Power, fg, 18.dp)
-            Spacer(Modifier.width(6.dp))
+            Spacer(Modifier.width(2.dp))
             BasicText(stringResource(R.string.fk_home_mode), style = Type.Body.copy(color = fg), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             if (state.focused) GlyphIcon(Glyph.ChevronLeft, fg.copy(alpha = if (at > 0) 1f else 0.25f), 14.dp)
             BasicText(
-                stringResource(when (modes[at]) { HomeMode.Full -> R.string.fk_mode_full; HomeMode.Custom -> R.string.fk_mode_custom; HomeMode.Efficient -> R.string.fk_mode_efficient }),
+                stringResource(when (modes[at]) { HomeMode.Auto -> R.string.fk_mode_auto; HomeMode.Full -> R.string.fk_mode_full; HomeMode.Custom -> R.string.fk_mode_custom; HomeMode.Efficient -> R.string.fk_mode_efficient }),
                 style = Type.Callout.copy(color = fg.copy(alpha = 0.72f)),
             )
             if (state.focused) GlyphIcon(Glyph.ChevronRight, fg.copy(alpha = if (at < modes.lastIndex) 1f else 0.25f), 14.dp)
@@ -640,7 +537,7 @@ private fun InputsPage(vm: HomeViewModel, takeFocus: Boolean, onOpen: (android.c
         }
         // Switching is this page's one job; what Aerial does with the inputs is a page further in.
         if (vm.sources.isNotEmpty()) {
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(12.dp))
             MenuRow(Glyph.Gear, stringResource(R.string.cc_inputs_settings), onClick = { vm.overlay = Overlay.ControlCenter(CcPage.InputSettings) })
         }
     }
@@ -662,7 +559,7 @@ private fun InputSettingsPage(vm: HomeViewModel, takeFocus: Boolean) {
     Column(Modifier.heightIn(max = 470.dp).verticalScroll(rememberScrollState())) {
         MenuRow(Glyph.ChevronLeft, stringResource(R.string.cc_inputs_settings), onClick = { vm.overlay = Overlay.ControlCenter(CcPage.Inputs) })
 
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(12.dp))
         BasicText(stringResource(R.string.cc_inputs_pin), style = Type.Callout, modifier = Modifier.padding(start = 14.dp, bottom = 6.dp))
         vm.sources.forEachIndexed { i, source ->
             val pinned = source.id in AerialSettings.pinnedSources
@@ -679,7 +576,7 @@ private fun InputSettingsPage(vm: HomeViewModel, takeFocus: Boolean) {
             modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp),
         )
 
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(16.dp))
         BasicText(stringResource(R.string.cc_inputs_boot), style = Type.Callout, modifier = Modifier.padding(start = 14.dp, bottom = 6.dp))
         ChoiceRow(
             text = stringResource(R.string.cc_inputs_boot_none),

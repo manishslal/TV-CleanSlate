@@ -7,7 +7,7 @@ import android.util.Log
 import org.json.JSONObject
 
 /**
- * Fork: the owner's logo pack for Dark Glass tiles, by package. It is copied into the build from
+ * Fork: the owner's logo pack, by package, for every tile style. It is copied into the build from
  * logos/ when that folder is there (app/build.gradle.kts) and never kept in this repo:
  * the logos are trademarks, for personal use. A build without it has no such asset, and every
  * tile is drawn from the app's own icon as before.
@@ -19,36 +19,46 @@ object LogoPack {
     /** Decoded no larger than this: 2 GB TVs draw a tile at 352×198, and masters run to a few thousand pixels. */
     private const val MAX_SIDE = 1024
 
+    /** A pack logo: light artwork, the color of its Color tile, and the ink it takes there (null: its own colors), and its size against the rest: a thin or round logo reads small at equal area. */
+    class Logo(val bitmap: Bitmap, val plate: Int?, val ink: Int?, val size: Float)
+
+    private class Entry(val file: String, val plate: Int?, val ink: Int?, val size: Float)
+
     private lateinit var context: Context
-    @Volatile private var files: Map<String, String>? = null
+    @Volatile private var files: Map<String, Entry>? = null
 
     /** Called before tiles are drawn. */
     fun use(context: Context) { this.context = context.applicationContext }
 
-    private fun files(): Map<String, String> = files ?: runCatching {
+    private fun color(entry: JSONObject, key: String): Int? =
+        entry.optString(key).takeIf { it.isNotEmpty() }?.let { runCatching { android.graphics.Color.parseColor(it) }.getOrNull() }
+
+    private fun files(): Map<String, Entry> = files ?: runCatching {
         val json = JSONObject(context.assets.open("$DIR/manifest.json").bufferedReader().use { it.readText() })
         buildMap {
             json.keys().forEach { brand ->
                 val entry = json.getJSONObject(brand)
                 val ids = entry.optJSONArray("android") ?: return@forEach
                 val file = entry.getString("file")
-                // Android draws no SVG from assets: that brand keeps its processed icon.
+                // Android draws no SVG from assets: logos/build_pack.py renders one to PNG.
                 if (file.endsWith(".svg")) return@forEach
-                for (i in 0 until ids.length()) put(ids.getString(i), file)
+                val logo = Entry(file, color(entry, "plate"), color(entry, "ink"), entry.optDouble("size", 1.0).toFloat())
+                for (i in 0 until ids.length()) put(ids.getString(i), logo)
             }
         }
     }.getOrElse { emptyMap() }.also { files = it }
 
     /** The logo for [pkg], or null: not in the pack, or no pack in this build. Off the main thread. */
-    fun load(pkg: String): Bitmap? {
-        val file = files()[pkg] ?: return null
+    fun load(pkg: String): Logo? {
+        val entry = files()[pkg] ?: return null
         return runCatching {
-            val path = "$DIR/$file"
+            val path = "$DIR/${entry.file}"
             val size = BitmapFactory.Options().apply { inJustDecodeBounds = true }
             context.assets.open(path).use { BitmapFactory.decodeStream(it, null, size) }
             var sample = 1
             while (maxOf(size.outWidth, size.outHeight) / sample > MAX_SIDE) sample *= 2
-            context.assets.open(path).use { BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sample }) }
+            val bitmap = context.assets.open(path).use { BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sample }) }
+            Logo(bitmap!!, entry.plate, entry.ink, entry.size)
         }.onFailure { Log.w(TAG, "could not read the logo of $pkg", it) }.getOrNull()
     }
 }
