@@ -141,5 +141,12 @@ Each entry gives what changed and how to undo it.
 - Launching YouTube and returning Home both worked.
 - Screen capture shows the launcher. It does not capture the video plane, so the wallpaper needs checking by eye.
 
-### Source changes not deployed (2026-10-31)
-- `webos/` has Clear tiles, System, Full Color logos and the focus glow. The JavaScript passes a syntax check, but the TV did not answer SSH, so none of it has run on the TV.
+### Source changes deployed (2026-11-01)
+- Deployed `webos/` with Clear tiles, System, Full Color logos, the focus glow, one-ink Dark logos, light clock cards, and tile names that clear the focus ring.
+- Previous app kept at `/media/developer/cleanyourtv/backup/app.before-2026-11-01`.
+- Checked with a compositor capture: Home in the foreground, white logos, and the focused name inside the dock. The capture leaves out the video plane.
+- Undo: copy that backup over `app/`, then run `stage-home.sh` and `reload-home.sh`.
+- Owner decision: keep AirPlay and Miracast. `17-lg-slim` no longer stops `miracast.service`.
+- Fixed `17-lg-slim`: `mqtt-client` runs from `/usr/sbin`, which the stub missed. It now stubs both paths.
+- Reviewed by compositor capture in Dark, Light, Clear, the full grid, Control Center and the screensaver, over black and over a near-white backdrop. Frost shows in the dock and grid. A later pass with `com.webos.service.capture` showed the real video behind Home, tiles, menus and frost in Dark, Light and Clear.
+- Matched Android's glow: it surrounds the focused tile, and the background glow shows on Dark and Clear only, at 32%.

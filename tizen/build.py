@@ -137,7 +137,7 @@ style = compile_css(css) + '''
 .minis { display: flex; flex-wrap: wrap; width: 174px; }
 .minis img { width: 84px; height: 58px; margin: 0 6px 4px 0; }
 #fgrid { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; }
-.tile.f .plate { box-shadow: 0 0 0 5px rgba(0,0,0,.75), 0 0 0 13px #f5f5f7, 0 18px 30px rgba(0,0,0,.45); }
+.tile.f .plate { box-shadow: 0 0 0 5px rgba(0,0,0,.75), 0 0 0 13px #f5f5f7, 0 0 30px rgba(0,0,0,.45); }
 body.idle #top { transform: none; }
 @keyframes push { 40% { transform: scale(1.15); } }
 '''
@@ -178,17 +178,8 @@ sub("icon: SVC + '/icon?id=' + encodeURIComponent(a.id), fallback: API + '/icon/
 sub("if (t.id !== 'com.cleanyourtv.manager' && t.id !== 'org.webosbrew.hbchannel') rows.push", 'if (false) rows.push')
 sub(",\n      { label: 'Turn Off TV', icon: 'POWER', ok: function () { api('/api/power/off', {}).catch(function () {}); } } ]", ' ]')
 sub('https://sylvan.apple.com/', 'http://sylvan.apple.com/')
-sub('function next() {\n  if (document.hidden) return;', "function next() {\n  if (document.hidden || $('v' + (1 - active)).onplaying) return;")
-sub('v.onerror = function () { setTimeout(next, 30000); };', 'v.onerror = function () { v.onplaying = null; setTimeout(next, 30000); };')
-sub('v.onerror = null; v.pause();', 'clearTimeout(window.wallGuard); v.onerror = v.onplaying = v.ontimeupdate = null; v.pause();')
-sub('v.play().catch(function () {});', """v.play();
-  v.ontimeupdate = function () { v.ontimeupdate = null; if (v.onplaying) v.onplaying(); };
-  clearTimeout(window.wallGuard);
-  window.wallGuard = setTimeout(function () {
-    if (!v.onplaying) return;
-    v.onplaying = v.ontimeupdate = v.onerror = null; v.pause(); v.removeAttribute('src'); v.load();
-    next();
-  }, 6000);""")
+sub('v.play().catch(function () {});', 'v.play();')
+sub('WALL_WAIT = 20000', 'WALL_WAIT = 6000')
 sub('function readInputs(j) {', "function readInputs() { return [{ id: 'org.tizen.SMSourceAPP', title: 'Inputs', short: 'Inputs', glyph: 'HDMI' }]; }\nfunction readWebOSInputs(j) {")
 sub("'com.palm.app.settings'", "'org.tizen.menu'")
 page = re.sub(r"'calc\(' \+ (.+?) \+ ' \* var\(--u\)\)'", r"(\1) + 'px'", page)

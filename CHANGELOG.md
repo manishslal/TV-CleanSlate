@@ -7,6 +7,12 @@
 - webOS: the clock has light cards in Light, and the screensaver keeps dark cards
 - webOS: the focused tile's name clears the focus ring
 - webOS: progress bars in focused menu rows are easier to see
+- webOS: Clear logos use one ink, so Netflix stays readable
+- webOS: menus hide the status pill and no longer show tiles through the panel
+- webOS: the date, caption and news have a stronger shadow, and the screensaver dims the scene slightly
+- webOS: a stalled wallpaper moves on to the next one
+- webOS: the focus glow surrounds the tile, and the background glow shows only on Dark and Clear, as on Android
+- LG: Miracast stays on, and LG's cloud link is fully stopped
 
 ## 1.67-mh23 (2026-11-01)
 

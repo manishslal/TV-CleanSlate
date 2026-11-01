@@ -58,6 +58,8 @@ This TV's HTTPS requests to Apple's aerial video host fail, so `build.py` uses i
 4. **Block ads at the router.** This needs no change on the TV and survives a reset.
 5. **Decide on the Home button.** This step is optional and needs the owner's separate approval.
 
+Later: walk the owner through blocking AdSuite, Sponsored Video and Ad Player at the router or DNS.
+
 ## Before the first run
 
 The owner does these steps:

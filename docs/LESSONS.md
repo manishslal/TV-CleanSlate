@@ -9,6 +9,8 @@ What one TV taught us that applies to the next. Add to this after every device, 
 | Dark tiles: one ink on every logo | `TileArt.monoInk` | `index.src.html` | From webOS |
 | Light clock cards; dark on the screensaver | `FlipText` | `index.src.html` | From webOS |
 | Tile name clears the focus ring | `AppTile` | `index.src.html` | From webOS |
+| Focus glow surrounds the tile; background glow on Dark and Clear only | `AppTile`, `HomeScreen` | `index.src.html` | From webOS |
+| A stalled wallpaper gives way to the next | `ExoPlayer` not reviewed | `index.src.html` | From webOS, 6 seconds |
 
 - Samsung Home is built from `webos/index.src.html`. Fix shared behavior there, then rebuild both.
 - Android Lite has no card clock.
@@ -26,6 +28,8 @@ What one TV taught us that applies to the next. Add to this after every device, 
 - Check `applist` afterwards. Package-level removal also takes an app's background services.
 
 ## Debugging a TV you can't see
+
+- On rooted LG TVs, `com.webos.service.capture/executeOneShot` with method `DISPLAY` captures the real screen, video included. `captureCompositorOutput` leaves the video out.
 
 - Add a debug build that reports keys, errors and page state to the computer. It separated "the remote never reached Home" from "Home ignored it".
 - Cache-bust any polling request, or commands can silently stop arriving.
