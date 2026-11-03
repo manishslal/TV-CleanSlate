@@ -118,6 +118,19 @@
       "requires_root": false,
       "liquid_glass": false,
       "verified_on_hardware": true
+    },
+    {
+      "id": "samsung-un55nu6900",
+      "name": "Samsung UN55NU6900",
+      "codename": "18_KANTSU_UHD_BASIC",
+      "platform": "tizen",
+      "os": "Tizen 4.0",
+      "ram_gb": 1,
+      "home": "tizen",
+      "debloat": true,
+      "requires_root": false,
+      "liquid_glass": false,
+      "verified_on_hardware": true
     }
   ]
 }

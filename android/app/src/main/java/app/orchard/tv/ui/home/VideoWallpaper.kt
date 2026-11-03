@@ -121,6 +121,17 @@ fun VideoWallpaper(
         sampleGlass({ player }, canTake = { copyGlassPossible }) { surface?.let { copyGlass(it) } }
     }
 
+    // A film that never starts gives way to the next, as an undecodable one does.
+    LaunchedEffect(play, showing) {
+        while (play && !showing) {
+            delay(WALL_STALL_MS)
+            player?.takeIf { it.playbackState == Player.STATE_BUFFERING && it.mediaItemCount > 1 }?.let {
+                DiagLog.i("video wallpaper stalled (${it.currentMediaItem?.mediaId})")
+                it.seekToNextMediaItem()
+            }
+        }
+    }
+
     LaunchedEffect(play) {
         if (play) {
             val p = player ?: open()?.also { player = it } ?: return@LaunchedEffect
@@ -182,3 +193,5 @@ private fun fileFrame(context: android.content.Context, id: String, atMs: Long, 
         runCatching { mmr.release() }
     }
 }
+
+private const val WALL_STALL_MS = 30_000L

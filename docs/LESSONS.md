@@ -4,6 +4,8 @@ What one TV taught us that applies to the next. Add to this after every device, 
 
 ## Keeping versions the same
 
+`docs/parity.json` is the full feature list, and CI fails a UI change that doesn't update it. The table below records where shared features live.
+
 | Feature | Android | webOS | Samsung |
 |---|---|---|---|
 | Dark tiles: one ink on every logo | `TileArt.monoInk` | `index.src.html` | From webOS |
@@ -21,16 +23,47 @@ What one TV taught us that applies to the next. Add to this after every device, 
 - Compiling CSS variables away can change which rule wins. `body.light .row .v` beat `.row.f .v` after compiling, so focused menu values went dark on dark. Check focused states in both themes after any compile step.
 - Don't assume `play()` returns a Promise or that `playing` fires. On Tizen 3.0, `timeupdate` was the reliable signal.
 
+- Hand-built MP4 fragments can pass `ffmpeg` and still fail on the TV. Tizen 3.0 rejected Apple's QuickTime sample entry until its version fields and 4-byte terminator were removed. Bisect by swapping one box at a time into a file that works.
+
+## Video on older TVs
+
+- A TV's browser and media player can use different network code. On the Samsung, the media player couldn't reliably reach hosts with IPv6 records while `XMLHttpRequest` always could, so one in six looked random.
+- When a media test looks random, rule out the network by host: try an IPv4-only host, a dual-stack host and a relay that logs requests. A failure on one host type is a clue a list of "good" files will hide.
+- Feeding Media Source from `XMLHttpRequest` avoids the media player's network code. It took Apple's videos from about one in six to 113 of 113 on the Samsung.
+- Test leaving and returning, and check that playback time moves. On the Samsung, the engine paused video as Home came back, leaving the first frame on screen with `readyState` 4.
+- Check that a test can't pass by accident: a stale player event reported a 22 ms start until the numbers looked wrong.
+
 ## Removing apps
 
 - Try the ID from the TV's own app list, not only the package ID. On the Samsung, `vd_appuninstall` refused `XtU8fQk2gN.ESPN` with error 132 and accepted the numeric ID from `vd_applist`.
 - The Samsung's Delete menu can refuse an app that the numeric ID removes.
+- Try the package ID too, the part before the dot. `vd_appuninstall adplatform` and the store demo's package ID worked after their app IDs returned error 132.
+- Every Tizen version labels system parts differently. Tizen 4.0 marks `com.samsung.tv.*` system apps as visible.
+- Video wallpaper cost about 200 MB of RAM on a 2018 Samsung with 1 GB. Stills are the fast option on such TVs.
 - Check `applist` afterwards. Package-level removal also takes an app's background services.
+
+## Web ports
+
+- `org.tizen.SMSourceAPP` launches but shows nothing on a 2018 Samsung. Pressing the Source key from the page over `wss://127.0.0.1:8002` opened, but the TV kept asking for approval and returned `ms.channel.unauthorized`, so this isn't solved yet.
+- Samsung's on-screen keyboard sends 65376 for Done and 65385 for Cancel, not Enter.
+- When a port stubs a platform service, return every field the page reads. Samsung's network stub left out the IP address, so Control Center said Offline on a connected TV.
 
 ## Debugging a TV you can't see
 
 - On rooted LG TVs, `com.webos.service.capture/executeOneShot` with method `DISPLAY` captures the real screen, video included. `captureCompositorOutput` leaves the video out.
 
+- Try undocumented arguments before accepting a reported limit. Samsung's `sdb shell 0 debug <app>` answers `closed` on Tizen 3.0, but adding a timeout, as in `sdb shell 0 debug <app> 30`, opens the web inspector.
+- The Samsung's inspector can't capture frames, but it can run html2canvas in the page. That shows layout and focus, not the video plane, and it isn't an exact render.
+- On the Samsung, remote close 1005 `notack` means nobody pressed Allow within 30 seconds. Keep the connection open until the token arrives, and try a new client name if the prompt stops working.
+- A Samsung app can't register the Home key, but Smart Hub takes focus without hiding the page. An app calling `tizen.application.launch` on itself at that moment closed Smart Hub on both Tizen 3.0 and 4.0. Menu and Source take focus the same way, so test every system pop-up before shipping a focus rule.
+- A web app is frozen behind other apps, so test any Home button idea from inside an app, not only from Home.
+- Set up a camera and scripted keys before a remote-control test. On a Mac, QuickTime's Movie Recording window stays live, and Photo Booth pauses. Look after every key, because a blind sequence can act inside the wrong app.
+- A Samsung can offer two IDs for one app. Netflix's store ID opened black, and `org.tizen.netflix-app` worked.
+- A remote Allow only counts while the computer stays connected. If a stale prompt stays up, close it and connect under a new client name.
+- A timeout isn't proof that code ran. On the Samsung it was the known hang from asking for debug twice. Change the delay length and confirm the time changes with it.
+- Check removed apps again later. The Samsung reinstalled ESPN, Tubi, Spotify and YouTube TV by itself.
+- `sdb shell 0 debug <app>` needs a timeout argument on Tizen 3.0 and fails with one on Tizen 4.0, so try both.
+- Inspector key events reach the page with no pairing, which is enough to test Home's focus and menus.
 - Add a debug build that reports keys, errors and page state to the computer. It separated "the remote never reached Home" from "Home ignored it".
 - Cache-bust any polling request, or commands can silently stop arriving.
 - Test a failing URL directly from the TV. Its failing HTTPS request to Apple's video host looked like a playback stall.

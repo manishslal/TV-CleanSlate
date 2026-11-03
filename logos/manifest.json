@@ -151,7 +151,8 @@
     "plate": "#000000",
     "ink": "#FFFFFF",
     "tizen": [
-      "Y6A54cEa22.AppleTV"
+      "Y6A54cEa22.AppleTV",
+      "com.samsung.tv.aria-video"
     ]
   },
   "spotify": {
@@ -516,7 +517,10 @@
     ],
     "commons": "Sling_TV_logo.svg",
     "plate": "#0F75BC",
-    "ink": "#FFFFFF"
+    "ink": "#FFFFFF",
+    "tizen": [
+      "ZmmGjO6VKO.slingtv"
+    ]
   },
   "pluto-tv": {
     "title": "Pluto Tv",

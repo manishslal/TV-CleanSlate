@@ -11,6 +11,8 @@ from pathlib import Path
 here = Path(__file__).parent
 root = here / '..'
 web = root / 'webos'
+sys.path.insert(0, str(root / 'logos'))
+from plates import readable  # noqa: E402
 out = here / 'build'
 debug_host = os.environ.get('DEBUG_HOST', '')
 
@@ -152,8 +154,8 @@ for brand, m in manifest.items():
     name = f"logo-{brand}{'.svg' if source.suffix == '.svg' else '.webp'}"
     if source.exists() and (web / 'logo' / name).exists():
         logos.update({i: name for i in m.get('tizen', [])})
-    if m.get('plate'):
-        plates.update({i: [m.get('plate'), m.get('ink')] for i in m.get('tizen', [])})
+    if m.get('plate') or m.get('size'):
+        plates.update({i: [readable(m.get('plate'), m.get('ink')), m.get('ink'), m.get('size')] for i in m.get('tizen', [])})
 ids = [manifest[b]['tizen'][0] for b in order if manifest.get(b, {}).get('tizen')]
 
 
@@ -172,18 +174,27 @@ sub('461', '10009')
 sub("r.setProperty('--driftx'", "(function () {})('--driftx'")
 sub("r.setProperty('--drifty'", "(function () {})('--drifty'")
 sub("el.style.setProperty('--halo', tint(t.id));", '')
+sub("if (t && zone === 'grid' && !down) $('glow')", "if (t) haloStyle(tint(t.id));\n  if (t && zone === 'grid' && !down) $('glow')")
 sub("t.el.style.setProperty('--dx'", "(function () {})('--dx'")
 sub("t.el.style.setProperty('--dy'", "(function () {})('--dy'")
 sub("icon: SVC + '/icon?id=' + encodeURIComponent(a.id), fallback: API + '/icon/' + encodeURIComponent(a.id)", 'icon: a.icon')
 sub("if (t.id !== 'com.cleanyourtv.manager' && t.id !== 'org.webosbrew.hbchannel') rows.push", 'if (false) rows.push')
 sub(",\n      { label: 'Turn Off TV', icon: 'POWER', ok: function () { api('/api/power/off', {}).catch(function () {}); } } ]", ' ]')
+sub('backSaver: true,', 'backSaver: true, takeHome: true,')
+sub("toggle('Back Starts Screensaver', 'backSaver'),", "toggle('Back Starts Screensaver', 'backSaver'), toggle('Home Button Returns Here', 'takeHome'),")
 sub('https://sylvan.apple.com/', 'http://sylvan.apple.com/')
+# The 2017 and 2018 TVs stall on anything above 1080p H.264, so the choice goes.
+sub("    rows.push(choice('Aerial Quality', [['hd', '1080p'], ['uhd', '4K']], function () { return S.quality; }, function (v) { S.quality = v; queue = []; restartWall(); }));\n", '')
+sub('v.src = item[0];', "if (/sylvan\\.apple\\.com/.test(item[0])) aerialPlay(v, item[0], next); else v.src = item[0];")
+sub('v.onplaying = v.ontimeupdate = v.onerror = null; v.pause();', 'aerialStop(v); v.onplaying = v.ontimeupdate = v.onerror = null; v.pause();')
+sub('clearTimeout(wallGuard); v.onerror = v.onplaying', 'clearTimeout(wallGuard); aerialStop(v); v.onerror = v.onplaying')
+sub('old.pause(); old.removeAttribute', 'aerialStop(old); old.pause(); old.removeAttribute')
 sub('v.play().catch(function () {});', 'v.play();')
-sub('WALL_WAIT = 20000', 'WALL_WAIT = 6000')
-sub('function readInputs(j) {', "function readInputs() { return [{ id: 'org.tizen.SMSourceAPP', title: 'Inputs', short: 'Inputs', glyph: 'HDMI' }]; }\nfunction readWebOSInputs(j) {")
+sub('WALL_WAIT = 20000', 'WALL_WAIT = 10000')
+sub('function readInputs(j) {', 'function readInputs() { return []; }\nfunction readWebOSInputs(j) {')
 sub("'com.palm.app.settings'", "'org.tizen.menu'")
 page = re.sub(r"'calc\(' \+ (.+?) \+ ' \* var\(--u\)\)'", r"(\1) + 'px'", page)
-sub('/* ---- settings, the same names', (here / 'adapter.js').read_text() + '\n/* ---- settings, the same names', 1)
+sub('/* ---- settings, the same names', (here / 'adapter.js').read_text() + (here / 'aerial.js').read_text() + '\n/* ---- settings, the same names', 1)
 if debug_host:
     sub('</head>', f'<script>var DEBUG_HOST = "{debug_host}";</script><script src="debug.js"></script></head>', 1)
 sub('<head>', '<head><script src="$WEBAPIS/webapis/webapis.js"></script>', 1)
@@ -192,6 +203,11 @@ sub("api('/api/frontend-ok', { version: VERSION }).catch(function () {});", """d
   else document.dispatchEvent(new Event('webOSRelaunch'));
 });""")
 
+# LEAN=1, for a TV short on memory and storage: starts on Efficient, with still wallpaper and no frost
+lean = os.environ.get('LEAN')
+if lean:
+    sub("effects: 'auto'", "effects: 'lite'")
+
 shutil.rmtree(out, ignore_errors=True)
 out.mkdir()
 (out / 'index.html').write_text(page)
@@ -199,6 +215,10 @@ shutil.copy(here / 'config.xml', out)
 shutil.copy(web / 'barlow_condensed_semibold.ttf', out)
 if debug_host:
     shutil.copy(here / 'debug.js', out)
+for picture in (web / 'stills').glob('still-*.jpg'):
+    shutil.copy(picture, out)
+for sheet in () if lean else (web / 'frost').glob('sheet-*.jpg'):
+    shutil.copy(sheet, out)
 for logo in (web / 'logo').iterdir():
     shutil.copy(logo, out)
 left = re.findall(r'var\(--|display: grid', style)

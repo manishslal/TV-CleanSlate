@@ -1,0 +1,15 @@
+name: Parity
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  ledger:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: python3 scripts/check-parity.py ${{ github.event.pull_request.base.sha || github.event.before }} ${{ github.sha }}

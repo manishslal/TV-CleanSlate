@@ -307,7 +307,7 @@
     <string name="fk_label_rows">Rows</string>
     <string name="fk_show_on_home">Show on Home</string>
     <string name="fk_label_peek">Peek at Next Row</string>
-    <string name="fk_label_plate">Glass Behind Apps</string>
+    <string name="fk_label_plate">Dock</string>
     <string name="fk_more_apps">More Apps</string>
     <string name="fk_label_tile_style">Tile Style</string>
     <string name="fk_label_mode">Mode</string>

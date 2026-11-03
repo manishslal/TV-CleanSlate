@@ -669,7 +669,7 @@ fun ShelfClock(
     away: Boolean = false,
 ) {
     val drift = heldDrift(saving, now)
-    val shadow = Shadow(Color.Black.copy(alpha = 0.28f), Offset(0f, 2f), blurRadius = 18f)
+    val shadow = Shadow(Color.Black.copy(alpha = 0.6f), Offset(0f, 2f), blurRadius = 18f)
     val dim = Color.White.copy(alpha = 0.72f)
     // Gone in the first 400 ms, while the time has barely set off (its 2 s ease-in-out). Fading
     // along its progress (1.52), they were still there as the time rose through the date, and over

@@ -1,0 +1,4 @@
+#!/bin/sh
+# Stops a UI commit that didn't update docs/parity.json, unless its message says [parity: none].
+grep -q '\[parity: none\]' "$1" && exit 0
+exec python3 scripts/check-parity.py

@@ -96,7 +96,7 @@ internal fun HeadlinesOverlay(now: LocalDateTime) {
     }
 }
 
-private val TextShade = Shadow(Color.Black.copy(alpha = 0.45f), Offset(0f, 1f), 6f)
+private val TextShade = Shadow(Color.Black.copy(alpha = 0.7f), Offset(0f, 1f), 6f)
 
 @Composable
 private fun age(published: Long): String {

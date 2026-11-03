@@ -35,9 +35,40 @@ Removing these took free space from 109 MB to 150 MB of 816 MB.
 
 ### Wallpaper
 
-- HTTPS requests to Apple's video host failed, so this build uses HTTP.
-- Starts are intermittent: 18 of 113 files on one pass, 2 of those 18 on the next, and 1 of 12 with a 3-second pause. Working files start within 4 seconds, and encoding and file layout matched between sampled files that played and stalled.
-- Home retries after 6 seconds. The cause is unknown.
+- HTTPS requests to Apple's video host failed from the browser side, so this build uses HTTP.
+- `<video>` started about one try in six: the media player can't reliably reach hosts with IPv6 records, and `<video>` stalls on 10 Mbps 1080p from any host. See the [research](../../docs/research/samsung-older-tvs.md).
+- `tizen/aerial.js` now fetches files with `XMLHttpRequest` and plays them through Media Source. 113 of 113 videos started through Home's clip change, with a median of 1.4 seconds and a slowest of 2.4.
+- A 524-second clip ran to its end and the next one started. Leaving for another app and returning restarted the wallpaper.
+- The owner confirmed by eye that video plays behind Home.
+
+### Home button
+
+- Home reopens itself about 0.6 seconds after the Home button, from Home's own screen only. **Home Button Returns Here** turns it off.
+- Home takes Menu and Source. Menu opens normally, and Source asks for a second press. The Inputs tile is gone. All of this was seen by the owner, except that the tile's removal was installed afterwards.
+
+### Known problems
+
+- ESPN, Tubi, Spotify and YouTube TV came back on 2026-11-01 at 19:27, without anyone reinstalling them, and show as tiles. The removal above didn't last.
+
+### Tiles
+
+- Fixed Netflix: the store ID opened a black screen, so Home opens `org.tizen.netflix-app`.
+- Seen opening on camera: YouTube, Netflix, Disney+ (about 30 seconds), HBO Max, Plex, Hulu, Prime Video, Apple TV, Paramount+, Tubi, YouTube TV. Not tested: ESPN, Spotify. Peacock's tile showed Prime Video's profile screen once, which may be a failed launch or a test slip, so it's unconfirmed.
+
+### Delay test
+
+- The owner approved a delay-only check of `sdb shell 0` commands. No command ran, and nothing changed on the TV. See the [research](../../docs/research/samsung-older-tvs.md#root-on-2017-and-2018-tvs).
+
+### Home key package
+
+- `CSHomeKey1.Web` was installed for a test and removed the same day with `vd_appuninstall`. The key rule didn't fire.
+- A client named CleanSlateKeys is allowed on this TV. Undo: remove it in Device Connect Manager.
+
+### Tools
+
+- `sdb shell 0 debug CSHome00Te.Home 30` opens the web inspector. Without the last argument, the TV answers `closed`.
+- The owner allowed a client named CleanSlateMac on the TV, and `tizen/tvkey.py` now sends remote keys. Undo: remove it in Device Connect Manager.
+- `tizen/tvshot.py` takes screenshots of Home's page, runs JavaScript in it and sends it keys.
 
 ### Verified
 

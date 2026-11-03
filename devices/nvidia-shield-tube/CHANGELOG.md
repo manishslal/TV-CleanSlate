@@ -76,3 +76,7 @@ All with `pm disable-user --user 0`. Undo one with `adb shell pm enable <package
 
 ### 7. Home 1.67-mh15 installed (2026-10-31)
 - Installed while asleep. Not checked on screen. Clear uses frosted glass here: Liquid Glass needs Android 13.
+
+### Home 1.67-mh25 installed (2026-11-03)
+- Updated from 1.67-mh15 with `adb install -r` of the standard release APK, then `cmd package compile -m speed -f io.manish.home`. Home Guard stayed enabled, and Home was in front afterwards.
+- Undo: install the earlier APK the same way, or `adb uninstall io.manish.home` to return to the stock launcher.

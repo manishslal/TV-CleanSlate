@@ -1,0 +1,286 @@
+{
+  "statuses": {
+    "done": "Works on this build",
+    "partial": "Works with a difference, explained in the note",
+    "missing": "Should exist here and doesn't yet",
+    "not-possible": "This platform can't do it, explained in the note",
+    "not-applicable": "Doesn't apply to this build",
+    "frozen": "This build isn't being updated"
+  },
+  "builds": [
+    "android",
+    "webos",
+    "tizen",
+    "lite"
+  ],
+  "features": [
+    {
+      "id": "dark-one-ink",
+      "name": "Dark and Clear logos use one ink",
+      "android": "done",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen"
+    },
+    {
+      "id": "light-clock-cards",
+      "name": "Light clock cards, dark on the screensaver",
+      "android": "done",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "not-applicable",
+      "note": "Lite has no card clock."
+    },
+    {
+      "id": "name-clears-ring",
+      "name": "Focused name clears the focus ring",
+      "android": "done",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen"
+    },
+    {
+      "id": "glow-shape",
+      "name": "Focus glow surrounds the tile; background glow on Dark and Clear only",
+      "android": "done",
+      "webos": "done",
+      "tizen": "partial",
+      "lite": "frozen",
+      "note": "Samsung's focus glow has no app color."
+    },
+    {
+      "id": "readable-text",
+      "name": "Date, caption and news stay readable over bright video",
+      "android": "partial",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen",
+      "note": "Android has darker shadows (1.67-mh24), not yet looked at on a TV."
+    },
+    {
+      "id": "wallpaper-stall",
+      "name": "A stalled wallpaper gives way to the next",
+      "android": "partial",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen",
+      "note": "Android skips after 30 s of buffering (1.67-mh24), not yet tried on a TV."
+    },
+    {
+      "id": "focus-style",
+      "name": "Focus Style: Standard, High Contrast, Invert",
+      "android": "done",
+      "webos": "done",
+      "tizen": "partial",
+      "lite": "partial",
+      "note": "Lite has no Invert. Built in from the web page, not yet looked at on a Samsung."
+    },
+    {
+      "id": "focus-glow-size",
+      "name": "Focus Glow: Small, Medium, Large",
+      "android": "done",
+      "webos": "done",
+      "tizen": "partial",
+      "lite": "frozen",
+      "note": "Built in from the web page, not yet looked at on a Samsung."
+    },
+    {
+      "id": "wallpaper-tint",
+      "name": "Wallpaper Tint: Off, Dim, Warm, Cool",
+      "android": "done",
+      "webos": "done",
+      "tizen": "partial",
+      "lite": "frozen",
+      "note": "Built in from the web page, not yet looked at on a Samsung."
+    },
+    {
+      "id": "apps-per-row",
+      "name": "Apps per Row",
+      "android": "done",
+      "webos": "done",
+      "tizen": "partial",
+      "lite": "done",
+      "note": "Web offers 4 to 6 and keeps its default of 6; Android defaults to 5. Built in from the web page, not yet looked at on a Samsung."
+    },
+    {
+      "id": "two-rows",
+      "name": "One or Two Rows on Home",
+      "android": "done",
+      "webos": "done",
+      "tizen": "partial",
+      "lite": "done",
+      "note": "Built in from the web page, not yet looked at on a Samsung."
+    },
+    {
+      "id": "peek",
+      "name": "Peek at Next Row",
+      "android": "done",
+      "webos": "missing",
+      "tizen": "missing",
+      "lite": "done",
+      "note": "The web dock has no room for a peek; it needs a design decision."
+    },
+    {
+      "id": "dock",
+      "name": "Dock",
+      "android": "done",
+      "webos": "done",
+      "tizen": "partial",
+      "lite": "done",
+      "note": "Built in from the web page, not yet looked at on a Samsung."
+    },
+    {
+      "id": "home-mode",
+      "name": "Home Mode replaces Effects",
+      "android": "done",
+      "webos": "partial",
+      "tizen": "partial",
+      "lite": "frozen",
+      "note": "On webOS, Auto behaves as Full, and Efficient is the old Lite. There are no wallpaper or glass changes. Built in from the web page, not yet looked at on a Samsung."
+    },
+    {
+      "id": "clock-styles",
+      "name": "Clock Style is Cards and Plain",
+      "android": "done",
+      "webos": "done",
+      "tizen": "partial",
+      "lite": "frozen",
+      "note": "Built in from the web page, not yet looked at on a Samsung."
+    },
+    {
+      "id": "arrow-pin",
+      "name": "Passcode by arrow keys",
+      "android": "done",
+      "webos": "done",
+      "tizen": "partial",
+      "lite": "done",
+      "note": "Built in from the web page, not yet looked at on a Samsung."
+    },
+    {
+      "id": "logo-size",
+      "name": "Logos set their own size",
+      "android": "done",
+      "webos": "done",
+      "tizen": "partial",
+      "lite": "frozen",
+      "note": "Built in from the web page, not yet looked at on a Samsung."
+    },
+    {
+      "id": "plate-contrast",
+      "name": "Color plates deepen until white logos reach 4.5:1",
+      "android": "done",
+      "webos": "done",
+      "tizen": "partial",
+      "lite": "frozen",
+      "note": "Built in from the web page, not yet looked at on a Samsung."
+    },
+    {
+      "id": "settings-gear",
+      "name": "Settings gear with a lit hub",
+      "android": "done",
+      "webos": "done",
+      "tizen": "partial",
+      "lite": "frozen",
+      "note": "Built in from the web page; not yet looked at on a Samsung."
+    },
+    {
+      "id": "frost",
+      "name": "Frosted dock and grid over video",
+      "android": "done",
+      "webos": "done",
+      "tizen": "partial",
+      "lite": "not-applicable",
+      "note": "Lite draws flat panels. Built in, but left out of the LEAN build; not yet looked at on a Samsung."
+    },
+    {
+      "id": "liquid-glass",
+      "name": "Liquid Glass",
+      "android": "done",
+      "webos": "not-possible",
+      "tizen": "not-possible",
+      "lite": "not-possible",
+      "note": "Needs Android 13 shaders."
+    },
+    {
+      "id": "input-tiles",
+      "name": "A tile for each input",
+      "android": "done",
+      "webos": "done",
+      "tizen": "not-possible",
+      "lite": "done",
+      "note": "No app can open Samsung's Source panel, so the Inputs tile is gone and Source takes two presses."
+    },
+    {
+      "id": "power-off",
+      "name": "Turn Off TV in Control Center",
+      "android": "done",
+      "webos": "done",
+      "tizen": "not-possible",
+      "lite": "done",
+      "note": "Samsung web apps can turn the screen off but not the TV, so the row is removed."
+    },
+    {
+      "id": "home-button",
+      "name": "Home button opens Home",
+      "android": "done",
+      "webos": "done",
+      "tizen": "partial",
+      "lite": "done",
+      "note": "Samsung opens Smart Hub first, then Home reopens over it. Only from Home's own screen, on both Samsungs. Not from inside apps."
+    },
+    {
+      "id": "phone-page",
+      "name": "Phone page: scan a QR code to pick wallpaper, send photos, name the city",
+      "android": "done",
+      "webos": "missing",
+      "tizen": "not-possible",
+      "lite": "frozen",
+      "note": "A Tizen web app can't listen on the network. On webOS, home-svc could serve it."
+    },
+    {
+      "id": "custom-tile-icons",
+      "name": "Give an app's tile a picture of your own",
+      "android": "done",
+      "webos": "missing",
+      "tizen": "missing",
+      "lite": "frozen",
+      "note": "Android sends the picture from the phone page, so the web builds need that first or another way in."
+    },
+    {
+      "id": "wallpaper-sources",
+      "name": "Wallpaper and screensaver sources: Aerial, Photos, Clock, Videos, System",
+      "android": "done",
+      "webos": "partial",
+      "tizen": "partial",
+      "lite": "frozen",
+      "note": "The web builds offer Aerial videos and Plex videos or photos."
+    },
+    {
+      "id": "aerial-quality",
+      "name": "Aerial Quality: Auto, 1080p, 4K, Dolby Vision",
+      "android": "done",
+      "webos": "partial",
+      "tizen": "not-possible",
+      "lite": "frozen",
+      "note": "LG offers 1080p and 4K (HEVC), not Dolby Vision, and 4K is untried on an LG. Samsung stalls above 1080p H.264, so the row is removed."
+    },
+    {
+      "id": "spoken-labels",
+      "name": "Spoken labels for screen readers",
+      "android": "done",
+      "webos": "missing",
+      "tizen": "missing",
+      "lite": "frozen",
+      "note": "Needs a check that webOS and Tizen screen readers read an app page at all."
+    },
+    {
+      "id": "lunar-date",
+      "name": "Chinese calendar date beside the clock on Chinese-language TVs",
+      "android": "done",
+      "webos": "not-applicable",
+      "tizen": "not-applicable",
+      "lite": "frozen",
+      "note": "The web Home is English only, so there is no Chinese-language mode to show it in."
+    }
+  ]
+}

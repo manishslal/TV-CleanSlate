@@ -2,7 +2,15 @@
 
 ## Unreleased
 
+- Android 1.67-mh25: Glass Behind Apps is now called Dock; clock text has darker shadows over bright video; a wallpaper that never starts gives way to the next after 30 seconds
+- webOS: Aerial Quality offers 1080p or 4K; Samsung keeps 1080p
+- `scripts/build-all.sh` rebuilds every Home and lists what each is missing
 - Samsung Tizen: a web Home built from webOS Home, running on one 2017 TV
+- Samsung Tizen: aerial videos now start reliably, through Media Source
+- Samsung Tizen: the Home button returns to Home after Smart Hub opens, from Home's own screen, with a setting to turn it off
+- Samsung Tizen: Home's Netflix tile no longer opens a black screen
+- Samsung Tizen: the Menu key opens Settings, Source takes two presses, and the Inputs tile is gone
+- Samsung Tizen: `tvshot.py` takes screenshots of Home and `tvkey.py` sends remote keys, with no root
 - webOS: Dark shows one ink on every logo, as Android does
 - webOS: the clock has light cards in Light, and the screensaver keeps dark cards
 - webOS: the focused tile's name clears the focus ring
@@ -13,6 +21,11 @@
 - webOS: a stalled wallpaper moves on to the next one
 - webOS: the focus glow surrounds the tile, and the background glow shows only on Dark and Clear, as on Android
 - LG: Miracast stays on, and LG's cloud link is fully stopped
+- webOS: new Focus Style, Focus Glow, Wallpaper Tint, Apps per Row, One or Two Rows and Dock
+- webOS: Home Mode replaces Effects, Flip is gone from Clock Style, and the passcode can be four arrows
+- webOS: logos use their own sizes, and Color plates deepen so white logos reach 4.5:1
+- Home Mode's Efficient shows still aerial pictures instead of moving wallpaper
+- `docs/parity.json` tracks each feature on every build, and CI fails a UI change that doesn't update it
 
 ## 1.67-mh23 (2026-11-01)
 

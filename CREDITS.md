@@ -65,6 +65,7 @@ Used while redesigning the interface. Their files are not included.
 | Item | Use | License or terms |
 |---|---|---|
 | [Jetpack Compose and AndroidX](https://developer.android.com/jetpack) | Android interface | Apache-2.0 |
+| [html2canvas](https://github.com/niklasvh/html2canvas) | `tizen/tvshot.py` downloads it to the computer to screenshot Home. It isn't included here or in Home | MIT |
 | [Media3 ExoPlayer](https://github.com/androidx/media) | Film playback | Apache-2.0 |
 | [NanoHTTPD](https://github.com/NanoHttpd/nanohttpd) | Phone setup page | BSD-3-Clause |
 | [ZXing](https://github.com/zxing/zxing) | QR codes | Apache-2.0 |

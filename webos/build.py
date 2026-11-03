@@ -2,16 +2,19 @@
 """Fill index.src.html with the wallpaper list, icons and news topics from the Android launcher's sources."""
 import json
 import re
+import sys
 from pathlib import Path
 
 here = Path(__file__).parent
+sys.path.insert(0, str(here / '../logos'))
+from plates import readable  # noqa: E402
 android = here / '../android/app/src/main'
 kt = android / 'java/app/orchard/tv'
 
-videos = [[v['url'], v.get('label', ''), v['category']]
+videos = [[v['url'], v.get('label', ''), v['category'], v.get('uhd', '')]
           for v in json.loads((android / 'assets/aerials.json').read_text())['videos']
           if 'AVC' in v['url'].upper() and 'SDR' in v['url']]
-videos = [v + [i] for i, v in enumerate(videos)]  # the number names the clip's baked frost, frost/frost-<n>.jpg
+videos = [v[:3] + [i, v[3]] for i, v in enumerate(videos)]  # the number names the clip's baked frost, frost/frost-<n>.jpg; the last is the 4K file
 
 paths = dict(re.findall(r'const val (\w+) = "([^"]+)"', (kt / 'ui/theme/GlyphPaths.kt').read_text()))
 wanted = 'WIFI LAN WIFI_OFF SETTINGS INPUT VOLUME_UP VOLUME_OFF VISIBILITY_OFF FOLDER OPEN_WITH DELETE CHEVRON_RIGHT HDMI LIGHT_MODE IMAGE PLAY_CIRCLE PARTLY_CLOUDY_DAY CALENDAR_MONTH VERIFIED_USER LANGUAGE BEDTIME CLOUD RAINY WEATHER_SNOWY FOGGY THUNDERSTORM POWER'.split()
@@ -52,10 +55,10 @@ for brand, m in json.loads((pack / 'manifest.json').read_text()).items():
         im.thumbnail((504, 276), Image.LANCZOS)
         im.save(out / name, 'WEBP', quality=92, alpha_quality=100, method=6)
     logos.update({i: name for i in m.get('webos', [])})
-    plates.update({i: [m.get('plate'), m.get('ink')] for i in m.get('webos', []) if m.get('plate')})
+    plates.update({i: [readable(m.get('plate'), m.get('ink')), m.get('ink'), m.get('size')] for i in m.get('webos', []) if m.get('plate') or m.get('size')})
 
 s = (here / 'index.src.html').read_text()
-for name, data in (('__VIDEOS__', videos), ('__ICONS__', icons), ('__TOPICS__', topics), ('__LOGOS__', logos), ('__PLATES__', plates), ('__FROST__', json.loads((here / 'frost.json').read_text()))):
+for name, data in (('__VIDEOS__', videos), ('__ICONS__', icons), ('__TOPICS__', topics), ('__LOGOS__', logos), ('__PLATES__', plates), ('__STILLS__', [p.name for p in sorted((here / 'stills').glob('still-*.jpg'))]), ('__FROST__', json.loads((here / 'frost.json').read_text()))):
     s = s.replace(name, json.dumps(data, separators=(',', ':')))
 (here / 'index.html').write_text(s)
 print(len(videos), 'videos', len(icons), 'icons', len(topics), 'topics', len(s), 'bytes')
