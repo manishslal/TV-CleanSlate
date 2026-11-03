@@ -86,3 +86,7 @@ All with `pm disable-user --user 0`. Undo one with `adb shell pm enable <package
 - A blind run of keys opened TiviMate's live TV once; Home was brought back with the Home key.
 - Undo: install the earlier APK the same way.
 
+### Home 1.67-mh29 installed (2026-11-03)
+- Clear tiles in Dark and Light show the dock at half strength. In Appearance, the Dock switch turned the dock off and on, and Wallpaper Tint showed Dim in Dark, went to Off (picture undimmed) and back to Dim.
+- Left on Clear tiles, Dark, Dock on, Tint Dim, as found before the test.
+

@@ -122,12 +122,12 @@
     },
     {
       "id": "dock",
-      "name": "Dock",
+      "name": "Dock, in Appearance, for every tile style (fainter behind Clear)",
       "android": "done",
       "webos": "done",
       "tizen": "partial",
       "lite": "done",
-      "note": "Built in from the web page, not yet looked at on a Samsung."
+      "note": "Built into the Samsung page, not yet looked at on a Samsung. Tried on the SHIELD."
     },
     {
       "id": "home-mode",
@@ -344,6 +344,15 @@
       "tizen": "partial",
       "lite": "frozen",
       "note": "Built into the web page, not yet looked at on an LG or a Samsung."
+    },
+    {
+      "id": "tint-per-appearance",
+      "name": "Wallpaper Tint for each appearance: Dark starts on Dim, which replaces Dark's own dimming",
+      "android": "done",
+      "webos": "done",
+      "tizen": "partial",
+      "lite": "frozen",
+      "note": "Light starts on a lighter Dim. A tint chosen before carries over to both. Samsung's is built in and not yet looked at on a TV."
     }
   ]
 }

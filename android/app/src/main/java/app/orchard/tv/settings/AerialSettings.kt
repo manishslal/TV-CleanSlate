@@ -233,11 +233,19 @@ object AerialSettings {
     /** Fork: the glow around a focused tile. */
     var focusGlow by mutableStateOf(FocusGlow.Medium); private set
 
-    /** Fork: the wash over the wallpaper. */
-    var wallpaperTint by mutableStateOf(WallpaperTint.Off); private set
+    /**
+     * Fork: the wash over the wallpaper, one for each appearance. Dark starts on Dim (the dimming
+     * Dark used to add on its own, so a Dim tint no longer stacks on it), Light on Dim too, a
+     * lighter one; either can be turned off or changed.
+     */
+    var tintDark by mutableStateOf(WallpaperTint.Dim); private set
+    var tintLight by mutableStateOf(WallpaperTint.Dim); private set
 
-    /** Fork: glass behind the top row, but not behind Clear tiles: glass on glass reads as neither. */
-    val showPlate: Boolean get() = homePlate && tileStyle != TileStyle.Clear
+    /** The wash for the appearance in effect now. */
+    val wallpaperTint: WallpaperTint get() = if (darkNow) tintDark else tintLight
+
+    /** Fork: the dock behind the top row. Behind Clear tiles it is fainter (HomeChrome). */
+    val showPlate: Boolean get() = homePlate
 
     /** Fork: whether tiles are dark glass with the logo alone right now, from [tileStyle]. */
     var darkTiles by mutableStateOf(true); private set
@@ -321,7 +329,10 @@ object AerialSettings {
         }
         focusStyle = FocusStyle.of(prefs.getString("focus_style", null))
         focusGlow = FocusGlow.of(prefs.getString("fork_focus_glow", null))
-        wallpaperTint = WallpaperTint.of(prefs.getString("fork_wallpaper_tint", null))
+        // Before 1.67-mh29 there was one tint, stacked on Dark's own dimming: a chosen one carries over.
+        val oldTint = prefs.getString("fork_wallpaper_tint", null)?.let(WallpaperTint::of)
+        tintDark = prefs.getString("fork_wallpaper_tint_dark", null)?.let(WallpaperTint::of) ?: oldTint?.takeIf { it != WallpaperTint.Off } ?: WallpaperTint.Dim
+        tintLight = prefs.getString("fork_wallpaper_tint_light", null)?.let(WallpaperTint::of) ?: oldTint?.takeIf { it != WallpaperTint.Off } ?: WallpaperTint.Dim
         pinnedSources = prefs.getStringSet("pinned_sources", null)?.toSet() ?: emptySet()
         bootSource = prefs.getString("boot_source", null)
         bootApp = prefs.getString("boot_app", null)
@@ -641,9 +652,10 @@ object AerialSettings {
         app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString("fork_focus_glow", glow.key) }
     }
 
+    /** Sets the wash for the appearance in effect now. */
     fun chooseWallpaperTint(tint: WallpaperTint) {
-        wallpaperTint = tint
-        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString("fork_wallpaper_tint", tint.key) }
+        if (darkNow) tintDark = tint else tintLight = tint
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString(if (darkNow) "fork_wallpaper_tint_dark" else "fork_wallpaper_tint_light", tint.key) }
     }
 
     fun chooseFocusStyle(style: FocusStyle) {

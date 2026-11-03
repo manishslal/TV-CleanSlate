@@ -275,17 +275,13 @@ fun HomeBackground(
             if (a > 0.01f) drawDrawingIn(saverImage, saverPush(), a)
         }
         Plate(frosted ?: backdrop, backdrop, filmGlass, plate, scroll, collapse, cover, filmStopped, toSaver, lift)
-        // Fork: Dark appearance dims the wallpaper, as iOS does in dark mode, so the dark tiles and
-        // white type sit on a deeper room. Light dims it a touch too, so a bright sky behind clear
-        // glass is not glaring. The screensaver it hands over to is shown undimmed.
-        val dim by animateFloatAsState(if (AerialSettings.darkNow) DARK_DIM else LIGHT_DIM, tween(400, easing = Motion.EaseInOut), label = "appearance-dim")
-        if (dim > 0.005f) Canvas(Modifier.fillMaxSize()) {
-            drawRect(Color.Black, alpha = dim * (1f - toSaver()))
-        }
-        // Fork: the owner's wash over a bright picture. The glass keeps its own frost.
+        // Fork: the wash over the wallpaper, one for each appearance (AerialSettings.tintDark and
+        // tintLight). Dim is how Dark deepens the room, as iOS does in dark mode, so dark tiles and
+        // white type sit on it; in Light it is lighter, so a bright sky behind clear glass is not
+        // glaring. The screensaver it hands over to is shown without it.
         val (washColor, washAlpha) = when (AerialSettings.wallpaperTint) {
             WallpaperTint.Off -> Color.Black to 0f
-            WallpaperTint.Dim -> Color.Black to 0.28f
+            WallpaperTint.Dim -> Color.Black to if (AerialSettings.darkNow) DARK_DIM else LIGHT_DIM
             WallpaperTint.Warm -> Palette.Orange to 0.14f
             WallpaperTint.Cool -> Palette.Blue to 0.14f
         }
@@ -300,7 +296,10 @@ fun HomeBackground(
 private val BoardDate = TextStyle(fontFamily = BoardFont, fontSize = 22.sp, letterSpacing = 0.16.em, color = BoardInk)
 private val BoardDetail = TextStyle(fontFamily = BoardFont, fontSize = 19.sp, letterSpacing = 0.1.em, color = BoardInk)
 
-/** How much Dark appearance darkens the wallpaper, and Light. */
+/** How strong the dock is behind Clear tiles. */
+private const val CLEAR_PLATE = 0.5f
+
+/** How much Dim darkens the wallpaper in Dark, and in Light. */
 private const val DARK_DIM = 0.3f
 private const val LIGHT_DIM = 0.12f
 
@@ -467,11 +466,13 @@ private fun Plate(glass: ImageBitmap?, sharp: ImageBitmap?, film: ImageBitmap?, 
 
     Canvas(Modifier.fillMaxSize().onSizeChanged { screen = Size(it.width.toFloat(), it.height.toFloat()) }) {
         if (plate == null) return@Canvas
-        val alpha = visibility()
+        // Behind Clear tiles the dock is fainter, so glass on glass still reads as two layers.
+        val clear = if (AerialSettings.tileStyle == app.orchard.tv.settings.TileStyle.Clear) CLEAR_PLATE else 1f
+        val alpha = visibility() * clear
         // The film's plate, while the film shows and the plate over a picture does not hide it.
         // With no frame to frost (an input's picture, which cannot be copied) it is the smoke and
         // the lit edge alone, so the top row keeps a plate over anything.
-        val base = (1f - smooth(((scroll() / collapse).coerceIn(0f, 1f) / 0.55f).coerceIn(0f, 1f))) * (1f - toSaver())
+        val base = (1f - smooth(((scroll() / collapse).coerceIn(0f, 1f) / 0.55f).coerceIn(0f, 1f))) * (1f - toSaver()) * clear
         val frame = filmTop
         val edge = smoke
         if (edge != null && cover() > 0.01f && alpha < 0.99f && base > 0.01f) {

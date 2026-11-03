@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Android 1.67-mh29 and web: Clear tiles have a dock again, at half strength, and the Dock switch is in Appearance for every tile style
+- Android and web: Wallpaper Tint is kept for each appearance; Dark starts on Dim instead of dimming on its own, so the two no longer stack, and Dim can be turned off or changed
 - Android 1.67-mh28: the VPN button turns blue while the VPN is on and shows the app's own mark like the other icons; Inputs is hidden on boxes and sticks
 - Android: Bluetooth opens Remotes & Accessories on Google TV and Android 12 TVs, and the pairing search on older ones such as the SHIELD
 - Android and web: glass follows glisse's numbers (tint, saturation, rim, outline, press springs)

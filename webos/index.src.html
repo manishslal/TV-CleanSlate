@@ -18,8 +18,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; colo
 #wall { background: radial-gradient(120% 90% at 30% 10%, #1c2a3a, #05070b 70%); }
 video, #photo { position: fixed; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.4s; }
 video.on, #photo.on { opacity: 1; }
-#shade { transition: opacity .8s, background-color .4s; background-color: rgba(0,0,0,.3); background-image: radial-gradient(62% 58% at 0 0, rgba(0,0,0,.62), rgba(0,0,0,0) 72%), linear-gradient(180deg, rgba(0,0,0,.3) 0, rgba(0,0,0,.04) 40%, rgba(0,0,0,.34) 100%); }
-body.light #shade { background-color: rgba(0,0,0,.12); }
+#shade { transition: opacity .8s; background-image: radial-gradient(62% 58% at 0 0, rgba(0,0,0,.62), rgba(0,0,0,0) 72%), linear-gradient(180deg, rgba(0,0,0,.3) 0, rgba(0,0,0,.04) 40%, rgba(0,0,0,.34) 100%); }
 body.right #shade { background-image: radial-gradient(62% 58% at 100% 0, rgba(0,0,0,.62), rgba(0,0,0,0) 72%), linear-gradient(180deg, rgba(0,0,0,.3) 0, rgba(0,0,0,.04) 40%, rgba(0,0,0,.34) 100%); }
 #glow { position: fixed; left: 0; top: 0; width: 96px; height: 54px; transform-origin: 0 0; opacity: var(--glowalpha); transition: opacity .2s; }
 /* This TV's video plane can't be blurred, so softly blurred frames baked from the clip play over it in step: inside the dock at rest, over the whole screen further down */
@@ -86,7 +85,7 @@ body.light:not(.idle) #clock.cards .half.bot { background: linear-gradient(#ebeb
 #line svg { width: calc(30 * var(--u)); height: calc(30 * var(--u)); vertical-align: calc(-5 * var(--u)); margin: 0 calc(6 * var(--u)); fill: currentColor; }
 
 #pill { position: fixed; right: calc(90 * var(--u)); top: calc(66 * var(--u)); height: calc(52 * var(--u)); padding: 0 calc(20 * var(--u)); border-radius: calc(26 * var(--u)); background: var(--glass);
-  display: flex; align-items: center; font-size: calc(22 * var(--u)); box-shadow: inset 0 0 0 1.22px var(--shine), inset 0 0 0 .5px var(--edge); transition: opacity .8s, transform .3s cubic-bezier(.3,1.35,.5,1); }
+  display: flex; align-items: center; font-size: calc(22 * var(--u)); box-shadow: inset 0 0 0 1.22px var(--shine), inset 0 0 0 .5px var(--edge); transition: opacity .8s, transform .16s ease-out; }
 body.right #pill { right: auto; left: calc(90 * var(--u)); }
 #pill svg { width: calc(26 * var(--u)); height: calc(26 * var(--u)); fill: currentColor; margin-right: calc(10 * var(--u)); }
 #pill span + svg { margin-left: calc(12 * var(--u)); margin-right: 0; }
@@ -192,10 +191,14 @@ body.light .row.f .bar { background: rgba(255,255,255,.35); }
 #news { right: calc(90 * var(--u)); max-width: calc(760 * var(--u)); text-align: right; font-size: calc(30 * var(--u)); line-height: 1.32; }
 #news small { display: block; font-size: calc(19 * var(--u)); letter-spacing: .08em; text-transform: uppercase; opacity: .72; margin-bottom: calc(6 * var(--u)); }
 #tint { opacity: 0; transition: opacity .8s; }
-body.tintdim #tint { background: #000; opacity: .28; }
+/* One tint for each appearance: Dim is how Dark deepens the picture, and lighter in Light */
+body.tintdim #tint { background: #000; opacity: .3; }
+body.light.tintdim #tint { opacity: .12; }
 body.tintwarm #tint { background: #ff9f0a; opacity: .14; }
 body.tintcool #tint { background: #0a84ff; opacity: .14; }
 body.noplate:not(.down) #dock, body.noplate:not(.down) #fclip { opacity: 0; }
+/* Behind Clear tiles the dock is fainter, so glass on glass still reads as two layers */
+body.cleartiles:not(.noplate) #dock { opacity: .5; }
 body.idle #tint, body.idle #gridwrap, body.idle #pill, body.idle #dock, body.idle #hint, body.idle #sheet, body.idle #glow, body.idle #fclip { opacity: 0; }
 body.idle #shade { opacity: 1; background-color: rgba(0,0,0,.16); }
 body.idle #caption, body.idle.news #news { opacity: 1; }
@@ -250,9 +253,12 @@ function svc(path) { return fetch(SVC + path).then(function (r) { return r.json(
 function esc(t) { var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
 /* ---- settings, the same names as Android Home's Personalize ---- */
-var S = Object.assign({ clockStyle: 'cards', clockRight: false, largeClock: false, h24: false, showWeather: true, fahrenheit: true, flapSound: false, uiSounds: true, focusStyle: 'high_contrast', focusGlow: 'medium', wallTint: 'off', columns: 6, twoRows: false, peek: true, plate: true, pinArrows: false,
+var S = Object.assign({ clockStyle: 'cards', clockRight: false, largeClock: false, h24: false, showWeather: true, fahrenheit: true, flapSound: false, uiSounds: true, focusStyle: 'high_contrast', focusGlow: 'medium', tintDark: 'dim', tintLight: 'dim', columns: 6, twoRows: false, peek: true, plate: true, pinArrows: false,
   appearance: 'dark', tiles: 'full', effects: 'auto', showAllNames: false, cats: ['landscapes', 'cities'], source: 'aerial', quality: 'hd', saverMin: 5, saverClock: true, backSaver: true,
   headlines: true, topics: ['tech'], newsShuffle: false, place: 'New York', lat: 40.7128, lon: -74.0060, hidden: HIDDEN.slice(), folders: {}, order: null, pin: '', bootTarget: '' }, read('home-settings', {}));
+/* Before one tint for each appearance there was one, stacked on Dark's dimming: a chosen one carries over */
+if (S.wallTint) { if (S.wallTint !== 'off') S.tintDark = S.tintLight = S.wallTint; delete S.wallTint; }
+function wallTint() { return darkNow() ? S.tintDark : S.tintLight; }
 if (S.clockStyle === 'flip') S.clockStyle = 'cards';
 var legacy = read('home-order', null);
 if (!S.order && legacy) S.order = legacy;
@@ -282,12 +288,12 @@ function theme() {
   c.toggle('glowlarge', S.focusGlow === 'large' && !lite);
   c.toggle('fnoring', S.focusStyle !== 'high_contrast' && !small);
   c.toggle('finvert', S.focusStyle === 'invert');
-  ['dim', 'warm', 'cool'].forEach(function (t) { c.toggle('tint' + t, S.wallTint === t); });
+  var wash = wallTint();
+  ['dim', 'warm', 'cool'].forEach(function (t) { c.toggle('tint' + t, wash === t); });
   var look = tileLook(), glass = tileGlass();
   c.toggle('glasstiles', look === 'dark');
   c.toggle('cleartiles', look === 'clear');
-  c.toggle('dimwall', glass && darkNow());
-  c.toggle('noplate', !S.plate && look !== 'clear');
+  c.toggle('noplate', !S.plate);
   if (look !== lastGlass) { lastGlass = look; if (allApps.length) build(); }
   $('clock').className = S.clockStyle;
 }
@@ -855,19 +861,18 @@ function pagePersonalize() {
     { label: 'Appearance', icon: 'LIGHT_MODE', to: { title: 'Appearance', rows: function () { return [
       choice('Appearance', [['auto', 'Auto'], ['dark', 'Dark'], ['light', 'Light']], function () { return S.appearance; }, function (v) { S.appearance = v; }),
       choice('Tile Style', [['system', 'System'], ['clear', 'Clear'], ['dark', 'Dark'], ['full', 'Color']], function () { return S.tiles; }, function (v) { S.tiles = v; build(); }),
+      toggle('Dock', 'plate'),
       choice('Home Mode', [['auto', 'Auto'], ['full', 'Full'], ['lite', 'Efficient']], function () { return S.effects; }, function (v) { S.effects = v; if (v === 'full') S.source = 'aerial'; restartWall(); }),
       choice('Focus Style', [['standard', 'Standard'], ['high_contrast', 'High Contrast'], ['invert', 'Invert']], function () { return S.focusStyle; }, function (v) { S.focusStyle = v; }),
       choice('Focus Glow', [['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']], function () { return S.focusGlow; }, function (v) { S.focusGlow = v; }),
-      choice('Wallpaper Tint', [['off', 'Off'], ['dim', 'Dim'], ['warm', 'Warm'], ['cool', 'Cool']], function () { return S.wallTint; }, function (v) { S.wallTint = v; }),
+      choice('Wallpaper Tint', [['off', 'Off'], ['dim', 'Dim'], ['warm', 'Warm'], ['cool', 'Cool']], wallTint, function (v) { if (darkNow()) S.tintDark = v; else S.tintLight = v; }),
       toggle('Show All App Names', 'showAllNames'),
       toggle('Navigation Sounds', 'uiSounds') ]; } } },
     { label: 'Layout', icon: 'OPEN_WITH', to: { title: 'Layout', rows: function () {
       var rows = [
         choice('Home', [[false, 'One Row'], [true, 'Two Rows']], function () { return S.twoRows; }, function (v) { S.twoRows = v; layout(); paint(); drawPage(true); }),
         choice('Apps per Row', [[4, '4'], [5, '5'], [6, '6']], function () { return S.columns; }, function (v) { S.columns = v; focus = 0; layout(); paint(); })];
-      /* Clear tiles are glass already */
       if (!S.twoRows) rows.push(toggle('Peek at Next Row', 'peek', function () { layout(); paint(); }));
-      if (tileLook() !== 'clear') rows.push(toggle('Dock', 'plate'));
       return rows; } } },
     { label: 'Wallpaper', icon: 'IMAGE', to: pageWall },
     { label: 'Weather', icon: 'PARTLY_CLOUDY_DAY', to: pageWeather },

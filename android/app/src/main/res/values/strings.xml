@@ -143,7 +143,7 @@
     <string name="st_home_one_row">One Row</string>
     <string name="st_home_layout_hint">One Row puts only the top row on screen, low down, so more of the wallpaper shows, a family photo say. Two Rows shows the top of the second row too. Press down for the rest.</string>
     <string name="st_plate">Top Row</string>
-    <string name="st_plate_hint">A plate of frosted glass under the top row, as on Apple TV, or the apps straight on the wallpaper.</string>
+    <string name="st_plate_hint">A plate of frosted glass under the top row, as on Apple TV, or the apps straight on the wallpaper. Behind Clear tiles it is fainter.</string>
     <string name="st_plate_glass">Glass</string>
     <string name="st_plate_none">None</string>
     <string name="st_sounds">Sounds</string>
@@ -332,6 +332,8 @@
     <string name="fk_size_large">Large</string>
     <string name="fk_wallpaper_tint">Wallpaper Tint</string>
     <string name="fk_wallpaper_tint_hint">A wash over the wallpaper on Home, for bright pictures.</string>
+    <string name="fk_wallpaper_tint_hint_dark">A wash over the wallpaper while Home is Dark. Dim is how Dark deepens the picture; turn it off to see the picture as it is.</string>
+    <string name="fk_wallpaper_tint_hint_light">A wash over the wallpaper while Home is Light. Dim is lighter here, so a bright sky behind the glass is not glaring.</string>
     <string name="fk_tint_dim">Dim</string>
     <string name="fk_tint_warm">Warm</string>
     <string name="fk_tint_cool">Cool</string>

@@ -327,8 +327,6 @@ private fun LayoutPage() {
             AerialSettings.HOME_COLUMNS.map { it to it.toString() },
             AerialSettings.homeColumns, AerialSettings::chooseHomeColumns,
         )
-        // Clear tiles are glass already.
-        if (AerialSettings.tileStyle != TileStyle.Clear) SwitchRow(R.string.fk_label_plate, stringResource(R.string.st_plate_hint), AerialSettings.homePlate, AerialSettings::chooseHomePlate)
         // Two rows show the second row whole; only one row has a peek to hide.
         if (AerialSettings.oneRowHome) SwitchRow(R.string.fk_label_peek, stringResource(R.string.st_peek_hint), AerialSettings.peekNextRow, AerialSettings::choosePeekNextRow)
     }
@@ -354,6 +352,8 @@ private fun AppearancePage() {
             listOf(TileStyle.System to R.string.fk_tiles_system, TileStyle.Clear to R.string.fk_tiles_clear, TileStyle.Glass to R.string.fk_tiles_glass, TileStyle.Full to R.string.fk_tiles_full),
             AerialSettings.tileStyle, AerialSettings::chooseTileStyle,
         )
+        // The dock behind the top row, in every tile style; fainter behind Clear tiles.
+        SwitchRow(R.string.fk_label_plate, stringResource(R.string.st_plate_hint), AerialSettings.homePlate, AerialSettings::chooseHomePlate)
         // Fork: only where the TV can draw Liquid Glass (Android 13 and later).
         if (app.orchard.tv.ui.components.LiquidLens.supported && !AerialSettings.lite) ValueRow(
             R.string.fk_glass, stringResource(R.string.fk_glass_hint),
@@ -376,7 +376,7 @@ private fun AppearancePage() {
             AerialSettings.focusGlow, AerialSettings::chooseFocusGlow,
         )
         ValueRow(
-            R.string.fk_wallpaper_tint, stringResource(R.string.fk_wallpaper_tint_hint),
+            R.string.fk_wallpaper_tint, stringResource(if (AerialSettings.darkNow) R.string.fk_wallpaper_tint_hint_dark else R.string.fk_wallpaper_tint_hint_light),
             listOf(WallpaperTint.Off to R.string.st_off, WallpaperTint.Dim to R.string.fk_tint_dim, WallpaperTint.Warm to R.string.fk_tint_warm, WallpaperTint.Cool to R.string.fk_tint_cool),
             AerialSettings.wallpaperTint, AerialSettings::chooseWallpaperTint,
         )
