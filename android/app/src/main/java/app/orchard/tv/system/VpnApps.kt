@@ -7,6 +7,12 @@ import android.content.pm.ApplicationInfo
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import app.orchard.tv.apps.LogoPack
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.core.content.edit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * An installed VPN app: [label] for the button, [mark] its logo from the logo pack (white on clear,
@@ -21,8 +27,38 @@ class VpnApp(val packageName: String, val label: String, val icon: Drawable, val
  * always the one that connected it.
  */
 object VpnApps {
+    /**
+     * The VPN app, looked up ahead of time so Control Center shows its button with the others: a
+     * lookup when the panel opened (30 days of usage stats, the app's icon, its logo) made the
+     * button appear a second or two after the rest on a SHIELD.
+     */
+    var app by mutableStateOf<VpnApp?>(null); private set
+
+    /**
+     * Whether a VPN has ever been up on this device while Home was running. Until then there is no
+     * VPN button: having a VPN app installed isn't a reason to show one.
+     */
+    var seen by mutableStateOf(false); private set
+
+    private const val PREFS = "aerial"
+    private const val KEY_SEEN = "vpn_seen"
+
+    /** Remembers that a VPN was up, once. */
+    fun sawVpn(context: Context) {
+        if (seen) return
+        seen = true
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean(KEY_SEEN, true) }
+    }
+
+    /** Looks the app up again, off the main thread; the last one stays shown meanwhile. */
+    suspend fun refresh(context: Context) {
+        if (!seen) seen = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_SEEN, false)
+        val found = withContext(Dispatchers.IO) { current(context) }
+        if (found?.packageName != app?.packageName || (found == null) != (app == null)) app = found
+    }
+
     /** Off the main thread: it reads the logo pack. */
-    fun current(context: Context): VpnApp? = runCatching {
+    private fun current(context: Context): VpnApp? = runCatching {
         val pm = context.packageManager
         val found = pm.queryIntentServices(Intent("android.net.VpnService"), 0)
             .mapNotNull { it.serviceInfo?.applicationInfo }

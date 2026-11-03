@@ -284,7 +284,7 @@
     },
     {
       "id": "cc-buttons",
-      "name": "Control Center buttons: Wi-Fi, Bluetooth, Settings, your VPN app (blue while on), Auto/Dark/Light",
+      "name": "Control Center buttons: Wi-Fi, Bluetooth, Settings, your VPN app (once a VPN has been up; blue while on), Auto/Dark/Light",
       "android": "done",
       "webos": "partial",
       "tizen": "partial",

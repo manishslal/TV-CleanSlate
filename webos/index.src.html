@@ -103,14 +103,14 @@ body.first .plate { animation: rise .42s ease-out backwards; }
 .plate.clear { background: var(--cleartile); }
 /* Clear: glass like the dock, bright on light panels, with the logo in dark ink there */
 body.cleartiles .plate { background: linear-gradient(160deg, rgba(255,255,255,.2), rgba(255,255,255,.07)); color: #fff; box-shadow: inset 0 0 0 1.22px var(--shine), inset 0 0 0 .5px var(--edge); }
-body.light.cleartiles .plate { background: linear-gradient(160deg, rgba(255,255,255,.58), rgba(255,255,255,.38)); color: #1d1d1f; box-shadow: inset 0 0 0 1.22px var(--shine), inset 0 0 0 .5px var(--edge); }
+body.light.cleartiles .plate { background: linear-gradient(160deg, rgba(255,255,255,.6), rgba(255,255,255,.46)); color: #1d1d1f; box-shadow: inset 0 0 0 1.22px var(--shine), inset 0 0 0 .5px var(--edge); }
 /* one ink and its shades: color goes to grey, as on Android */
 body.cleartiles .plate img, body.cleartiles .plate canvas { filter: grayscale(1) brightness(1.15); }
 body.light.cleartiles .plate img, body.light.cleartiles .plate canvas { filter: grayscale(1) invert(1) brightness(.75); }
 body.cleartiles .tile.f .plate { filter: brightness(1.12); }
 body.cleartiles .tile.f .plate::after { box-shadow: inset 0 0 0 calc(2 * var(--u)) rgba(255,255,255,.7), inset 0 1px 0 rgba(255,255,255,.3); }
 /* Dark is the tile's own look, whatever the appearance */
-body.glasstiles .plate { background: rgba(40,40,40,.62); color: #fff; box-shadow: inset 0 0 0 1.22px var(--shine), inset 0 0 0 .5px var(--edge); }
+body.glasstiles .plate { background: rgba(40,40,40,.62); color: #fff; box-shadow: inset 0 0 0 1.22px rgba(255,255,255,.13), inset 0 0 0 .5px rgba(255,255,255,.08); }
 /* one ink on every logo, as on Android */
 body.glasstiles .plate.mark img, body.cleartiles .plate.mark img { filter: brightness(0) invert(1); }
 body.light.cleartiles .plate.mark img { filter: brightness(0); }
@@ -198,7 +198,7 @@ body.tintwarm #tint { background: #ff9f0a; opacity: .14; }
 body.tintcool #tint { background: #0a84ff; opacity: .14; }
 body.noplate:not(.down) #dock, body.noplate:not(.down) #fclip { opacity: 0; }
 /* Behind Clear tiles the dock is fainter, so glass on glass still reads as two layers */
-body.cleartiles:not(.noplate) #dock { opacity: .5; }
+body.cleartiles:not(.noplate):not(.down):not(.idle) #dock { opacity: .5; }
 body.idle #tint, body.idle #gridwrap, body.idle #pill, body.idle #dock, body.idle #hint, body.idle #sheet, body.idle #glow, body.idle #fclip { opacity: 0; }
 body.idle #shade { opacity: 1; background-color: rgba(0,0,0,.16); }
 body.idle #caption, body.idle.news #news { opacity: 1; }

@@ -90,3 +90,7 @@ All with `pm disable-user --user 0`. Undo one with `adb shell pm enable <package
 - Clear tiles in Dark and Light show the dock at half strength. In Appearance, the Dock switch turned the dock off and on, and Wallpaper Tint showed Dim in Dark, went to Off (picture undimmed) and back to Dim.
 - Left on Clear tiles, Dark, Dock on, Tint Dim, as found before the test.
 
+### Home 1.67-mh30 installed (2026-11-03)
+- The VPN button was on screen with the others 0.45 s after OK, where it used to appear a second or two later.
+- Wallpaper Tint measured on the sky: 196 with Off, 137 with Dim (30%). Left on Clear tiles, Dark, Dim.
+

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Android 1.67-mh31 and web: fixes from a glass review: the dock no longer stays half-visible in the grid and screensaver with Clear tiles, the rim fades cleanly at its corners and follows the appearance on an input's plate, Dark tiles keep their dark rim in Light, and Clear tiles in Light read better over dark pictures
+- Android 1.67-mh30: the VPN button shows with the other buttons instead of a second or two later, and only once a VPN has been connected on the device
 - Android 1.67-mh29 and web: Clear tiles have a dock again, at half strength, and the Dock switch is in Appearance for every tile style
 - Android and web: Wallpaper Tint is kept for each appearance; Dark starts on Dim instead of dimming on its own, so the two no longer stack, and Dim can be turned off or changed
 - Android 1.67-mh28: the VPN button turns blue while the VPN is on and shows the app's own mark like the other icons; Inputs is hidden on boxes and sticks

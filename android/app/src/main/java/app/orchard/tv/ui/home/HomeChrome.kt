@@ -432,9 +432,10 @@ private fun Plate(glass: ImageBitmap?, sharp: ImageBitmap?, film: ImageBitmap?, 
     var filmBottom by remember { mutableStateOf<ImageBitmap?>(null) }
     var smoke by remember { mutableStateOf<ImageBitmap?>(null) }
     val filmSwap = remember { Animatable(1f) }
-    LaunchedEffect(plate, screen) {
+    val smokeLight = !AerialSettings.darkNow
+    LaunchedEffect(plate, screen, smokeLight) {
         if (plate == null || screen == Size.Zero) return@LaunchedEffect
-        smoke = withContext(Dispatchers.Default) { bakePlate(smokeGlass(), screen, plate, with(density) { PlateCorner.toPx() }, with(density) { app.orchard.tv.ui.components.Glisse.RIM.dp.toPx() }) }
+        smoke = withContext(Dispatchers.Default) { bakePlate(smokeGlass(), screen, plate, with(density) { PlateCorner.toPx() }, with(density) { app.orchard.tv.ui.components.Glisse.RIM.dp.toPx() }, light = smokeLight) }
     }
     LaunchedEffect(film, plate, screen) {
         if (film == null || plate == null || screen == Size.Zero) {

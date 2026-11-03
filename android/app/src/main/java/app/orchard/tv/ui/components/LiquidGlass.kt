@@ -179,10 +179,7 @@ internal fun rememberFrostSwap(frost: ImageBitmap?): Triple<ImageBitmap?, ImageB
 
 private const val FROST_SWAP_MS = 450
 
-/**
- * The lit edge of a piece of glass: a sheen inside the top, and a rim bright where light falls on
- * it from the top left, faint along the sides, and catching again at the far corner.
- */
+/** The lit edge of a piece of glass and its outline, as [glassEdge] bakes them. */
 private fun DrawScope.drawGlassEdge(size: Size, radius: Float, bottomCorners: Boolean, light: Boolean) {
     val w = size.width.roundToInt()
     val h = size.height.roundToInt()
@@ -210,8 +207,9 @@ fun Modifier.glassRim(corner: Dp): Modifier = composed {
 }
 
 /**
- * The lit edge of a [w]×[h] piece of glass, as glisse measures iOS 26.1's: a line [rim] wide,
- * brightest at the very edge and gone at its inner side. Light from the top left lights the left
+ * The lit edge of a [w]×[h] piece of glass, as glisse measures iOS 26.1's: a line [rim] wide.
+ * Glisse fades it from the very edge to nothing at its inner side; a line this thin is drawn even,
+ * at that fade's average (0.6 of the shine), so it carries the same light. Light from the top left lights the left
  * side and the top, and its reflection the right side and the bottom; it fades out over the two
  * corners between (top right, bottom left). [light] panels get the stronger shine of a light page.
  * Under it, an [edge]-wide line holds the outline: white on dark glass, black on light. Made once
@@ -223,7 +221,7 @@ fun glassEdge(w: Int, h: Int, radius: Float, rim: Float, bottomCorners: Boolean 
         val canvas = android.graphics.Canvas(bitmap)
         // A sheet's rim runs off the bottom with its corners.
         val bottom = if (bottomCorners) h.toFloat() else h + radius
-        val shine = if (light) Glisse.SHINE_LIGHT else Glisse.SHINE_DARK
+        val shine = (if (light) Glisse.SHINE_LIGHT else Glisse.SHINE_DARK) * 0.6f
         fun white(alpha: Float) = Color.White.copy(alpha = alpha).toArgb()
         if (edge > 0f) canvas.drawPath(
             smoothRectPath(Rect(edge / 2, edge / 2, w - edge / 2, bottom - edge / 2), radius - edge / 2).asAndroidPath(),
@@ -246,7 +244,12 @@ fun glassEdge(w: Int, h: Int, radius: Float, rim: Float, bottomCorners: Boolean 
         val blMid = angle(r * 0.29f, bottom - r * 0.29f)
         val blEnd = angle(0f, bottom - r)
         val on = white(shine)
-        val stops = listOf(0f to on, trEnd to on, blStart to on, blMid to 0, blEnd to on, trStart to on, trMid to 0, 1f to on)
+        // Transparent white, not transparent black: the gradient blends unpremultiplied, and a
+        // fade to black would pass through grey and smudge light glass at those corners.
+        val off = white(0f)
+        // Square corners have no curve to fade over: the rim stays even all round.
+        val stops = if (r < 1f) listOf(0f to on, 1f to on)
+        else listOf(0f to on, trEnd to on, blStart to on, blMid to off, blEnd to on, trStart to on, trMid to off, 1f to on)
             .let { list -> list.sortedBy { it.first } }
         canvas.drawPath(
             smoothRectPath(Rect(rim / 2, rim / 2, w - rim / 2, bottom - rim / 2), radius - rim / 2).asAndroidPath(),
@@ -284,11 +287,12 @@ object Glisse {
      */
     const val LIGHT_KEEP = 0.48f
     const val LIGHT_ADD = 226f * 0.52f
-    /** Press and release springs, glisse's pointer press: stiffness and damping ratio. */
+    /**
+     * Glisse's pointer press spring: stiffness and damping ratio (its 29.2 damping). Its release
+     * bounce (230, 0.78) isn't used: an overshoot on focus made the focus ring shimmer.
+     */
     const val PRESS_STIFFNESS = 417.6f
     const val PRESS_DAMPING = 0.714f
-    const val RELEASE_STIFFNESS = 230f
-    const val RELEASE_DAMPING = 0.781f
 }
 
 /** [keep] of the picture, saturated by [Glisse.SATURATE], plus [add] of the glass's own color. */

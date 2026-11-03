@@ -36,8 +36,8 @@ No glisse code is used here. Only its measured numbers and ideas.
 
 ## What changed to match glisse (Home 1.67-mh28)
 
-- **Tint:** dark glass keeps 0.38 of the picture under `rgb(40 40 40)` at 0.62, as glisse does. What's behind is saturated 1.5 first. Light glass keeps 0.55 under a soft white at 0.45, clearer than glisse's 0.6, because the owner wanted Light less bright.
-- **Rim:** 1.22 dp at 0.13 on dark glass and 0.3 on light, over a 0.5 dp outline at 8%. It fades at the top-right and bottom-left corners on Android; the web draws an even ring.
+- **Tint:** dark glass keeps 0.38 of the picture under `rgb(40 40 40)` at 0.62, as glisse does. What's behind is saturated 1.5 first. Light glass keeps 0.48 under a soft white at 0.52, clearer than glisse's 0.6, because the owner wanted Light less bright.
+- **Rim:** 1.22 dp at 0.13 on dark glass and 0.3 on light, over a 0.5 dp outline at 8%. Glisse fades the line inward; Android draws it even at that fade's average, 0.6 of the shine. It fades at the top-right and bottom-left corners on Android; the web draws an even ring.
 - **Springs:** buttons and tiles press with glisse's 417.6 stiffness at a damping ratio of 0.71. Focus and release stay critically damped rather than taking glisse's release bounce, because an overshoot made the focus ring shimmer.
 - **Dock:** the plate keeps 0.84 of the saturated frost and adds only a little white, in both appearances.
 - **Light:** Wallpaper Tint's Dim is 12% in Light and 30% in Dark, on Android and the web. Each appearance keeps its own tint, both starting on Dim.
@@ -55,7 +55,7 @@ Android 13 and later already has the full effect, so the gains are on the other 
 | Light tint (softened for a clearer Light) | Yes | Yes | Yes | Yes |
 | What's behind saturated 1.5 times | No: the lens draws it | Yes, in the color filter, panels and dock | Yes, baked into the frost | Yes, baked; the LEAN build has no frost |
 | Lit rim, 1.22, at 0.13 on dark and 0.3 on light | The lens's own rim instead | Yes, fading at the top-right and bottom-left corners | An even ring | An even ring |
-| 0.5 outline at 8% | Yes | Yes | Yes | Yes |
+| 0.5 outline at 8% | No: the lens path draws none | Yes | Yes | Yes |
 | Press spring, 417.6 at a damping ratio of 0.71 | Yes | Yes | No springs in CSS; a short ease | Same as LG |
 | Release bounce, 230 at 0.78 | No | No | No | No |
 

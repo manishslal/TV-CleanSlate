@@ -1,5 +1,6 @@
 package app.orchard.tv
 
+import app.orchard.tv.system.VpnApps
 import app.orchard.tv.system.MemoryTrim
 import android.app.Application
 import android.os.Build
@@ -156,6 +157,14 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         }
         // A tile picture set or removed from the phone page.
         viewModelScope.launch { snapshotFlow { CustomIcons.version }.drop(1).collect { reload() } }
+        // The VPN app for Control Center, ready before the panel opens; looked up again when a VPN
+        // comes up or goes down, as the app used last may have changed.
+        viewModelScope.launch {
+            snapshotFlow { network.vpn }.collect { on ->
+                if (on) VpnApps.sawVpn(context)
+                VpnApps.refresh(context)
+            }
+        }
         // Fork: the tile style is part of every tile's stamp, so a change redraws them all.
         viewModelScope.launch { snapshotFlow { AerialSettings.tileLook }.drop(1).collect { reload() } }
         // Fork: once the screensaver or a panel has closed (and faded out), what it held goes back.

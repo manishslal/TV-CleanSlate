@@ -81,6 +81,10 @@ See [Logos we still need](../logos/README.md#logos-we-still-need).
 - Android TV 11 (SHIELD) can't open that page alone. Its `SubFragmentActivity` only takes power options. The nearest is the pairing search, `com.google.android.intent.action.CONNECT_INPUT`.
 - Apps can list themselves as TV inputs for their preview channels. On the SHIELD, Peacock and VLC did, with no hardware behind them. Count only inputs with hardware before deciding a device has inputs.
 
+## Control Center
+
+- Anything a panel needs should be looked up before it opens. Reading 30 days of usage stats, an app's icon and a logo when Control Center opened made the VPN button appear a second or two after the rest on the SHIELD.
+
 ## Testing on a TV someone is using
 
 - Look at the screen after every key, and never send a run of keys blind. A blind run that assumed Control Center had opened launched TiviMate's live TV on the SHIELD instead.

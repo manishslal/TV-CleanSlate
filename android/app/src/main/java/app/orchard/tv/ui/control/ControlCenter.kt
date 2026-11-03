@@ -48,10 +48,8 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.withContext
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.withFrameNanos
@@ -80,7 +78,6 @@ import app.orchard.tv.Overlay
 import app.orchard.tv.R
 import app.orchard.tv.apps.SourceLooks
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.runtime.produceState
 import app.orchard.tv.settings.AerialSettings
 import app.orchard.tv.settings.Appearance
 import app.orchard.tv.system.Brightness
@@ -237,7 +234,10 @@ private fun MainPage(vm: HomeViewModel, now: LocalDateTime, takeFocus: Boolean, 
         }
 
         Spacer(Modifier.height(12.dp))
-        val vpnApp by produceState<app.orchard.tv.system.VpnApp?>(null) { value = withContext(Dispatchers.IO) { VpnApps.current(context) } }
+        // Ready ahead of time (VpnApps), so it shows with the other buttons; only once a VPN has
+        // been up on this device. Checked again in the background while the panel is open.
+        val vpnApp = VpnApps.app.takeIf { VpnApps.seen }
+        LaunchedEffect(Unit) { VpnApps.refresh(context) }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             RoundButton(
                 when (vm.network.kind) { NetKind.Ethernet -> Glyph.Ethernet; NetKind.Offline -> Glyph.Offline; else -> Glyph.Wifi },
