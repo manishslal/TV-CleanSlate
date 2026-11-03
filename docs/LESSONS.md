@@ -72,3 +72,18 @@ What one TV taught us that applies to the next. Add to this after every device, 
 ## Logos
 
 See [Logos we still need](../logos/README.md#logos-we-still-need).
+
+## Settings pages on Android TVs
+
+- No TV here answers the standard `android.settings.BLUETOOTH_SETTINGS`. Check `cmd package resolve-activity --brief -a <action>` on each device before relying on one.
+- Google TV (onn 4K, Android 14) opens Remotes & Accessories with `com.android.tv.settings.CONNECTED_DEVICES`.
+- Android 12 TV settings (Hisense) show the same page as a slice: `android.settings.SLICE_SETTINGS` with the extra `slice_uri` set to `content://com.android.tv.settings.accessories.sliceprovider/general`.
+- Android TV 11 (SHIELD) can't open that page alone. Its `SubFragmentActivity` only takes power options. The nearest is the pairing search, `com.google.android.intent.action.CONNECT_INPUT`.
+- Apps can list themselves as TV inputs for their preview channels. On the SHIELD, Peacock and VLC did, with no hardware behind them. Count only inputs with hardware before deciding a device has inputs.
+
+## Testing on a TV someone is using
+
+- Look at the screen after every key, and never send a run of keys blind. A blind run that assumed Control Center had opened launched TiviMate's live TV on the SHIELD instead.
+- Change appearance with Home's config broadcast (`--es appearance light`) rather than keys, and set it back when done.
+- Don't open pages on a TV that is in use or asleep just to look. A box asleep can wake the TV over HDMI-CEC.
+

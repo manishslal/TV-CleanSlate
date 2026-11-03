@@ -11,6 +11,10 @@
     <string name="cc_inputs">信号源</string>
     <string name="cc_network">网络</string>
     <string name="cc_settings">设置</string>
+    <string name="cc_bluetooth">Bluetooth</string>
+    <string name="cc_appearance_auto">自动</string>
+    <string name="cc_appearance_dark">深色</string>
+    <string name="cc_appearance_light">浅色</string>
     <string name="cc_volume">音量</string>
     <string name="cc_muted">已静音</string>
     <string name="cc_home_default">已设为默认桌面</string>
@@ -305,7 +309,7 @@
     <string name="fk_label_rows">行数</string>
     <string name="fk_show_on_home">在主屏显示</string>
     <string name="fk_label_peek">露出下一行</string>
-    <string name="fk_label_plate">应用后的玻璃</string>
+    <string name="fk_label_plate">程序坞</string>
     <string name="fk_more_apps">更多应用</string>
     <string name="fk_label_tile_style">磁贴样式</string>
     <string name="fk_label_mode">模式</string>

@@ -95,7 +95,9 @@ fun Pressable(
             state.focused -> focusedScale
             else -> 1f
         },
-        animationSpec = if (state.pressed) tween(100, easing = Motion.EaseOut) else spring(dampingRatio = 1f, stiffness = 520f),
+        // glisse's press spring going in. Focus and release settle critically damped, as tiles do:
+        // an overshoot on focus made the white focus fill shimmer.
+        animationSpec = if (state.pressed) spring(Glisse.PRESS_DAMPING, Glisse.PRESS_STIFFNESS) else spring(dampingRatio = 1f, stiffness = 520f),
         label = "pressable-scale",
     )
     Box(

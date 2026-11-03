@@ -53,8 +53,8 @@ object LiquidLens {
             tile && light -> { setFloatUniform("tintMix", 0.44f, 0.5f); setFloatUniform("rimMix", 0.44f, 0.56f) }
             tile -> { setFloatUniform("tintMix", 0.6f, 0.02f); setFloatUniform("rimMix", 0.66f, 0.08f) }
             dock -> { setFloatUniform("tintMix", 0.8f, 0.118f); setFloatUniform("rimMix", 0.9f, 0.06f) }
-            light -> { setFloatUniform("tintMix", 0.42f, 0.56f); setFloatUniform("rimMix", 0.68f, 0.24f) }
-            else -> { setFloatUniform("tintMix", 0.46f, 0.03f); setFloatUniform("rimMix", 0.46f, 0.03f) }
+            light -> { setFloatUniform("tintMix", Glisse.LIGHT_KEEP, Glisse.LIGHT_ADD / 255f); setFloatUniform("rimMix", 0.68f, 0.24f) }
+            else -> { setFloatUniform("tintMix", Glisse.DARK_KEEP, Glisse.DARK_ADD / 255f); setFloatUniform("rimMix", 0.46f, 0.03f) }
         }
         // Fork: some of the sharp picture reaches the middle, so what lies behind the glass still shows.
         setFloatUniform("see", if (sharp != null) 0.3f else 0f)

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Android 1.67-mh28: the VPN button turns blue while the VPN is on and shows the app's own mark like the other icons; Inputs is hidden on boxes and sticks
+- Android: Bluetooth opens Remotes & Accessories on Google TV and Android 12 TVs, and the pairing search on older ones such as the SHIELD
+- Android and web: glass follows glisse's numbers (tint, saturation, rim, outline, press springs)
+- Android and web: Light is clearer and less bright, and dims the wallpaper slightly as Dark does
+- Android 1.67-mh26: Control Center's round buttons are now Wi-Fi, Bluetooth, Settings, your VPN app with its own logo, and an Auto, Dark or Light button; Inputs moved to its own row
+- Android: the brightness row is hidden on boxes and sticks, where it moved nothing
+- webOS and Samsung: Control Center has an Appearance row; the dock and panels have a lit rim
+- `docs/research/liquid-glass.md`: what Home can take from glisse without a heavy GPU
 - Android 1.67-mh25: Glass Behind Apps is now called Dock; clock text has darker shadows over bright video; a wallpaper that never starts gives way to the next after 30 seconds
 - webOS: Aerial Quality offers 1080p or 4K; Samsung keeps 1080p
 - `scripts/build-all.sh` rebuilds every Home and lists what each is missing

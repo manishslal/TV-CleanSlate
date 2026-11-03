@@ -276,8 +276,9 @@ fun HomeBackground(
         }
         Plate(frosted ?: backdrop, backdrop, filmGlass, plate, scroll, collapse, cover, filmStopped, toSaver, lift)
         // Fork: Dark appearance dims the wallpaper, as iOS does in dark mode, so the dark tiles and
-        // white type sit on a deeper room. The screensaver it hands over to is shown undimmed.
-        val dim by animateFloatAsState(if (AerialSettings.darkNow) DARK_DIM else 0f, tween(400, easing = Motion.EaseInOut), label = "appearance-dim")
+        // white type sit on a deeper room. Light dims it a touch too, so a bright sky behind clear
+        // glass is not glaring. The screensaver it hands over to is shown undimmed.
+        val dim by animateFloatAsState(if (AerialSettings.darkNow) DARK_DIM else LIGHT_DIM, tween(400, easing = Motion.EaseInOut), label = "appearance-dim")
         if (dim > 0.005f) Canvas(Modifier.fillMaxSize()) {
             drawRect(Color.Black, alpha = dim * (1f - toSaver()))
         }
@@ -299,8 +300,9 @@ fun HomeBackground(
 private val BoardDate = TextStyle(fontFamily = BoardFont, fontSize = 22.sp, letterSpacing = 0.16.em, color = BoardInk)
 private val BoardDetail = TextStyle(fontFamily = BoardFont, fontSize = 19.sp, letterSpacing = 0.1.em, color = BoardInk)
 
-/** How much Dark appearance darkens the wallpaper. */
+/** How much Dark appearance darkens the wallpaper, and Light. */
 private const val DARK_DIM = 0.3f
+private const val LIGHT_DIM = 0.12f
 
 /**
  * The sharp picture and the grid's glass. A new wallpaper fades in over the old, which stays whole
@@ -433,7 +435,7 @@ private fun Plate(glass: ImageBitmap?, sharp: ImageBitmap?, film: ImageBitmap?, 
     val filmSwap = remember { Animatable(1f) }
     LaunchedEffect(plate, screen) {
         if (plate == null || screen == Size.Zero) return@LaunchedEffect
-        smoke = withContext(Dispatchers.Default) { bakePlate(smokeGlass(), screen, plate, with(density) { PlateCorner.toPx() }, with(density) { 1.2.dp.toPx() }) }
+        smoke = withContext(Dispatchers.Default) { bakePlate(smokeGlass(), screen, plate, with(density) { PlateCorner.toPx() }, with(density) { app.orchard.tv.ui.components.Glisse.RIM.dp.toPx() }) }
     }
     LaunchedEffect(film, plate, screen) {
         if (film == null || plate == null || screen == Size.Zero) {
@@ -534,11 +536,12 @@ private fun Plate(glass: ImageBitmap?, sharp: ImageBitmap?, film: ImageBitmap?, 
  * 3 ms more a frame than the plain rounded plate. Baked while drawing, for one screen and place.
  */
 private class PlateLayer(private val src: ImageBitmap) {
-    private var baked: Pair<Pair<Size, Rect>, ImageBitmap>? = null
+    private var baked: Pair<Triple<Size, Rect, Boolean>, ImageBitmap>? = null
 
     fun draw(scope: androidx.compose.ui.graphics.drawscope.DrawScope, plate: Rect, at: Rect, alpha: Float) = with(scope) {
-        val image = baked?.takeIf { it.first == size to plate }?.second
-            ?: bakePlate(src, size, plate, PlateCorner.toPx(), 1.2.dp.toPx()).also { baked = (size to plate) to it }
+        val light = !AerialSettings.darkNow
+        val image = baked?.takeIf { it.first == Triple(size, plate, light) }?.second
+            ?: bakePlate(src, size, plate, PlateCorner.toPx(), app.orchard.tv.ui.components.Glisse.RIM.dp.toPx(), light = light).also { baked = Triple(size, plate, light) to it }
         drawBaked(image, at, alpha)
     }
 }
@@ -582,13 +585,23 @@ private const val GRID_SHADE = 0.55f
 /** How much the plate swells as it dissolves into the grid's background. */
 private val PlateSwell = 14.dp
 
-/** The plate's tint: the frosted picture a little darker, lifted with white, so it reads as milky glass. */
-private val PlateTint = floatArrayOf(
-    0.8f, 0f, 0f, 0f, 30f,
-    0f, 0.8f, 0f, 0f, 30f,
-    0f, 0f, 0.8f, 0f, 30f,
-    0f, 0f, 0f, 1f, 0f,
-)
+/**
+ * The plate's tint: the frosted picture saturated as glisse saturates what is behind its glass
+ * (1.5), nearly all of it kept and lifted only a little, so the plate reads as clear glass in both
+ * appearances rather than a milky sheet.
+ */
+private val PlateTint = run {
+    val s = app.orchard.tv.ui.components.Glisse.SATURATE
+    val keep = 0.84f
+    val add = 16f
+    val lr = 0.2126f * (1 - s); val lg = 0.7152f * (1 - s); val lb = 0.0722f * (1 - s)
+    floatArrayOf(
+        keep * (lr + s), keep * lg, keep * lb, 0f, add,
+        keep * lr, keep * (lg + s), keep * lb, 0f, add,
+        keep * lr, keep * lg, keep * (lb + s), 0f, add,
+        0f, 0f, 0f, 1f, 0f,
+    )
+}
 
 /** The glass picture with the plate's tint applied ahead of time, so the plate is one plain draw. */
 private fun plateTinted(src: ImageBitmap): ImageBitmap {
@@ -599,7 +612,7 @@ private fun plateTinted(src: ImageBitmap): ImageBitmap {
 }
 
 /** The part of [glass] (stretched over [screen]) under [plate], cut to the plate's outline, with its lit edge. */
-private fun bakePlate(glass: ImageBitmap, screen: Size, plate: Rect, radius: Float, rim: Float, edge: Boolean = true): ImageBitmap {
+private fun bakePlate(glass: ImageBitmap, screen: Size, plate: Rect, radius: Float, rim: Float, edge: Boolean = true, light: Boolean = !AerialSettings.darkNow): ImageBitmap {
     val w = plate.width.roundToInt().coerceAtLeast(1)
     val h = plate.height.roundToInt().coerceAtLeast(1)
     val out = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
@@ -610,7 +623,7 @@ private fun bakePlate(glass: ImageBitmap, screen: Size, plate: Rect, radius: Flo
         android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG),
     )
     canvas.drawBitmap(smoothMask(w, h, radius), 0f, 0f, android.graphics.Paint().apply { xfermode = android.graphics.PorterDuffXfermode(PorterDuff.Mode.DST_IN) })
-    if (edge) canvas.drawBitmap(glassEdge(w, h, radius, rim).asAndroidBitmap(), 0f, 0f, null)
+    if (edge) canvas.drawBitmap(glassEdge(w, h, radius, rim, light = light, edge = rim * app.orchard.tv.ui.components.Glisse.EDGE / app.orchard.tv.ui.components.Glisse.RIM).asAndroidBitmap(), 0f, 0f, null)
     return out.frozen().asImageBitmap()
 }
 

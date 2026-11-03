@@ -80,3 +80,9 @@ All with `pm disable-user --user 0`. Undo one with `adb shell pm enable <package
 ### Home 1.67-mh25 installed (2026-11-03)
 - Updated from 1.67-mh15 with `adb install -r` of the standard release APK, then `cmd package compile -m speed -f io.manish.home`. Home Guard stayed enabled, and Home was in front afterwards.
 - Undo: install the earlier APK the same way, or `adb uninstall io.manish.home` to return to the stock launcher.
+
+### Home 1.67-mh28 installed (2026-11-03)
+- Updated with `adb install -r`, then compiled for speed. Tried every Control Center button on the TV: Wi-Fi opened Network & Internet, Bluetooth opened the pairing search, Settings opened TV Settings, Windscribe opened the app (left connected), and Appearance stepped Auto, Dark, Light and back to Auto. Inputs and Brightness are hidden. Back returned to Home each time.
+- A blind run of keys opened TiviMate's live TV once; Home was brought back with the Home key.
+- Undo: install the earlier APK the same way.
+

@@ -67,6 +67,15 @@ object Brightness {
         return if (value in 1..100) value else null
     }
 
+    /**
+     * Whether this TV has a panel Home knows how to reach, or at least a picture panel to open.
+     * Control Center also keeps the row on any device with inputs (a TV); on a Shield, Fire or
+     * Google TV box or a stick `screen_brightness` moves nothing, so the row is left out there.
+     */
+    fun hasPanelControl(context: Context): Boolean =
+        SystemProbe.xgimiBrightnessLevel() != null || isTcl(context) || isSony(context) || isXiaomi(context) ||
+            usesXiaomiBacklight(context) || MitvPanel.usable(context) || SystemProbe.skyworthPicturePanel(context)
+
     /** Current level as 0..1, or null when Aerial cannot change it on this TV. */
     fun level(context: Context): Float? {
         // XGIMI: the real brightness is the DLP light-engine level; the system screen_brightness

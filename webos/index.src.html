@@ -5,12 +5,12 @@
 <title>Home</title>
 <style>
 @font-face { font-family: Board; src: url(barlow_condensed_semibold.ttf); }
-:root { --u: calc(100vw / 1920); --ink: #efe7d2; --label: #fff; --dim: rgba(235,235,245,.6); --glass: rgba(24,24,26,.82); --hair: rgba(255,255,255,.1);
+:root { --u: calc(100vw / 1920); --ink: #efe7d2; --label: #fff; --dim: rgba(235,235,245,.6); --glass: rgba(40,40,40,.62); --hair: rgba(255,255,255,.1); --shine: rgba(255,255,255,.13); --edge: rgba(255,255,255,.08);
   --panel: rgba(32,32,34,.99); --row: rgba(120,120,128,.18); --focus: #f5f5f7; --onfocus: #1d1d1f; --sheet-a: rgba(30,33,40,.44); --sheet-b: rgba(20,22,28,.56); --plain-a: rgba(46,50,58,.9); --plain-b: rgba(24,26,32,.94);
   --dock-a: rgba(255,255,255,.14); --dock-b: rgba(255,255,255,.05); --rim: rgba(255,255,255,.4); --ring: #f5f5f7; --ringgap: rgba(0,0,0,.75);
   --onwall: #fff; --onwall-shadow: rgba(0,0,0,.75); --onsheet: #fff; --onsheet-shadow: rgba(0,0,0,.75); --lift: rgba(0,0,0,.6); --dockshadow: rgba(0,0,0,.42); --cleartile: var(--glass); --glowalpha: .32; }
-body.light { --label: #1d1d1f; --dim: rgba(60,60,67,.62); --glass: rgba(242,242,247,.86); --hair: rgba(0,0,0,.12); --panel: rgba(242,242,247,.99); --row: rgba(120,120,128,.16);
-  --focus: #1d1d1f; --onfocus: #fff; --sheet-a: rgba(238,240,244,.52); --sheet-b: rgba(222,226,232,.62); --plain-a: rgba(236,238,242,.92); --plain-b: rgba(214,218,226,.94); --dock-a: rgba(255,255,255,.34); --dock-b: rgba(255,255,255,.18); --rim: rgba(255,255,255,.9); --ringgap: rgba(0,0,0,.4);
+body.light { --label: #1d1d1f; --dim: rgba(60,60,67,.62); --glass: rgba(226,226,230,.52); --hair: rgba(0,0,0,.12); --shine: rgba(255,255,255,.3); --edge: rgba(0,0,0,.08); --panel: rgba(228,228,233,.99); --row: rgba(120,120,128,.16);
+  --focus: #1d1d1f; --onfocus: #fff; --sheet-a: rgba(226,229,234,.42); --sheet-b: rgba(212,216,222,.5); --plain-a: rgba(228,230,235,.9); --plain-b: rgba(206,210,218,.92); --dock-a: rgba(255,255,255,.22); --dock-b: rgba(255,255,255,.1); --rim: rgba(255,255,255,.9); --ringgap: rgba(0,0,0,.4);
   --onsheet: #1d1d1f; --onsheet-shadow: rgba(255,255,255,.7); --lift: rgba(0,0,0,.3); --dockshadow: rgba(0,0,0,.22); --cleartile: rgba(44,44,48,.88); --glowalpha: .32; }
 * { box-sizing: border-box; margin: 0; }
 html, body { width: 100%; height: 100%; overflow: hidden; background: #000; color: var(--label); font-family: "LG Smart UI", "Helvetica Neue", Arial, sans-serif; cursor: none; }
@@ -18,9 +18,9 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; colo
 #wall { background: radial-gradient(120% 90% at 30% 10%, #1c2a3a, #05070b 70%); }
 video, #photo { position: fixed; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.4s; }
 video.on, #photo.on { opacity: 1; }
-#shade { transition: opacity .8s; background-image: radial-gradient(62% 58% at 0 0, rgba(0,0,0,.62), rgba(0,0,0,0) 72%), linear-gradient(180deg, rgba(0,0,0,.3) 0, rgba(0,0,0,.04) 40%, rgba(0,0,0,.34) 100%); }
+#shade { transition: opacity .8s, background-color .4s; background-color: rgba(0,0,0,.3); background-image: radial-gradient(62% 58% at 0 0, rgba(0,0,0,.62), rgba(0,0,0,0) 72%), linear-gradient(180deg, rgba(0,0,0,.3) 0, rgba(0,0,0,.04) 40%, rgba(0,0,0,.34) 100%); }
+body.light #shade { background-color: rgba(0,0,0,.12); }
 body.right #shade { background-image: radial-gradient(62% 58% at 100% 0, rgba(0,0,0,.62), rgba(0,0,0,0) 72%), linear-gradient(180deg, rgba(0,0,0,.3) 0, rgba(0,0,0,.04) 40%, rgba(0,0,0,.34) 100%); }
-body.dimwall #shade { background-color: rgba(0,0,0,.3); }
 #glow { position: fixed; left: 0; top: 0; width: 96px; height: 54px; transform-origin: 0 0; opacity: var(--glowalpha); transition: opacity .2s; }
 /* This TV's video plane can't be blurred, so softly blurred frames baked from the clip play over it in step: inside the dock at rest, over the whole screen further down */
 #fclip { position: fixed; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; opacity: 0; transition: clip-path .22s ease-out, opacity .3s;
@@ -32,7 +32,7 @@ body.down #fclip { clip-path: inset(0 round 0); }
 #sheet { opacity: 0; transition: opacity .2s; background: linear-gradient(180deg, var(--plain-a), var(--plain-b)); }
 body.frosted #sheet { background: linear-gradient(180deg, var(--sheet-a), var(--sheet-b)); }
 #dock { position: fixed; left: calc(52 * var(--u)); right: calc(52 * var(--u)); bottom: calc(40 * var(--u)); height: calc(240 * var(--u)); border-radius: calc(36 * var(--u)); transition: opacity .2s;
-  background: linear-gradient(180deg, var(--dock-a), var(--dock-b)); box-shadow: inset 0 1px 0 var(--rim), inset 0 -1px 0 rgba(255,255,255,.08), 0 calc(18 * var(--u)) calc(48 * var(--u)) var(--dockshadow); }
+  background: linear-gradient(180deg, var(--dock-a), var(--dock-b)); box-shadow: inset 0 0 0 1.22px var(--shine), inset 0 0 0 .5px var(--edge), 0 calc(18 * var(--u)) calc(48 * var(--u)) var(--dockshadow); }
 #hint { position: fixed; left: 0; right: 0; bottom: calc(10 * var(--u)); text-align: center; font-size: calc(19 * var(--u)); color: var(--onwall); opacity: .82; text-shadow: 0 1px calc(8 * var(--u)) var(--onwall-shadow); transition: opacity .2s; }
 body.down #sheet { opacity: 1; }
 body.down #dock, body.down #hint, body.peek #hint { opacity: 0; }
@@ -86,7 +86,7 @@ body.light:not(.idle) #clock.cards .half.bot { background: linear-gradient(#ebeb
 #line svg { width: calc(30 * var(--u)); height: calc(30 * var(--u)); vertical-align: calc(-5 * var(--u)); margin: 0 calc(6 * var(--u)); fill: currentColor; }
 
 #pill { position: fixed; right: calc(90 * var(--u)); top: calc(66 * var(--u)); height: calc(52 * var(--u)); padding: 0 calc(20 * var(--u)); border-radius: calc(26 * var(--u)); background: var(--glass);
-  display: flex; align-items: center; font-size: calc(22 * var(--u)); box-shadow: inset 0 0 0 1px var(--hair); transition: opacity .8s, transform .1s ease-out; }
+  display: flex; align-items: center; font-size: calc(22 * var(--u)); box-shadow: inset 0 0 0 1.22px var(--shine), inset 0 0 0 .5px var(--edge); transition: opacity .8s, transform .3s cubic-bezier(.3,1.35,.5,1); }
 body.right #pill { right: auto; left: calc(90 * var(--u)); }
 #pill svg { width: calc(26 * var(--u)); height: calc(26 * var(--u)); fill: currentColor; margin-right: calc(10 * var(--u)); }
 #pill span + svg { margin-left: calc(12 * var(--u)); margin-right: 0; }
@@ -103,15 +103,15 @@ body.first .plate { animation: rise .42s ease-out backwards; }
 .plate img, .plate canvas { position: absolute; }
 .plate.clear { background: var(--cleartile); }
 /* Clear: glass like the dock, bright on light panels, with the logo in dark ink there */
-body.cleartiles .plate { background: linear-gradient(160deg, rgba(255,255,255,.2), rgba(255,255,255,.07)); color: #fff; }
-body.light.cleartiles .plate { background: linear-gradient(160deg, rgba(255,255,255,.72), rgba(255,255,255,.5)); color: #1d1d1f; }
+body.cleartiles .plate { background: linear-gradient(160deg, rgba(255,255,255,.2), rgba(255,255,255,.07)); color: #fff; box-shadow: inset 0 0 0 1.22px var(--shine), inset 0 0 0 .5px var(--edge); }
+body.light.cleartiles .plate { background: linear-gradient(160deg, rgba(255,255,255,.58), rgba(255,255,255,.38)); color: #1d1d1f; box-shadow: inset 0 0 0 1.22px var(--shine), inset 0 0 0 .5px var(--edge); }
 /* one ink and its shades: color goes to grey, as on Android */
 body.cleartiles .plate img, body.cleartiles .plate canvas { filter: grayscale(1) brightness(1.15); }
 body.light.cleartiles .plate img, body.light.cleartiles .plate canvas { filter: grayscale(1) invert(1) brightness(.75); }
 body.cleartiles .tile.f .plate { filter: brightness(1.12); }
 body.cleartiles .tile.f .plate::after { box-shadow: inset 0 0 0 calc(2 * var(--u)) rgba(255,255,255,.7), inset 0 1px 0 rgba(255,255,255,.3); }
 /* Dark is the tile's own look, whatever the appearance */
-body.glasstiles .plate { background: rgba(24,24,26,.82); color: #fff; }
+body.glasstiles .plate { background: rgba(40,40,40,.62); color: #fff; box-shadow: inset 0 0 0 1.22px var(--shine), inset 0 0 0 .5px var(--edge); }
 /* one ink on every logo, as on Android */
 body.glasstiles .plate.mark img, body.cleartiles .plate.mark img { filter: brightness(0) invert(1); }
 body.light.cleartiles .plate.mark img { filter: brightness(0); }
@@ -156,7 +156,7 @@ body:not(.glasstiles):not(.cleartiles) #glow { display: none; }
 #scrim { background: rgba(0,0,0,.5); opacity: 0; visibility: hidden; transition: opacity .14s; z-index: 9; }
 body.modal #pill { opacity: 0; }
 body.modal #scrim { opacity: 1; visibility: visible; }
-.panel { position: fixed; top: calc(70 * var(--u)); bottom: calc(70 * var(--u)); right: calc(70 * var(--u)); width: calc(640 * var(--u)); border-radius: calc(32 * var(--u)); background: var(--panel); box-shadow: 0 calc(20 * var(--u)) calc(60 * var(--u)) rgba(0,0,0,.5), inset 0 1px 0 var(--rim); padding: calc(34 * var(--u)); overflow: hidden; z-index: 10; display: none; }
+.panel { position: fixed; top: calc(70 * var(--u)); bottom: calc(70 * var(--u)); right: calc(70 * var(--u)); width: calc(640 * var(--u)); border-radius: calc(32 * var(--u)); background: var(--panel); box-shadow: 0 calc(20 * var(--u)) calc(60 * var(--u)) rgba(0,0,0,.5), inset 0 0 0 1.22px var(--shine), inset 0 0 0 .5px var(--edge); padding: calc(34 * var(--u)); overflow: hidden; z-index: 10; display: none; }
 .panel.on { display: block; animation: pop .18s ease-out; }
 @keyframes pop { from { opacity: 0; transform: translateX(calc(40 * var(--u))); } }
 .panel h2 { font-size: calc(36 * var(--u)); font-weight: 600; margin-bottom: calc(6 * var(--u)); }
@@ -853,7 +853,7 @@ function pagePersonalize() {
       choice('Format', [[false, '5:39 PM'], [true, '17:39']], function () { return S.h24; }, function (v) { S.h24 = v; }),
       toggle('Flap Sound', 'flapSound') ]; } } },
     { label: 'Appearance', icon: 'LIGHT_MODE', to: { title: 'Appearance', rows: function () { return [
-      choice('Appearance', [['dark', 'Dark'], ['light', 'Light'], ['auto', 'Auto']], function () { return S.appearance; }, function (v) { S.appearance = v; }),
+      choice('Appearance', [['auto', 'Auto'], ['dark', 'Dark'], ['light', 'Light']], function () { return S.appearance; }, function (v) { S.appearance = v; }),
       choice('Tile Style', [['system', 'System'], ['clear', 'Clear'], ['dark', 'Dark'], ['full', 'Color']], function () { return S.tiles; }, function (v) { S.tiles = v; build(); }),
       choice('Home Mode', [['auto', 'Auto'], ['full', 'Full'], ['lite', 'Efficient']], function () { return S.effects; }, function (v) { S.effects = v; if (v === 'full') S.source = 'aerial'; restartWall(); }),
       choice('Focus Style', [['standard', 'Standard'], ['high_contrast', 'High Contrast'], ['invert', 'Invert']], function () { return S.focusStyle; }, function (v) { S.focusStyle = v; }),
@@ -993,6 +993,7 @@ function pageControl() {
       { label: 'Inputs', icon: 'INPUT', to: pageInputs },
       { label: 'Network', icon: net && net.wired && net.wired.state === 'connected' ? 'LAN' : 'WIFI', value: (w && w.ipAddress) || 'Offline', ok: function () { closeAll(); open({ id: 'com.palm.app.settings' }); } },
       { label: 'Settings', icon: 'SETTINGS', ok: function () { closeAll(); open({ id: 'com.palm.app.settings' }); } },
+      choice('Appearance', [['auto', 'Auto'], ['dark', 'Dark'], ['light', 'Light']], function () { return S.appearance; }, function (v) { S.appearance = v; }, 'CONTRAST'),
       { label: 'Personalize', icon: 'IMAGE', ok: function () { lock(function () { push(pagePersonalize()); }); } },
       { label: 'When TV Turns On', icon: 'POWER', value: function () { var t = allInputs.concat(allApps).filter(function (x) { return x.id === S.bootTarget; })[0]; return t ? t.title : 'Home'; }, to: pageBoot },
       { label: 'Turn Off TV', icon: 'POWER', ok: function () { api('/api/power/off', {}).catch(function () {}); } } ];

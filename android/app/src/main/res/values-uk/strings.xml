@@ -9,6 +9,10 @@
     <string name="cc_inputs">Джерела</string>
     <string name="cc_network">Мережа</string>
     <string name="cc_settings">Налаштування</string>
+    <string name="cc_bluetooth">Bluetooth</string>
+    <string name="cc_appearance_auto">Авто</string>
+    <string name="cc_appearance_dark">Темна</string>
+    <string name="cc_appearance_light">Світла</string>
     <string name="cc_volume">Гучність</string>
     <string name="cc_muted">Звук вимкнено</string>
     <string name="cc_home_default">Встановлено як головний екран</string>
@@ -298,7 +302,7 @@
     <string name="fk_label_rows">Ряди</string>
     <string name="fk_show_on_home">На головному екрані</string>
     <string name="fk_label_peek">Край наступного ряду</string>
-    <string name="fk_label_plate">Скло під застосунками</string>
+    <string name="fk_label_plate">Док</string>
     <string name="fk_more_apps">Інші застосунки</string>
     <string name="fk_label_tile_style">Стиль плиток</string>
     <string name="fk_label_mode">Режим</string>

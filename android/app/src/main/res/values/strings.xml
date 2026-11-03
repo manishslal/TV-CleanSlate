@@ -12,6 +12,10 @@
     <string name="cc_inputs">Inputs</string>
     <string name="cc_network">Network</string>
     <string name="cc_settings">Settings</string>
+    <string name="cc_bluetooth">Bluetooth</string>
+    <string name="cc_appearance_auto">Auto</string>
+    <string name="cc_appearance_dark">Dark</string>
+    <string name="cc_appearance_light">Light</string>
     <string name="cc_volume">Volume</string>
     <string name="cc_muted">Muted</string>
     <string name="cc_home_default">Set as your home screen</string>

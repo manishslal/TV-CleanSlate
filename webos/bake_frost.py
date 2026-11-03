@@ -8,9 +8,11 @@ import math
 import subprocess
 from pathlib import Path
 
-from PIL import Image, ImageFilter
+from PIL import Image, ImageEnhance, ImageFilter
 
 STEP, COLS, MAX, W, H = 10, 6, 36, 192, 108
+# What lies behind glass is saturated 1.5 times, as glisse does (docs/research/liquid-glass.md).
+SATURATE = 1.5
 here = Path(__file__).parent
 out = here / 'frost'
 out.mkdir(exist_ok=True)
@@ -43,9 +45,24 @@ def bake(item):
             pass
         if last:
             sheet.paste(last, (k % COLS * W, k // COLS * H))
-    sheet.filter(ImageFilter.GaussianBlur(1.6)).save(path, 'JPEG', quality=72, optimize=True)
+    ImageEnhance.Color(sheet.filter(ImageFilter.GaussianBlur(1.6))).enhance(SATURATE).save(path, 'JPEG', quality=72, optimize=True)
+    with marker.open('a') as f:
+        f.write(path.name + '\n')
     return i, n
 
+
+# Sheets baked before saturation was added get it once, without fetching the clips again. Each
+# sheet is listed as it is done, so a run cut short never saturates one twice.
+marker = out / '.saturated'
+done_sheets = set(marker.read_text().split()) if marker.exists() else set()
+if '1.5' in done_sheets:  # the first version wrote only the factor, after every sheet was done
+    done_sheets = {p.name for p in out.glob('sheet-*.jpg')}
+    marker.write_text('\n'.join(sorted(done_sheets)) + '\n')
+for p in sorted(out.glob('sheet-*.jpg')):
+    if p.name not in done_sheets:
+        ImageEnhance.Color(Image.open(p).convert('RGB')).enhance(SATURATE).save(p, 'JPEG', quality=72, optimize=True)
+        with marker.open('a') as f:
+            f.write(p.name + '\n')
 
 with cf.ThreadPoolExecutor(10) as pool:
     done = list(pool.map(bake, enumerate(urls)))

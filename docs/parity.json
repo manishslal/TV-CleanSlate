@@ -281,6 +281,69 @@
       "tizen": "not-applicable",
       "lite": "frozen",
       "note": "The web Home is English only, so there is no Chinese-language mode to show it in."
+    },
+    {
+      "id": "cc-buttons",
+      "name": "Control Center buttons: Wi-Fi, Bluetooth, Settings, your VPN app (blue while on), Auto/Dark/Light",
+      "android": "done",
+      "webos": "partial",
+      "tizen": "partial",
+      "lite": "frozen",
+      "note": "The web Control Center is a list. It has Network, Settings and an Appearance row, but no Bluetooth row (no known way to open LG's or Samsung's Bluetooth page) and no VPN app. Samsung's version is built in and not yet looked at on a TV."
+    },
+    {
+      "id": "brightness-row",
+      "name": "Brightness row only where it works",
+      "android": "done",
+      "webos": "done",
+      "tizen": "not-applicable",
+      "lite": "frozen",
+      "note": "Android hides it on boxes and sticks (no inputs and no panel it knows), where the setting moves nothing, and keeps it on every TV. LG's row opens Picture Settings; Samsung has none."
+    },
+    {
+      "id": "rim-light",
+      "name": "Lit glass edge: light from the top left, a faint reflection bottom right",
+      "android": "done",
+      "webos": "partial",
+      "tizen": "partial",
+      "lite": "frozen",
+      "note": "Android bakes glisse's rim per size; the web draws it as two inset rings on the dock, panels, pill and glass tiles."
+    },
+    {
+      "id": "bluetooth-page",
+      "name": "Bluetooth opens the remotes and accessories page",
+      "android": "partial",
+      "webos": "missing",
+      "tizen": "missing",
+      "lite": "frozen",
+      "note": "Google TV opens Remotes & Accessories, and Android 12 TV settings open it as a slice. SHIELD and other Android 11 and older TVs can't open that page alone, so it opens the pairing search. Only the SHIELD has been tried; the onn and Hisense targets were checked by what answers the intent."
+    },
+    {
+      "id": "inputs-only-tvs",
+      "name": "Inputs only where inputs can be switched",
+      "android": "done",
+      "webos": "not-applicable",
+      "tizen": "not-applicable",
+      "lite": "frozen",
+      "note": "Android hides it on boxes and sticks, counting only inputs with hardware behind them. LG and Samsung are TVs."
+    },
+    {
+      "id": "glisse-glass",
+      "name": "Glass in glisse's numbers: tint, 1.5 saturation, 1.22 rim, 0.5 edge, press springs",
+      "android": "partial",
+      "webos": "partial",
+      "tizen": "partial",
+      "lite": "frozen",
+      "note": "Android 9 to 12 draw glisse's tint, saturation, rim and outline. Android 13 and later keep the lens shader's own rim, without the saturation. The web has no live blur, so its frost is baked with the saturation, and panels stay opaque so tiles don't show through; its rim is an even ring. Press uses glisse's spring; focus stays critically damped on every build, because an overshoot made the focus ring shimmer."
+    },
+    {
+      "id": "clear-light",
+      "name": "Clear Light appearance: less white, more picture, wallpaper dimmed 12%",
+      "android": "done",
+      "webos": "partial",
+      "tizen": "partial",
+      "lite": "frozen",
+      "note": "Built into the web page, not yet looked at on an LG or a Samsung."
     }
   ]
 }

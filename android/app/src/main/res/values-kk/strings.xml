@@ -9,6 +9,10 @@
     <string name="cc_inputs">Көздер</string>
     <string name="cc_network">Желі</string>
     <string name="cc_settings">Параметрлер</string>
+    <string name="cc_bluetooth">Bluetooth</string>
+    <string name="cc_appearance_auto">Авто</string>
+    <string name="cc_appearance_dark">Қараңғы</string>
+    <string name="cc_appearance_light">Ашық</string>
     <string name="cc_volume">Дыбыс деңгейі</string>
     <string name="cc_muted">Дыбыс өшірулі</string>
     <string name="cc_home_default">Басты экран ретінде орнатылған</string>
@@ -298,7 +302,7 @@
     <string name="fk_label_rows">Қатарлар</string>
     <string name="fk_show_on_home">Басты экранда</string>
     <string name="fk_label_peek">Келесі қатардың шеті</string>
-    <string name="fk_label_plate">Қолданбалар астындағы шыны</string>
+    <string name="fk_label_plate">Док</string>
     <string name="fk_more_apps">Басқа қолданбалар</string>
     <string name="fk_label_tile_style">Плитка стилі</string>
     <string name="fk_label_mode">Режим</string>

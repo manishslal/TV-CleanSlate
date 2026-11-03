@@ -101,14 +101,14 @@ fun Modifier.liquidGlass(corner: Dp, bottomCorners: Boolean = true, band: Dp = 2
             onDrawBehind {
                 if (shader == null || brush == null || root == IntSize.Zero) {
                     drawImage(flat, dstSize = IntSize(w, h), colorFilter = ColorFilter.tint(plain))
-                    drawGlassEdge(size, radius, bottomCorners)
+                    drawGlassEdge(size, radius, bottomCorners, light)
                 } else if (AerialSettings.lite) {
                     // Lite (AerialSettings.lite): one solid color, the frosted wallpaper's average as
                     // the glass would dim it, without the layer the glass needs every frame, which
                     // weak GPUs feel most while a panel slides in. Solid: the plain glass color is
                     // see-through and showed the tiles under the Personalize sheet.
                     drawImage(flat, dstSize = IntSize(w, h), colorFilter = ColorFilter.tint(liteGlass(frost, light)))
-                    drawGlassEdge(size, radius, bottomCorners)
+                    drawGlassEdge(size, radius, bottomCorners, light)
                 } else {
                     val t = swap()
                     if (drawnAt != at || drawnRoot != root || drawnT != t) {
@@ -137,7 +137,7 @@ fun Modifier.liquidGlass(corner: Dp, bottomCorners: Boolean = true, band: Dp = 2
                             } else {
                                 drawRect(brush, colorFilter = tint, blendMode = BlendMode.SrcIn)
                             }
-                            if (!lens || t < 1f) drawGlassEdge(size, radius, bottomCorners)
+                            if (!lens || t < 1f) drawGlassEdge(size, radius, bottomCorners, light)
                         }
                     }
                     drawLayer(glass)
@@ -183,11 +183,11 @@ private const val FROST_SWAP_MS = 450
  * The lit edge of a piece of glass: a sheen inside the top, and a rim bright where light falls on
  * it from the top left, faint along the sides, and catching again at the far corner.
  */
-private fun DrawScope.drawGlassEdge(size: Size, radius: Float, bottomCorners: Boolean) {
+private fun DrawScope.drawGlassEdge(size: Size, radius: Float, bottomCorners: Boolean, light: Boolean) {
     val w = size.width.roundToInt()
     val h = size.height.roundToInt()
     if (w <= 0 || h <= 0) return
-    drawImage(glassEdge(w, h, radius, 1.2.dp.toPx(), bottomCorners), dstSize = IntSize(w, h))
+    drawImage(glassEdge(w, h, radius, Glisse.RIM.dp.toPx(), bottomCorners, light, Glisse.EDGE.dp.toPx()), dstSize = IntSize(w, h))
 }
 
 /**
@@ -201,50 +201,107 @@ fun Modifier.glassRim(corner: Dp): Modifier = composed {
         val w = size.width.roundToInt().coerceAtLeast(1)
         val h = size.height.roundToInt().coerceAtLeast(1)
         val radius = corner.toPx().coerceAtMost(size.minDimension / 2)
-        val edge = glassEdge(w, h, radius, 1.2.dp.toPx())
-        val line = 1.dp.toPx()
+        val edge = glassEdge(w, h, radius, Glisse.RIM.dp.toPx(), light = light, edge = Glisse.EDGE.dp.toPx())
         onDrawWithContent {
             drawContent()
-            if (light) drawRoundRect(
-                Color.Black.copy(alpha = 0.1f),
-                topLeft = Offset(line / 2, line / 2), size = Size(size.width - line, size.height - line),
-                cornerRadius = CornerRadius(radius), style = Stroke(line),
-            )
             drawImage(edge, dstSize = IntSize(w, h))
         }
     }
 }
 
-/** The lit edge of a [w]×[h] piece of glass at full strength, white with alpha; made once per size. */
-fun glassEdge(w: Int, h: Int, radius: Float, rim: Float, bottomCorners: Boolean = true): ImageBitmap =
-    baked(listOf("glass-edge", w, h, radius, rim, bottomCorners)) {
+/**
+ * The lit edge of a [w]×[h] piece of glass, as glisse measures iOS 26.1's: a line [rim] wide,
+ * brightest at the very edge and gone at its inner side. Light from the top left lights the left
+ * side and the top, and its reflection the right side and the bottom; it fades out over the two
+ * corners between (top right, bottom left). [light] panels get the stronger shine of a light page.
+ * Under it, an [edge]-wide line holds the outline: white on dark glass, black on light. Made once
+ * per size, so it costs nothing to draw and works on every TV.
+ */
+fun glassEdge(w: Int, h: Int, radius: Float, rim: Float, bottomCorners: Boolean = true, light: Boolean = false, edge: Float = 0f): ImageBitmap =
+    baked(listOf("glass-edge-2", w, h, radius, rim, bottomCorners, light, edge)) {
         val bitmap = createBitmap(w, h)
         val canvas = android.graphics.Canvas(bitmap)
         // A sheet's rim runs off the bottom with its corners.
         val bottom = if (bottomCorners) h.toFloat() else h + radius
+        val shine = if (light) Glisse.SHINE_LIGHT else Glisse.SHINE_DARK
         fun white(alpha: Float) = Color.White.copy(alpha = alpha).toArgb()
-        // The sheen fades out by the middle.
-        canvas.drawPath(
-            smoothRectPath(Rect(0f, 0f, w.toFloat(), bottom), radius).asAndroidPath(),
+        if (edge > 0f) canvas.drawPath(
+            smoothRectPath(Rect(edge / 2, edge / 2, w - edge / 2, bottom - edge / 2), radius - edge / 2).asAndroidPath(),
             Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                shader = LinearGradient(0f, 0f, 0f, bottom, intArrayOf(white(0.10f), 0), floatArrayOf(0f, 0.5f), Shader.TileMode.CLAMP)
+                style = Paint.Style.STROKE
+                strokeWidth = edge
+                color = if (light) Color.Black.copy(alpha = Glisse.EDGE_ALPHA).toArgb() else white(Glisse.EDGE_ALPHA)
             },
         )
+        // Around the centre: full shine on every side, none at the top-right and bottom-left
+        // corners, fading over each corner's curve.
+        val cx = w / 2f
+        val cy = bottom / 2f
+        fun angle(x: Float, y: Float) = ((Math.toDegrees(kotlin.math.atan2((y - cy).toDouble(), (x - cx).toDouble())) + 360) % 360 / 360).toFloat()
+        val r = radius.coerceAtMost(minOf(w.toFloat(), bottom) / 2)
+        val trStart = angle(w - r, 0f) // the top side meets the corner
+        val trMid = angle(w - r * 0.29f, r * 0.29f)
+        val trEnd = angle(w.toFloat(), r) // the corner meets the right side
+        val blStart = angle(r, bottom)
+        val blMid = angle(r * 0.29f, bottom - r * 0.29f)
+        val blEnd = angle(0f, bottom - r)
+        val on = white(shine)
+        val stops = listOf(0f to on, trEnd to on, blStart to on, blMid to 0, blEnd to on, trStart to on, trMid to 0, 1f to on)
+            .let { list -> list.sortedBy { it.first } }
         canvas.drawPath(
             smoothRectPath(Rect(rim / 2, rim / 2, w - rim / 2, bottom - rim / 2), radius - rim / 2).asAndroidPath(),
             Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 style = Paint.Style.STROKE
                 strokeWidth = rim
-                shader = LinearGradient(
-                    0f, 0f, w.toFloat(), bottom,
-                    intArrayOf(white(0.55f), white(0.10f), white(0.06f), white(0.30f)),
-                    floatArrayOf(0f, 0.35f, 0.7f, 1f),
-                    Shader.TileMode.CLAMP,
-                )
+                shader = android.graphics.SweepGradient(cx, cy, stops.map { it.second }.toIntArray(), stops.map { it.first }.toFloatArray())
             },
         )
         bitmap.frozen().asImageBitmap()
     }
+
+/**
+ * Glass as glisse (github.com/0kzh/glisse) measures iOS 26: its numbers, not ours. Only the
+ * numbers are taken, no code. See docs/research/liquid-glass.md.
+ */
+object Glisse {
+    /** The rim's width and the outline under it, in dp (glisse's 1.22 px and 0.5 px). */
+    const val RIM = 1.22f
+    const val EDGE = 0.5f
+    /** How bright the rim is: 0.13 on dark glass, 0.3 on light. */
+    const val SHINE_DARK = 0.13f
+    const val SHINE_LIGHT = 0.3f
+    /** The outline: white at 8% on dark glass, black at 8% on light. */
+    const val EDGE_ALPHA = 0.08f
+    /** What lies behind is saturated 1.5 times before it is tinted. */
+    const val SATURATE = 1.5f
+    /** Dark glass: rgb(40 40 40 / 0.62) over the picture. */
+    const val DARK_KEEP = 0.38f
+    const val DARK_ADD = 40f * 0.62f
+    /**
+     * Light glass, kept clear: a soft white at 0.52 over the picture (glisse uses white at 0.6), so
+     * more of the picture shows and it is less bright than a white sheet, while dark text still
+     * reads on a night sky: over black it comes out at 118, about 3.6:1 against #1D1D1F.
+     */
+    const val LIGHT_KEEP = 0.48f
+    const val LIGHT_ADD = 226f * 0.52f
+    /** Press and release springs, glisse's pointer press: stiffness and damping ratio. */
+    const val PRESS_STIFFNESS = 417.6f
+    const val PRESS_DAMPING = 0.714f
+    const val RELEASE_STIFFNESS = 230f
+    const val RELEASE_DAMPING = 0.781f
+}
+
+/** [keep] of the picture, saturated by [Glisse.SATURATE], plus [add] of the glass's own color. */
+private fun glassTint(keep: Float, add: Float, addBlue: Float = add): ColorFilter {
+    val s = Glisse.SATURATE
+    val lr = 0.2126f * (1 - s); val lg = 0.7152f * (1 - s); val lb = 0.0722f * (1 - s)
+    return ColorFilter.colorMatrix(ColorMatrix(floatArrayOf(
+        keep * (lr + s), keep * lg, keep * lb, 0f, add,
+        keep * lr, keep * (lg + s), keep * lb, 0f, add,
+        keep * lr, keep * lg, keep * (lb + s), 0f, addBlue,
+        0f, 0f, 0f, 1f, 0f,
+    )))
+}
 
 /** Panels: the frosted picture at half its light, lifted a little, so white text reads on snow. */
 /** Lite's panel color for [frost]: its average color, dimmed as [PanelTint] dims the glass. Made once per picture. */
@@ -256,24 +313,14 @@ private fun liteGlass(frost: ImageBitmap, light: Boolean): Color = synchronized(
             val c = small.getPixel(x, y)
             r += android.graphics.Color.red(c); g += android.graphics.Color.green(c); b += android.graphics.Color.blue(c)
         }
-        fun dim(sum: Float) = ((sum / 144f) * (if (light) 0.42f else 0.46f) + (if (light) 143f else 8f)).coerceIn(0f, 255f) / 255f
+        fun dim(sum: Float) = ((sum / 144f) * (if (light) Glisse.LIGHT_KEEP else Glisse.DARK_KEEP) + (if (light) Glisse.LIGHT_ADD else Glisse.DARK_ADD)).coerceIn(0f, 255f) / 255f
         Color(dim(r), dim(g), dim(b))
     }
 }
 
 private val liteColors = HashMap<Pair<ImageBitmap, Boolean>, Color>()
 
-/** Fork: a light panel, the frosted picture faint under milky white, so dark text reads on night skies. */
-private val LightPanelTint = ColorFilter.colorMatrix(ColorMatrix(floatArrayOf(
-    0.42f, 0f, 0f, 0f, 143f,
-    0f, 0.42f, 0f, 0f, 143f,
-    0f, 0f, 0.42f, 0f, 146f,
-    0f, 0f, 0f, 1f, 0f,
-)))
+/** Fork: a light panel, the frosted picture under clear white glass, so dark text reads on night skies. */
+private val LightPanelTint = glassTint(Glisse.LIGHT_KEEP, Glisse.LIGHT_ADD, Glisse.LIGHT_ADD + 3f)
 
-private val PanelTint = ColorFilter.colorMatrix(ColorMatrix(floatArrayOf(
-    0.46f, 0f, 0f, 0f, 8f,
-    0f, 0.46f, 0f, 0f, 8f,
-    0f, 0f, 0.46f, 0f, 8f,
-    0f, 0f, 0f, 1f, 0f,
-)))
+private val PanelTint = glassTint(Glisse.DARK_KEEP, Glisse.DARK_ADD)

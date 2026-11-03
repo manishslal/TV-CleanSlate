@@ -79,7 +79,13 @@ import app.orchard.tv.HomeViewModel
 import app.orchard.tv.Overlay
 import app.orchard.tv.R
 import app.orchard.tv.apps.SourceLooks
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.runtime.produceState
 import app.orchard.tv.settings.AerialSettings
+import app.orchard.tv.settings.Appearance
+import app.orchard.tv.system.Brightness
+import app.orchard.tv.system.VpnApps
+import androidx.core.graphics.drawable.toBitmap
 import app.orchard.tv.settings.HomeMode
 import app.orchard.tv.guard.FireKeeper
 import app.orchard.tv.system.HomeStatus
@@ -156,7 +162,7 @@ fun ControlCenter(
         ) {
             Column(
                 Modifier
-                    .width(300.dp)
+                    .width(360.dp)
                     .consumeTaps()
                     .liquidGlass(24.dp)
                     .padding(16.dp),
@@ -231,15 +237,12 @@ private fun MainPage(vm: HomeViewModel, now: LocalDateTime, takeFocus: Boolean, 
         }
 
         Spacer(Modifier.height(12.dp))
+        val vpnApp by produceState<app.orchard.tv.system.VpnApp?>(null) { value = withContext(Dispatchers.IO) { VpnApps.current(context) } }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            RoundButton(Glyph.Input, stringResource(R.string.cc_inputs), focusRequester = first) {
-                // TCL lists no inputs to Android; its own input panel is the next best thing.
-                vm.overlay = if (vm.sources.isEmpty() && SystemProbe.openInputPicker(context)) Overlay.None
-                else Overlay.ControlCenter(CcPage.Inputs)
-            }
             RoundButton(
                 when (vm.network.kind) { NetKind.Ethernet -> Glyph.Ethernet; NetKind.Offline -> Glyph.Offline; else -> Glyph.Wifi },
-                stringResource(R.string.cc_network),
+                stringResource(if (vm.network.kind == NetKind.Ethernet) R.string.net_ethernet else R.string.net_wifi),
+                focusRequester = first,
             ) {
                 vm.whenUnlocked {
                     val pages = SystemProbe.networkSettingsIntents(context, ethernet = vm.network.kind == NetKind.Ethernet)
@@ -247,13 +250,47 @@ private fun MainPage(vm: HomeViewModel, now: LocalDateTime, takeFocus: Boolean, 
                     onOpen(pages.first())
                 }
             }
+            RoundButton(Glyph.Bluetooth, stringResource(R.string.cc_bluetooth)) {
+                vm.whenUnlocked {
+                    val pages = SystemProbe.bluetoothSettingsIntents(context)
+                    LaunchFallback.arm(pages.drop(1))
+                    onOpen(pages.first())
+                }
+            }
             RoundButton(Glyph.Gear, stringResource(R.string.cc_settings)) { vm.whenUnlocked { onOpen(SystemProbe.settingsIntent(context)) } }
+            // The VPN app's own logo and name; with several installed, the one used last.
+            // Without any, the button is left out rather than point nowhere.
+            vpnApp?.let { app ->
+                RoundButton(Glyph.VpnKey, app.label, mark = app.mark, picture = app.icon.takeIf { app.mark == null }, on = vm.network.vpn) { vm.whenUnlocked { onOpen(app.launch) } }
+            }
+            val next = when (AerialSettings.appearance) { Appearance.Auto -> Appearance.Dark; Appearance.Dark -> Appearance.Light; Appearance.Light -> Appearance.Auto }
+            RoundButton(
+                when (AerialSettings.appearance) { Appearance.Auto -> Glyph.Contrast; Appearance.Dark -> Glyph.Moon; Appearance.Light -> Glyph.Sun },
+                stringResource(when (AerialSettings.appearance) { Appearance.Auto -> R.string.cc_appearance_auto; Appearance.Dark -> R.string.cc_appearance_dark; Appearance.Light -> R.string.cc_appearance_light }),
+            ) { AerialSettings.chooseAppearance(next) }
+        }
+
+        // Only where inputs can be switched: a TV, not a Shield, onn box or Fire stick. Apps' own
+        // preview channels (Peacock, VLC on a SHIELD) are tuner inputs with no hardware behind them.
+        val picker = remember { SystemProbe.hasInputPicker(context) }
+        val tv = vm.sources.any { it.hardware != null || it.kind != SourceKind.Tuner } || picker
+        if (tv) {
+        Spacer(Modifier.height(8.dp))
+        MenuRow(Glyph.Input, stringResource(R.string.cc_inputs), onClick = {
+            // TCL lists no inputs to Android; its own input panel is the next best thing.
+            vm.overlay = if (vm.sources.isEmpty() && SystemProbe.openInputPicker(context)) Overlay.None
+            else Overlay.ControlCenter(CcPage.Inputs)
+        })
         }
 
         Spacer(Modifier.height(12.dp))
         VolumeRow(vm)
-        Spacer(Modifier.height(6.dp))
-        BrightnessRow(vm)
+        // A box or stick has no panel, so its brightness setting moves nothing: no row there.
+        val panel = remember { Brightness.hasPanelControl(context) }
+        if (tv || panel) {
+            Spacer(Modifier.height(6.dp))
+            BrightnessRow(vm)
+        }
 
         Spacer(Modifier.height(6.dp))
         // How Home looks (wallpaper, screensaver, focus style, hidden apps, weather) lives in one place.
@@ -323,12 +360,27 @@ private fun SetupPage(vm: HomeViewModel, takeFocus: Boolean, onOpen: (android.co
 
 /** A round Control Center button: frosted at rest, white when focused. */
 @Composable
-private fun RoundButton(glyph: Glyph, label: String, focusRequester: FocusRequester? = null, onClick: () -> Unit) {
+private fun RoundButton(
+    glyph: Glyph, label: String, focusRequester: FocusRequester? = null,
+    mark: android.graphics.Bitmap? = null, picture: android.graphics.drawable.Drawable? = null, on: Boolean = false, onClick: () -> Unit,
+) {
     Pressable(onClick = onClick, focusRequester = focusRequester, focusedScale = 1.1f) { state ->
-        val bg by animateColorAsState(if (state.focused) Palette.Focus else Color.Transparent, tween(Motion.Quick, easing = Motion.EaseOut), label = "round-bg")
+        // On (a VPN that is up) fills blue, as iOS shows a switched-on control; focus is white.
+        val bg by animateColorAsState(if (state.focused) Palette.Focus else if (on) Palette.Blue else Color.Transparent, tween(Motion.Quick, easing = Motion.EaseOut), label = "round-bg")
+        val ink = if (state.focused) Palette.OnFocus else if (on) Color.White else Palette.Label
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(64.dp)) {
             Box(Modifier.size(48.dp).liquidGlass(24.dp, band = 10.dp).background(bg), contentAlignment = Alignment.Center) {
-                GlyphIcon(glyph, if (state.focused) Palette.OnFocus else Palette.Label, 20.dp)
+                when {
+                    mark != null -> {
+                        val bitmap = remember(mark) { mark.asImageBitmap() }
+                        Image(bitmap, contentDescription = null, colorFilter = ColorFilter.tint(ink), contentScale = ContentScale.Fit, modifier = Modifier.size(24.dp))
+                    }
+                    picture != null -> {
+                        val bitmap = remember(picture) { picture.toBitmap(144, 144).asImageBitmap() }
+                        Image(bitmap, contentDescription = null, modifier = Modifier.size(28.dp).clip(CircleShape))
+                    }
+                    else -> GlyphIcon(glyph, ink, 20.dp)
+                }
             }
             Spacer(Modifier.height(6.dp))
             BasicText(

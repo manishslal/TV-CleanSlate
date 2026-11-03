@@ -260,6 +260,45 @@ object SystemProbe {
     fun networkSettingsIntents(context: Context, ethernet: Boolean = false): List<Intent> =
         listOfNotNull(xgimiSettingsIntent(context, XGIMI_NETWORK_PAGE)) + networkSettingsActivityIntents(context, ethernet)
 
+    /**
+     * The page that lists remotes and Bluetooth devices, nearest first. No TV here answers the
+     * standard BLUETOOTH_SETTINGS action, so each firmware's own page comes before it:
+     * - Google TV (onn 4K, Android 14): Remotes & Accessories, `com.android.tv.settings.CONNECTED_DEVICES`.
+     * - Android TV 12 settings (Hisense, Android 12): the same page as a slice, through SliceActivity.
+     * - Android TV 11 and older (SHIELD): no such page can be opened alone, so the pairing search,
+     *   which lists what it finds and pairs it, is the nearest.
+     */
+    fun bluetoothSettingsIntents(context: Context): List<Intent> {
+        val slice = Intent("android.settings.SLICE_SETTINGS")
+            .putExtra("slice_uri", "content://$ACCESSORIES_SLICES/general")
+            .takeIf { context.packageManager.resolveContentProvider(ACCESSORIES_SLICES, 0) != null }
+        return allResolvable(
+            context,
+            Intent("com.android.tv.settings.CONNECTED_DEVICES"),
+            *listOfNotNull(slice).toTypedArray(),
+            Intent("android.settings.BLUETOOTH_SETTINGS"),
+            Intent("com.google.android.intent.action.CONNECT_INPUT"),
+            Intent(Settings.ACTION_SETTINGS),
+        )
+    }
+
+    private const val ACCESSORIES_SLICES = "com.android.tv.settings.accessories.sliceprovider"
+
+    /**
+     * Whether this device can show or switch inputs at all: it lists some, or its firmware has an
+     * input panel [openInputPicker] can open. A Shield, an onn box or a Fire stick has neither.
+     */
+    fun hasInputPicker(context: Context): Boolean {
+        val pm = context.packageManager
+        fun activity(intent: Intent) = runCatching { pm.resolveActivity(intent, 0) }.getOrNull() != null
+        return xgimiSettingsIntent(context, XGIMI_SOURCE_PAGE) != null ||
+            runCatching { pm.resolveService(Intent("com.hisense.tv.start_inputs").setComponent(ComponentName("com.hisense.tv.inputs", "com.hisense.tv.InputsUIService")), 0) }.getOrNull() != null ||
+            tclInputPanel(context) != null ||
+            activity(Intent("coocaa.intent.action.SOURCE_DIALOG")) ||
+            activity(Intent("coocaa.intent.aigc.home.tvsource")) ||
+            runCatching { pm.queryBroadcastReceivers(Intent("com.coocaa.action.SOURCE").setComponent(ComponentName("com.tianci.movieplatform", "com.ccos.cooui.homepage.receiver.LaunchSourceReceiver")), 0) }.getOrNull().orEmpty().any { it.activityInfo.exported }
+    }
+
     private fun networkSettingsActivityIntents(context: Context, ethernet: Boolean = false): List<Intent> {
         val wired = listOfNotNull(Intent("com.xiaomi.mitv.settings.ETHERNET_SETTINGS").setPackage("com.xiaomi.mitv.settings").takeIf { ethernet })
         return allResolvable(

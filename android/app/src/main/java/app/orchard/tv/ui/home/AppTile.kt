@@ -1,5 +1,6 @@
 package app.orchard.tv.ui.home
 
+import app.orchard.tv.ui.components.Glisse
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -206,10 +207,11 @@ fun AppTile(
             focused || moving -> FOCUSED_SCALE
             else -> 1f
         },
-        // Press answers immediately; focus settles on a spring so rapid D-pad presses retarget
-        // smoothly. Critically damped, as Android TV's focus zoom (Leanback, Compose for TV) is: an
-        // overshoot reads as a wobble on a lit tile and makes the white frame shimmer.
-        animationSpec = if (pressed) tween(Motion.Fast, easing = Motion.EaseOut) else spring(dampingRatio = 1f, stiffness = 520f),
+        // Press takes glisse's press spring. Focus settles on a spring so rapid D-pad presses
+        // retarget smoothly. Critically damped, as Android TV's focus zoom (Leanback, Compose for
+        // TV) is, rather than glisse's release bounce: an overshoot reads as a wobble on a lit tile
+        // and makes the white frame shimmer.
+        animationSpec = if (pressed) spring(Glisse.PRESS_DAMPING, Glisse.PRESS_STIFFNESS) else spring(dampingRatio = 1f, stiffness = 520f),
         label = "tile-scale",
     )
     val lift by animateFloatAsState(
