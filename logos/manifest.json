@@ -30,6 +30,7 @@
   },
   "hbo-max": {
     "title": "HBO Max",
+    "glow": "#7B3FF2",
     "file": "dark/hbo-max.png",
     "webos": [
       "com.wbd.stream"

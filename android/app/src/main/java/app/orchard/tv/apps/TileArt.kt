@@ -424,7 +424,16 @@ object TileArtFactory {
         }
         logo.recycle()
         val plate = pack.plate.takeUnless { dark } ?: GRAPHITE_BOTTOM
-        return finish(colorTile(plate, plate), fore, keepDark = true).withTint(Color(brandTint(icon)))
+        // The focus glow: the pack's own glow color, else its plate where that has a hue (Windscribe's
+        // navy), else the icon's color; AppTile.glowColor lifts a dark one and makes a grey one white.
+        val glow = pack.glow ?: pack.plate?.takeIf { saturated(it) } ?: brandTint(icon)
+        return finish(colorTile(plate, plate), fore, keepDark = true).withTint(Color(glow))
+    }
+
+    private fun saturated(c: Int): Boolean {
+        val hsv = FloatArray(3)
+        android.graphics.Color.colorToHSV(c, hsv)
+        return hsv[1] >= 0.3f
     }
 
     /** Fork: the icon's own color, saturated parts weighing most; transparent for a grey or black-and-white icon. */

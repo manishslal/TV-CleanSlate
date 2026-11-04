@@ -48,6 +48,26 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
 
+/**
+ * Eases the film's speed to [target] over [ms], so it slows to a stop or gathers pace rather than
+ * cutting. Aerial films have no sound, so a changing speed is only seen. Cancelled mid-way (the
+ * film is wanted again), it leaves the speed where it got to, and the next ease starts from there.
+ */
+internal suspend fun Player.easeSpeed(target: Float, ms: Int) {
+    val from = playbackParameters.speed
+    val steps = (ms / 40).coerceAtLeast(1)
+    for (i in 1..steps) {
+        val f = i / steps.toFloat()
+        val eased = f * f * (3f - 2f * f)
+        setPlaybackSpeed((from + (target - from) * eased).coerceAtLeast(0.05f))
+        kotlinx.coroutines.delay(40)
+    }
+}
+
+/** How long a moving wallpaper takes to slow to a stop, and to get going again. */
+internal const val FILM_EASE_OUT_MS = 700
+internal const val FILM_EASE_IN_MS = 900
+
 /** How long Home sits still before the owner's videos start moving, unless set to keep moving. */
 internal const val START_AFTER_MS = 10_000L
 
@@ -134,6 +154,7 @@ fun LiveWallpaper(
     var showing by remember { mutableStateOf(false) }
     val reader = remember { FrameReader(context) }
     // Plays as soon as Home shows it, and keys do not stop it (Wallpapers.keepsMoving).
+    val reduced = app.orchard.tv.ui.theme.LocalReducedMotion.current
     val play = moving || hold
     val inSaver by rememberUpdatedState(hold && !moving)
     val keepNow by rememberUpdatedState(keep)
@@ -260,10 +281,13 @@ fun LiveWallpaper(
             Wallpapers.dropFilmFrost()
             // Its decoder was let go for the screensaver (LiveFilm.letDecoderGo).
             if (p.playbackState == Player.STATE_IDLE) p.prepare()
+            // Picks up from slow, as it slowed to a stop (easeSpeed).
+            if (!reduced && p.playbackParameters.speed >= 0.99f && !fresh) p.setPlaybackSpeed(0.2f)
             p.playWhenReady = true
             snapshotFlow { showing }.first { it }
             caughtUp?.await()
             DiagLog.i("wallpaper film moving")
+            if (p.playbackParameters.speed < 1f) launch { p.easeSpeed(1f, FILM_EASE_IN_MS) }
             cover.animateTo(1f, tween(1200, easing = Motion.EaseOut))
         } else {
             val p = player ?: return@LaunchedEffect
@@ -272,7 +296,10 @@ fun LiveWallpaper(
                 release()
                 return@LaunchedEffect
             }
+            // Slows to a stop over a moment rather than freezing on the frame it was at.
+            if (!reduced && p.isPlaying) p.easeSpeed(0.05f, FILM_EASE_OUT_MS)
             p.pause()
+            p.setPlaybackSpeed(1f)
             if (cover.value > 0f) {
                 // The stopped frame becomes the picture; once Home has it, the film can go. Where
                 // the video plane cannot be read, the same moment is decoded from the 1080p file:

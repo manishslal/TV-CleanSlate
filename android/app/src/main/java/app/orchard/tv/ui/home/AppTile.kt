@@ -299,9 +299,11 @@ fun AppTile(
             ) {
                 val blur = if (AerialSettings.focusGlow == FocusGlow.Large) GlowLarge else ShadowBlur
                 val shadow = tileShadow(size.width.roundToInt(), size.height.roundToInt(), Corner.toPx(), blur.toPx())
-                // Fork: the app's own color lifts the focused tile off the wallpaper; a grey app keeps the plain shadow.
-                val halo = app.art.tint.takeIf { it.alpha > 0.5f }?.let { androidx.compose.ui.graphics.ColorFilter.tint(it, BlendMode.SrcIn) }
-                fun glow() = translate(-shadow.ext, -shadow.ext) { repeat(if (halo != null) 2 else 1) { drawImage(shadow.image, colorFilter = halo) } }
+                // Fork: the app's own color lifts the focused tile off the wallpaper. A black-and-white or
+                // grey app (Apple TV) glows white, and a dark brand color (HBO Max's purple, Windscribe's
+                // navy) is lifted to a bright one of its hue: dark, it drew no glow on a dark room.
+                val halo = androidx.compose.ui.graphics.ColorFilter.tint(glowColor(app.art.tint), BlendMode.SrcIn)
+                fun glow() = translate(-shadow.ext, -shadow.ext) { repeat(2) { drawImage(shadow.image, colorFilter = halo) } }
                 // A Clear tile lets what is behind it through: the glow stays outside, off the logo.
                 if (TileArtFactory.clear) clipPath(smoothRectPath(Rect(0f, 0f, size.width, size.height), Corner.toPx()), ClipOp.Difference) { glow() } else glow()
             }
@@ -751,3 +753,16 @@ private fun ringFrame(w: Int, h: Int, corner: Float, gap: Float, width: Float, d
         canvas.drawPath(around(out), line(width, Color.White.copy(alpha = 0.96f)))
         RingFrame(bitmap.frozen().asImageBitmap(), ext)
     }
+
+/** A color a focus glow shows: greys, black and white glow white; a dark color is lifted, keeping its hue. */
+internal fun glowColor(tint: Color): Color {
+    if (tint.alpha < 0.5f) return GlowWhite
+    val hsv = FloatArray(3)
+    android.graphics.Color.colorToHSV(tint.toArgb(), hsv)
+    if (hsv[1] < 0.18f) return GlowWhite
+    hsv[1] = hsv[1].coerceAtMost(0.9f)
+    hsv[2] = hsv[2].coerceAtLeast(0.85f)
+    return Color(android.graphics.Color.HSVToColor(hsv))
+}
+
+private val GlowWhite = Color(0xFFF2F2F7)

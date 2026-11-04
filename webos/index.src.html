@@ -616,7 +616,7 @@ function inked(img, ink) {
 function tile(t) {
   var el = document.createElement('div');
   el.className = 'tile';
-  el.style.setProperty('--halo', tint(t.id));
+  el.style.setProperty('--halo', halo(t.id));
   var p = document.createElement('div');
   p.className = 'plate';
   if (t.folder) {
@@ -671,6 +671,19 @@ function tile(t) {
   return el;
 }
 function hue(id) { var h = 0; for (var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 360; return 'hsl(' + h + ',55%,38%)'; }
+/* The focus glow, as on Android: a black-and-white or grey app (Apple TV) glows white, and a dark
+   brand color (HBO Max's purple, Windscribe's navy) is lifted to a bright one of its hue */
+function halo(id) {
+  var look = PLATES[id] || [], c = look[3] || look[0] || colors[id] || '', r, g, b;
+  var m = c.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i);
+  if (m) { r = parseInt(m[1], 16); g = parseInt(m[2], 16); b = parseInt(m[3], 16); }
+  else { m = c.match(/\d+/g); if (!m) return '#f2f2f7'; r = +m[0]; g = +m[1]; b = +m[2]; }
+  var max = Math.max(r, g, b), min = Math.min(r, g, b), sat = max ? (max - min) / max : 0;
+  if (sat < 0.18) return '#f2f2f7';
+  var k = Math.max(max, 217) / max, s2 = Math.min(sat, 0.9);
+  function ch(v) { var x = max - (max - v) * s2 / sat; return Math.round(Math.min(255, x * k)); }
+  return 'rgb(' + ch(r) + ',' + ch(g) + ',' + ch(b) + ')';
+}
 function tint(id) {
   var pack = PLATES[id] && PLATES[id][0];
   if (pack) return pack;

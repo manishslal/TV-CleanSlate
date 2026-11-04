@@ -316,7 +316,7 @@
       "webos": "missing",
       "tizen": "missing",
       "lite": "frozen",
-      "note": "Google TV opens Remotes & Accessories, and Android 12 TV settings open it as a slice. SHIELD and other Android 11 and older TVs can't open that page alone, so it opens the pairing search. Only the SHIELD has been tried; the onn and Hisense targets were checked by what answers the intent."
+      "note": "Google TV opens Remotes & Accessories (tried on the onn 4K: Connected Devices). Android 12 TV settings open it as a slice (checked only by what answers the intent, on a Hisense). SHIELD and other Android 11 and older TVs can't open that page alone, so it opens the pairing search (tried on the SHIELD)."
     },
     {
       "id": "inputs-only-tvs",
@@ -353,6 +353,32 @@
       "tizen": "partial",
       "lite": "frozen",
       "note": "Light starts on a lighter Dim. A tint chosen before carries over to both. Samsung's is built in and not yet looked at on a TV."
+    },
+    {
+      "id": "glow-every-app",
+      "name": "Every app's focused tile glows: white for grey or black-and-white apps, dark brand colors lifted, a logo's own glow color",
+      "android": "done",
+      "webos": "done",
+      "tizen": "partial",
+      "lite": "frozen",
+      "note": "Samsung's is built in, not yet looked at on a TV."
+    },
+    {
+      "id": "pill-network-name",
+      "name": "Status pill shows the network name",
+      "android": "done",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "done"
+    },
+    {
+      "id": "film-eases",
+      "name": "A moving wallpaper slows to a stop under a menu and picks up again, and the glass fades through its lens",
+      "android": "done",
+      "webos": "not-applicable",
+      "tizen": "not-applicable",
+      "lite": "frozen",
+      "note": "The web builds pause their video without easing; their glass is baked frost, which doesn't change under a menu."
     }
   ]
 }

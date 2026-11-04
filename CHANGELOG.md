@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Android 1.67-mh34 and web: every app's focused tile glows. Black-and-white and grey apps glow white (Apple TV), and dark brand colors are lifted to a bright one of the same hue (Windscribe's navy to blue). A logo can set its glow color in `logos/manifest.json` (HBO Max: purple)
+- Android 1.67-mh32: a moving wallpaper slows to a stop when a menu opens and gathers pace when it closes, instead of freezing and jumping
+- Android 13 and later: the liquid glass stays liquid while its picture changes, fading from the old picture to the new over 0.9 s, where it used to drop to flat glass and pop back
+- Android: the status pill shows the Wi-Fi name, as the web Home and Lite do
 - Android 1.67-mh31 and web: fixes from a glass review: the dock no longer stays half-visible in the grid and screensaver with Clear tiles, the rim fades cleanly at its corners and follows the appearance on an input's plate, Dark tiles keep their dark rim in Light, and Clear tiles in Light read better over dark pictures
 - Android 1.67-mh30: the VPN button shows with the other buttons instead of a second or two later, and only once a VPN has been connected on the device
 - Android 1.67-mh29 and web: Clear tiles have a dock again, at half strength, and the Dock switch is in Appearance for every tile style

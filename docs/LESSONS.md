@@ -71,6 +71,8 @@ What one TV taught us that applies to the next. Add to this after every device, 
 
 ## Logos
 
+- A focus glow taken from an app's icon is no glow at all for a grey or black-and-white icon (Apple TV) and nearly none for a dark one (HBO Max, Windscribe). Lift dark colors, glow white for greys, and let a logo name its glow color.
+
 See [Logos we still need](../logos/README.md#logos-we-still-need).
 
 ## Settings pages on Android TVs
@@ -84,6 +86,10 @@ See [Logos we still need](../logos/README.md#logos-we-still-need).
 ## Control Center
 
 - Anything a panel needs should be looked up before it opens. Reading 30 days of usage stats, an app's icon and a logo when Control Center opened made the VPN button appear a second or two after the rest on the SHIELD.
+
+## Moving wallpaper under glass
+
+- When a panel opens over a moving film, the film stops and its frame becomes the glass's picture. On Android 13 and later, the glass used to drop from the lens to flat frosting while the new picture faded in, then pop back: the "liquid glass turns on and off" the owner saw on the onn. With Daily Photo the picture never changes, so it never showed. Fade through the lens instead, and ease the film's speed down rather than pausing on the spot.
 
 ## Testing on a TV someone is using
 

@@ -20,9 +20,9 @@ object LogoPack {
     private const val MAX_SIDE = 1024
 
     /** A pack logo: light artwork, the color of its Color tile, and the ink it takes there (null: its own colors), and its size against the rest: a thin or round logo reads small at equal area. */
-    class Logo(val bitmap: Bitmap, val plate: Int?, val ink: Int?, val size: Float)
+    class Logo(val bitmap: Bitmap, val plate: Int?, val ink: Int?, val size: Float, val glow: Int? = null)
 
-    private class Entry(val file: String, val plate: Int?, val ink: Int?, val size: Float)
+    private class Entry(val file: String, val plate: Int?, val ink: Int?, val size: Float, val glow: Int?)
 
     private lateinit var context: Context
     @Volatile private var files: Map<String, Entry>? = null
@@ -42,7 +42,7 @@ object LogoPack {
                 val file = entry.getString("file")
                 // Android draws no SVG from assets: logos/build_pack.py renders one to PNG.
                 if (file.endsWith(".svg")) return@forEach
-                val logo = Entry(file, color(entry, "plate"), color(entry, "ink"), entry.optDouble("size", 1.0).toFloat())
+                val logo = Entry(file, color(entry, "plate"), color(entry, "ink"), entry.optDouble("size", 1.0).toFloat(), color(entry, "glow"))
                 for (i in 0 until ids.length()) put(ids.getString(i), logo)
             }
         }
@@ -58,7 +58,7 @@ object LogoPack {
             var sample = 1
             while (maxOf(size.outWidth, size.outHeight) / sample > MAX_SIDE) sample *= 2
             val bitmap = context.assets.open(path).use { BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sample }) }
-            Logo(bitmap!!, entry.plate, entry.ink, entry.size)
+            Logo(bitmap!!, entry.plate, entry.ink, entry.size, entry.glow)
         }.onFailure { Log.w(TAG, "could not read the logo of $pkg", it) }.getOrNull()
     }
 }

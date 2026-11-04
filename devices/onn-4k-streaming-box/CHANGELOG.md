@@ -162,3 +162,18 @@ Then use `scripts/99-restore-stock.sh` if anything still points away from the st
 ## 1.67-mh17 (2026-10-31)
 - Installed. Every tile style, Invert, Focus Glow, Wallpaper Tint and Control Center captured in Light and Dark, with independent QA on all but the last panel text change.
 - 73 unit tests pass and no crashes are logged. Left on Clear tiles, Light, Liquid glass, as before.
+
+### Home 1.67-mh31 installed (2026-11-03)
+- Updated from 1.67-mh17 with `adb install -r` of the standard release APK, then `cmd package compile -m speed -f io.manish.home`. Home Guard stayed enabled and Home was in front.
+- Control Center shows Wi-Fi, Bluetooth, Settings and Appearance. No VPN button, because no VPN has been seen up on this box, and no Inputs or Brightness, as on any box. Bluetooth opened Google TV's Connected Devices page (`com.android.tv.settings.CONNECTED_DEVICES`), listing the remote, and Back returned to Home.
+- Android 14 draws Liquid Glass with the lens shader. The video wallpaper plays on a SurfaceView that `screencap` shows as black, so screenshots of Home look black behind the glass.
+- Undo: install the earlier APK the same way.
+
+### Home 1.67-mh32 installed (2026-11-03)
+- After the owner found the glass flicking between liquid and flat, and the moving wallpaper stopping dead, when Control Center opened. Installed while TiviMate was playing; it kept playing. Not yet looked at: the owner was using the box.
+
+### Home 1.67-mh34 installed (2026-11-03)
+- Recorded Control Center opening over the moving Aerial wallpaper: the panel came in about 0.5 s after OK and its glass picture faded in over about 0.8 s, with no skipped frames. The first opening after an install took a second (42 frames skipped while it was composed for the first time). The video plane doesn't show in `screencap` or `screenrecord`, so the film's slow stop was checked by its log only.
+- Focus glow checked: Windscribe blue, HBO Max purple, Apple TV white, TiviMate blue. The status pill shows the Wi-Fi name.
+- Left on Daily Photo, as before the test, and on Home.
+

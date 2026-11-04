@@ -126,7 +126,12 @@ fun Modifier.liquidGlass(corner: Dp, bottomCorners: Boolean = true, band: Dp = 2
                         // and before Android 9 hardware drawing cannot compose two bitmaps.
                         glass.record(this, layoutDirection, IntSize(w, h)) {
                             drawImage(flat, dstSize = IntSize(w, h))
-                            if (underShader != null && under != null && t < 1f) {
+                            if (lens && under != null && t < 1f) {
+                                // A new picture fades in over the old one through the lens, so the
+                                // glass stays liquid while it changes rather than going flat.
+                                drawRect(ShaderBrush(LiquidLens.shader(under, if (tile) null else Wallpapers.backdrop, IntSize(w, h), radius, !bottomCorners, at, root, light, density, band.toPx(), tile = tile)), blendMode = BlendMode.SrcIn)
+                                drawRect(ShaderBrush(LiquidLens.shader(frost, if (tile) null else Wallpapers.backdrop, IntSize(w, h), radius, !bottomCorners, at, root, light, density, band.toPx(), tile = tile)), alpha = t, blendMode = BlendMode.SrcAtop)
+                            } else if (underShader != null && under != null && t < 1f) {
                                 // A new frosted picture fades in over the old within the outline.
                                 place(underShader, under)
                                 drawRect(ShaderBrush(underShader), colorFilter = tint, blendMode = BlendMode.SrcIn)
@@ -137,7 +142,7 @@ fun Modifier.liquidGlass(corner: Dp, bottomCorners: Boolean = true, band: Dp = 2
                             } else {
                                 drawRect(brush, colorFilter = tint, blendMode = BlendMode.SrcIn)
                             }
-                            if (!lens || t < 1f) drawGlassEdge(size, radius, bottomCorners, light)
+                            if (!lens) drawGlassEdge(size, radius, bottomCorners, light)
                         }
                     }
                     drawLayer(glass)
@@ -171,13 +176,13 @@ internal fun rememberFrostSwap(frost: ImageBitmap?): Triple<ImageBitmap?, ImageB
         // Mid-fade, the one further in stays under the next.
         under = if (swap.value > 0.5f) old else under ?: old
         swap.snapTo(0f)
-        swap.animateTo(1f, tween(FROST_SWAP_MS, easing = Motion.EaseOut))
+        swap.animateTo(1f, tween(FROST_SWAP_MS, easing = Motion.EaseInOut))
         under = null
     }
     return Triple(shown, under, { swap.value })
 }
 
-private const val FROST_SWAP_MS = 450
+private const val FROST_SWAP_MS = 900
 
 /** The lit edge of a piece of glass and its outline, as [glassEdge] bakes them. */
 private fun DrawScope.drawGlassEdge(size: Size, radius: Float, bottomCorners: Boolean, light: Boolean) {

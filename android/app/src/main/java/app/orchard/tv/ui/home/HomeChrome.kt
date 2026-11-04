@@ -1,5 +1,7 @@
 package app.orchard.tv.ui.home
 
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.layout.widthIn
 import android.os.Build
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.ShaderBrush
@@ -296,6 +298,9 @@ fun HomeBackground(
 private val BoardDate = TextStyle(fontFamily = BoardFont, fontSize = 22.sp, letterSpacing = 0.16.em, color = BoardInk)
 private val BoardDetail = TextStyle(fontFamily = BoardFont, fontSize = 19.sp, letterSpacing = 0.1.em, color = BoardInk)
 
+/** How long a new picture takes to fade into the dock's glass: slow, so the glass changes gently. */
+private const val PLATE_SWAP_MS = 900
+
 /** How strong the dock is behind Clear tiles. */
 private const val CLEAR_PLATE = 0.5f
 
@@ -418,7 +423,7 @@ private fun Plate(glass: ImageBitmap?, sharp: ImageBitmap?, film: ImageBitmap?, 
         under = shown.takeIf { swap.value > 0.5f } ?: under
         shown = glass
         swap.snapTo(0f)
-        swap.animateTo(1f, tween(450, easing = Motion.EaseOut))
+        swap.animateTo(1f, tween(PLATE_SWAP_MS, easing = Motion.EaseInOut))
         under = null
     }
     val top = remember(shown) { shown?.let { PlateLayer(plateTinted(it)) } }
@@ -462,6 +467,10 @@ private fun Plate(glass: ImageBitmap?, sharp: ImageBitmap?, film: ImageBitmap?, 
     // for a new picture or place; the baked plate is software and cannot run the lens.
     val lensLayer = rememberGraphicsLayer()
     var lensFor by remember { mutableStateOf<List<Any?>?>(null) }
+    // The last picture's lens, under the new one while it fades in: the glass stays liquid
+    // throughout, where it used to drop to the flat plate for the fade and pop back after.
+    val lensUnderLayer = rememberGraphicsLayer()
+    var lensUnderFor by remember { mutableStateOf<List<Any?>?>(null) }
     val lens = LiquidLens.supported && AerialSettings.liquidGlass && !AerialSettings.lite
     val lightLens = !AerialSettings.darkNow
 
@@ -505,24 +514,39 @@ private fun Plate(glass: ImageBitmap?, sharp: ImageBitmap?, film: ImageBitmap?, 
         val r = plate.translate(0f, -scroll() - lift()).inflate(grow)
         val t = swap.value
         val picture = shown
-        if (lens && t >= 1f && picture != null && Build.VERSION.SDK_INT >= 33) {
+        if (lens && picture != null && Build.VERSION.SDK_INT >= 33) {
             val w = plate.width.roundToInt().coerceAtLeast(1)
             val h = plate.height.roundToInt().coerceAtLeast(1)
-            val key = listOf(picture, sharp, plate, size, lightLens)
-            if (lensFor != key) {
-                lensFor = key
+            fun record(layer: androidx.compose.ui.graphics.layer.GraphicsLayer, of: ImageBitmap) {
                 val radius = PlateCorner.toPx()
                 val mask = smoothMask(w, h, radius).asImageBitmap()
                 val root = IntSize(size.width.roundToInt(), size.height.roundToInt())
-                val shader = LiquidLens.shader(picture, sharp, IntSize(w, h), radius, false, plate.topLeft, root, lightLens, density.density, PlateBand.toPx(), dock = true)
-                lensLayer.compositingStrategy = androidx.compose.ui.graphics.layer.CompositingStrategy.Offscreen
-                lensLayer.record(this, layoutDirection, IntSize(w, h)) {
+                val shader = LiquidLens.shader(of, sharp, IntSize(w, h), radius, false, plate.topLeft, root, lightLens, density.density, PlateBand.toPx(), dock = true)
+                layer.compositingStrategy = androidx.compose.ui.graphics.layer.CompositingStrategy.Offscreen
+                layer.record(this, layoutDirection, IntSize(w, h)) {
                     drawImage(mask, dstSize = IntSize(w, h))
                     drawRect(ShaderBrush(shader), blendMode = BlendMode.SrcIn)
                 }
             }
-            lensLayer.alpha = alpha
-            withTransform({ translate(r.left, r.top); scale(r.width / w, r.height / h, Offset.Zero) }) { drawLayer(lensLayer) }
+            val key = listOf(picture, sharp, plate, size, lightLens)
+            if (lensFor != key) {
+                lensFor = key
+                record(lensLayer, picture)
+            }
+            val old = under
+            withTransform({ translate(r.left, r.top); scale(r.width / w, r.height / h, Offset.Zero) }) {
+                if (t < 1f && old != null) {
+                    val underKey = listOf(old, sharp, plate, size, lightLens)
+                    if (lensUnderFor != underKey) {
+                        lensUnderFor = underKey
+                        record(lensUnderLayer, old)
+                    }
+                    lensUnderLayer.alpha = alpha
+                    drawLayer(lensUnderLayer)
+                    lensLayer.alpha = alpha * t
+                } else lensLayer.alpha = alpha
+                drawLayer(lensLayer)
+            }
             return@Canvas
         }
         if (t < 1f) bottom?.draw(this, plate, r, alpha)
@@ -917,6 +941,17 @@ fun StatusPill(
                 NetKind.Offline -> Glyph.Offline
             }
             GlyphIcon(glyph, fg, 22.dp, level = network.level)
+            // The network's name, as the web Home and Lite show it.
+            val name = when (network.kind) {
+                NetKind.Wifi -> network.name
+                NetKind.Ethernet -> stringResource(R.string.net_ethernet)
+                NetKind.Offline -> stringResource(R.string.net_offline)
+            }
+            if (name != null) BasicText(
+                name, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                style = Type.Caption.copy(color = fg, fontSize = 17.sp, fontWeight = FontWeight.W500),
+                modifier = Modifier.widthIn(max = 200.dp),
+            )
             if (network.vpn) VpnBadge(fg)
             if (showTime) {
                 FlipText(timeText(now), style = Type.Headline.copy(color = fg))

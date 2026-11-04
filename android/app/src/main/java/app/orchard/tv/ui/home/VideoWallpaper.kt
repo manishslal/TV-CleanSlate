@@ -1,5 +1,6 @@
 package app.orchard.tv.ui.home
 
+import kotlinx.coroutines.launch
 import app.orchard.tv.plex.Plex
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
@@ -62,6 +63,7 @@ fun VideoWallpaper(
         delay(START_AFTER_MS)
         idle = true
     }
+    val reduced = app.orchard.tv.ui.theme.LocalReducedMotion.current
     val play = moving && (idle || AerialSettings.wallpaperAlwaysMoves)
     val keepNow by rememberUpdatedState(keep)
 
@@ -138,8 +140,10 @@ fun VideoWallpaper(
             DiagLog.i("video wallpaper starts (${p.currentMediaItem?.mediaId} at ${p.currentPosition} ms, idle $idle)")
             Wallpapers.dropFilmFrost()
             if (p.playbackState == Player.STATE_IDLE) p.prepare()
+            if (!reduced && p.playbackParameters.speed >= 0.99f && p.currentPosition > 0) p.setPlaybackSpeed(0.2f)
             p.playWhenReady = true
             snapshotFlow { showing }.first { it }
+            if (p.playbackParameters.speed < 1f) launch { p.easeSpeed(1f, FILM_EASE_IN_MS) }
             cover.animateTo(1f, tween(1200, easing = Motion.EaseOut))
         } else {
             val p = player ?: return@LaunchedEffect
@@ -148,7 +152,9 @@ fun VideoWallpaper(
                 release()
                 return@LaunchedEffect
             }
+            if (!reduced && p.isPlaying) p.easeSpeed(0.05f, FILM_EASE_OUT_MS)
             p.pause()
+            p.setPlaybackSpeed(1f)
             DiagLog.i("video wallpaper stops at ${p.currentPosition} ms")
             if (cover.value > 0f) {
                 val film = p.currentMediaItem?.mediaId
