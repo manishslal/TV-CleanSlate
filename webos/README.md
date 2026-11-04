@@ -9,7 +9,7 @@ webOS doesn't let apps replace Home, so this runs on [CleanYourTV](https://githu
 | `index.src.html` | The app, with placeholders filled at build time |
 | `build.py` | Builds `index.html` from the Android app's wallpaper list, icons and topics |
 | `bake_frost.py` | Bakes blurred frames, because webOS video can't be read or blurred by a page |
-| `home-svc.js`, `12-home-svc` | Local service for volume, network, news and power-on target |
+| `home-svc.js`, `12-home-svc` | Local service for volume, network, news, Bing's photo list and power-on target |
 | `16-lg-us-ads` | Blocks LG's US ad and telemetry hosts |
 | `17-lg-slim` | Stops services this TV doesn't need |
 | `20-home-on-power` | Opens Home on reboot and wake |
@@ -21,4 +21,6 @@ python3 webos/bake_frost.py   # writes frost/ and frost.json; needs ffmpeg and P
 python3 webos/build.py        # needs Pillow and your own logos in logos/dark/
 ```
 
-`index.html`, `frost/`, `frost.json` and `logo/` are generated and not committed. Deployment steps and how to undo them are in the device log.
+`build.py` also copies the interface sounds (`ui_*.wav`, made by `tools/make-sounds.py`) next to `index.html`; deploy them with it. `index.html`, `frost/`, `frost.json`, `logo/` and the sounds are generated and not committed. Deployment steps and how to undo them are in the device log.
+
+The daily pictures (Bing, NASA Earth Observatory, Wikimedia, Google Earth View) are fetched by the page. Bing's list does not allow web pages, so on LG the page asks `home-svc.js` (`/bing`); deploy the updated `home-svc.js` along with the page.

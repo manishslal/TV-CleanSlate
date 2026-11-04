@@ -102,3 +102,20 @@ See [Logos we still need](../logos/README.md#logos-we-still-need).
 
 - Google TV and SHIELD ship with the system text size (`settings get system font_scale`) at 0.85, while Fire OS ships at 1.0. Home's type was sized on the first two, so every sp size drew 18% larger on the Fire TV. Check `font_scale` on each device before judging text size from a screenshot; `canvasFontScale` in `Theme.kt` now evens it out.
 - Look at a new element on every device class it ships to, not only the one in front of you. The Wi-Fi name was checked on the onn only.
+
+## Talking to a home server
+
+- Android 9 and later refuse plain HTTP to any host the network security config does not name, and a home server's address is different in every home. The SHIELD and onn failed where the Fire TV (Android 7) worked. Home writes its request to the cut-out service on a socket, and only to an address that resolves to a private range; HTTPS rules stay as they are everywhere else.
+- A Compose state object made for the first time on a background thread, while a frame is being composed, stops the app ("reading a state that was created after the snapshot was taken"). Touch such objects on the main thread at start-up (`Depth.clear()` in `Wallpapers.init`).
+
+## Testing over ADB from zsh
+
+- In zsh, `$id:latest` is not "the value, then :latest": `:l` is the lowercase modifier, so the shell sent `earthatest`. Write `"${id}:latest"`. Home was right to fall back to its default picture.
+
+## Picture sources
+
+- NASA's own Picture of the Day API answered every day of 2026 with a placeholder NASA logo. Earth Observatory's feed (science.nasa.gov) works and is mostly pictures of Earth from orbit; its resizer gives a 1920-wide copy of files up to 6 MB.
+- Wikimedia's thumbnail server allows 1920 wide but refuses 2560.
+- A cut-out model also marks haze (a river, a sky). Judge a cut-out by how firmly it marks what it marks, not by its size: a fish scored 0.93, river haze 0.44.
+- Read a 16:9 picture's calmest spot from the part the screen shows: squashing the whole 3:2 picture into the sample picked a different side than the cropped picture did.
+

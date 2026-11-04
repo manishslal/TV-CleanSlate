@@ -19,6 +19,9 @@ If you want Aerial itself, use and support the upstream project. Bug reports for
 | Barlow Condensed SemiBold (`app/src/main/res/font/barlow_condensed_semibold.ttf`), the fork's flap-card clock | The Barlow Project Authors, https://github.com/jpt/barlow | SIL Open Font License 1.1, see [FONT-LICENSE-OFL-Barlow.txt](FONT-LICENSE-OFL-Barlow.txt) |
 | Icon path data in `GlyphPaths.kt` | Google Material Design Icons, https://github.com/google/material-design-icons | Apache License 2.0 |
 | Chinese city list (`cities-cn.tsv`) | GeoNames, https://www.geonames.org | CC BY 4.0 |
+| Inter, four static weights (`app/src/main/res/font/inter_static_*.ttf`), cut from the variable font for Android 7 | The Inter Project Authors, https://github.com/rsms/inter | SIL Open Font License 1.1, see [FONT-LICENSE-OFL.txt](FONT-LICENSE-OFL.txt) |
+| Google Earth View picture numbers and places (`app/src/main/assets/earthview.json`) | Collected by https://github.com/limhenry/earthview | No license stated; only numbers and place names, as facts. The pictures are Google's, fetched at runtime |
+| Interface sounds (`app/src/main/res/raw/ui_move/select/back/limit.wav`) | Made for the fork by `tools/make-sounds.py` | This project's license |
 | Weather data (runtime) | Open-Meteo, https://open-meteo.com | Open-Meteo terms (CC BY 4.0 data) |
 | Aerial films (runtime) | Apple; streamed from Apple's servers, not included in this repository | Apple's terms |
 | Photo of the day (runtime) | Microsoft Bing | Bing's terms |

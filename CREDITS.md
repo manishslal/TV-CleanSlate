@@ -59,6 +59,8 @@ Used while redesigning the interface. Their files are not included.
 | Barlow Condensed SemiBold | [The Barlow Project Authors](https://github.com/jpt/barlow) | [SIL OFL 1.1](android/FONT-LICENSE-OFL-Barlow.txt) |
 | Icon path data | [Google Material Design Icons](https://github.com/google/material-design-icons) | Apache-2.0 |
 | City list | [GeoNames](https://www.geonames.org) | CC BY 4.0 |
+| Google Earth View picture numbers and places (`android/app/src/main/assets/earthview.json`) | Collected by [limhenry/earthview](https://github.com/limhenry/earthview) | No license stated; only the numbers and place names are kept, as facts. The pictures are Google's and are fetched at runtime |
+| Interface sounds | Made here by `tools/make-sounds.py` | This project's license |
 
 ## Libraries and services
 
@@ -73,7 +75,21 @@ Used while redesigning the interface. Their files are not included.
 | [ipinfo.io](https://ipinfo.io) | Location lookup at runtime | ipinfo's terms |
 | Apple aerial films | Streamed from Apple at runtime, never stored here | Apple's terms |
 | Bing photo of the day | Fetched at runtime | Microsoft's terms |
+| [NASA Earth Observatory](https://science.nasa.gov/earth/earth-observatory/) Image of the Day | Wallpaper fetched at runtime, credited on screen | NASA imagery is generally public domain |
+| [Wikimedia Commons](https://commons.wikimedia.org) Picture of the Day | Wallpaper fetched at runtime; its author and license are shown with it | Each file's own license (CC BY, CC BY-SA and others) |
+| [Google Earth View](https://earthview.withgoogle.com) | Wallpaper fetched at runtime | Google's terms |
 | Google News RSS | Headlines at runtime | Google's terms |
+
+## Cut-out service
+
+`server/cutout` builds a Docker image on a home server. Nothing below is included in this repository.
+
+| Item | Author | License | Use |
+|---|---|---|---|
+| [ISNet (DIS)](https://github.com/xuebinqin/DIS) general-use model | Xuebin Qin and contributors | Apache-2.0 | Finds a wallpaper's subject |
+| [rembg](https://github.com/danielgatis/rembg) | Daniel Gatis | MIT | Its release hosts the ONNX export of the model, downloaded when the image is built |
+| [ONNX Runtime](https://github.com/microsoft/onnxruntime) | Microsoft | MIT | Runs the model |
+| [Pillow](https://github.com/python-pillow/Pillow) and [NumPy](https://github.com/numpy/numpy) | Their contributors | MIT-CMU, BSD-3-Clause | Pictures and arrays |
 
 ## Logo tools
 

@@ -10,6 +10,7 @@
 
 - `1.67-mh37` installed over mh35 and compiled with `-m speed` while YouTube played; YouTube was not interrupted. Sounds are Home's own. Not looked at on screen.
 - Later mh37 build: the cut-out service answers here too (fish: solid 0.95). Put back on the daily photo, Large at the top left. Not looked at on screen.
+- Review-fix build from 20d82c3 installed and compiled with `-m speed`. Checked on screen: Home, Dark with Clear tiles, the Large clock at the top left and the daily photo. The collections loaded (NASA 6, Wikimedia 5, Earth View 6), and the cut-out service answered: today's Bing photo is haze (solid 0.42), so no subject over the clock. 0 crash entries.
 
 ## Home mh35 — 2026-11-04
 

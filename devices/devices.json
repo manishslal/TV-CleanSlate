@@ -13,7 +13,7 @@
       "debloat": true,
       "liquid_glass": true,
       "verified_on_hardware": true,
-      "latest_build_tested": "1.67-mh15"
+      "latest_build_tested": "1.67-mh37"
     },
     {
       "id": "onn-4k-plus",
@@ -41,7 +41,7 @@
       "debloat": true,
       "liquid_glass": false,
       "verified_on_hardware": true,
-      "latest_build_tested": "1.67-mh15"
+      "latest_build_tested": "1.67-mh37"
     },
     {
       "id": "tcl-c02-4k-us",

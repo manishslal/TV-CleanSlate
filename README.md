@@ -31,6 +31,7 @@ It stands on the work of other open source projects. The Android app is a fork o
 | **Device kit** | Scripts to back up a TV, disable the stock launcher, switch launchers and restore stock | [scripts/](scripts/README.md) |
 | **Guides** | Setup, safety, troubleshooting and agent-ready debloat prompts | [guides/](guides/getting-started.md) |
 | **Device logs** | What was changed on each TV and how to undo it | [devices/](devices/README.md) |
+| **Cut-out service** | An optional home-server container that lets a wallpaper's subject stand in front of the clock | [server/cutout/](server/cutout/README.md) |
 
 ## Features
 
@@ -38,6 +39,10 @@ It stands on the work of other open source projects. The Android app is a fork o
 |---|---|---|
 | Aerial film wallpapers | Yes | Yes |
 | Flip-card clock, date and weather | Yes | Yes |
+| Clock Small, Large or Huge; top left, center, right or Auto (where the picture is calmest) | Yes | Yes |
+| Daily wallpapers from Bing, NASA Earth Observatory, Wikimedia Commons and Google Earth View, or a different source each day | Yes | Yes |
+| The wallpaper's subject in front of the clock, with a home cut-out service | Yes | No |
+| Calm interface sounds of its own (`tools/make-sounds.py`) | Yes | Yes |
 | Clear, Dark and Color tiles | Yes | Yes |
 | Focus glow in the app's color | Yes | Yes |
 | Personalize panel | Yes | Yes |
@@ -137,6 +142,9 @@ guides/     Debloat and safety guides
 devices/    Per-device logs, restore scripts and devices.json
 logos/      Logo manifest (app IDs only, no artwork)
 docs/       Supported devices, architecture, screenshots and research
+tizen/      Samsung Tizen build of the web Home
+server/     Optional home-server services (the cut-out service)
+tools/      Generators for bundled material (the interface sounds)
 ```
 
 AI coding agents should start with [AGENTS.md](AGENTS.md).

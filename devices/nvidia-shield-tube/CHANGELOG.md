@@ -11,6 +11,7 @@
 - `1.67-mh37` installed over mh35 and compiled with `-m speed`. Sounds are Home's own.
 - Checked in Light: Control Center's panel shows the picture through grey glass, with white cards for the buttons and volume; Personalize's three groups sit on white sections. 0 crash entries.
 - Later mh37 build: the cut-out service on the home server answers here; Wikimedia's fish stood in front of the time (14% of it, no digit over 20%). Android 11 refuses plain HTTP to an unnamed host, so Home asks the service on a socket, home addresses only. Put back on the daily photo, Large at the top left.
+- Review-fix build installed while TiviMate played, without interrupting it. One crash came from the first of these builds: Compose stopped Home because Depth's state was first made on the cut-out thread. Fixed by making it at start-up; 0 crash entries after.
 
 ## Home mh35 — 2026-11-04
 
