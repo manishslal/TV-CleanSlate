@@ -48,6 +48,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.boundsInParent
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
@@ -138,6 +140,9 @@ private val LargeClockTop = 80.dp
  */
 private val LargeClockHeight = 152.dp
 
+/** Fork: the same for the huge clock ([HUGE_TIME] times the time, [HUGE_LINES] the date and weather). */
+private val HugeClockHeight = 214.dp
+
 /**
  * The highest the large clock may go to make room for two rows, level with the status pill. Only
  * at the left: at the right it would run into the pill.
@@ -171,7 +176,7 @@ internal fun gridGap(columns: Int): Dp = when (columns) {
 internal fun restTileWidth(screenW: Dp, columns: Int): Dp = (screenW - GridMargin * 2 - gridGap(columns) * (columns - 1)) / columns
 
 /** Grid geometry for the screen at hand. On a 1080p TV this is a 960×540 dp canvas. */
-private class GridMetrics(screenW: Dp, screenH: Dp, val columns: Int, oneRow: Boolean, plateNames: Boolean, peek: Boolean, plate: Boolean, largeClock: Boolean, clockRight: Boolean) {
+private class GridMetrics(screenW: Dp, screenH: Dp, val columns: Int, oneRow: Boolean, plateNames: Boolean, peek: Boolean, plate: Boolean, largeClock: Boolean, clockRight: Boolean, hugeClock: Boolean = false) {
     val margin = GridMargin
     val gap = gridGap(columns)
     val tileW = restTileWidth(screenW, columns)
@@ -205,12 +210,13 @@ private class GridMetrics(screenW: Dp, screenH: Dp, val columns: Int, oneRow: Bo
      * cap top: the clock's lines are boxed to their capitals. Two rows that do not fit under it
      * (four a row with every name) take it up beside the pill, at the left.
      */
+    private val clockHeight = if (hugeClock) HugeClockHeight else LargeClockHeight
     val clockY = if (oneRow || !largeClock) LargeClockTop else
-        (twoRowFit - (if (plate) PlatePadV else 0.dp) - LargeClockHeight)
+        (twoRowFit - (if (plate) PlatePadV else 0.dp) - clockHeight)
             .coerceIn(if (clockRight) LargeClockTop else LargeClockTopMin, LargeClockTop)
 
     /** The highest two rows may start: under the large clock's weather line. What does not fit lifts in on the second row ([shelfLift]). */
-    private val twoRowFloor = if (largeClock) clockY + LargeClockHeight + if (plate) PlatePadV else 0.dp else 0.dp
+    private val twoRowFloor = if (largeClock) clockY + clockHeight + if (plate) PlatePadV else 0.dp else 0.dp
 
     /**
      * In two-row mode both rows sit low, laid from the bottom up ([twoRowFit]). In one-row mode, or
@@ -538,8 +544,9 @@ fun HomeScreen(
         val hasPlate = AerialSettings.showPlate
         val largeClock = AerialSettings.largeClock
         val clockRightNow = AerialSettings.clockRight
-        val metrics = remember(maxWidth, maxHeight, columns, oneRow, plateNames, peek, hasPlate, largeClock, clockRightNow) {
-            GridMetrics(maxWidth, maxHeight, columns, oneRow, plateNames, peek, hasPlate, largeClock, clockRightNow)
+        val hugeClock = AerialSettings.hugeClock
+        val metrics = remember(maxWidth, maxHeight, columns, oneRow, plateNames, peek, hasPlate, largeClock, clockRightNow, hugeClock) {
+            GridMetrics(maxWidth, maxHeight, columns, oneRow, plateNames, peek, hasPlate, largeClock, clockRightNow, hugeClock)
         }
         val collapsePx = with(density) { metrics.collapse.toPx() }
 
@@ -737,14 +744,21 @@ fun HomeScreen(
                 val clockRight = AerialSettings.clockRight
                 // The large clock stands over the top row; the small one is the time and weather in
                 // one line, top left or beside the pill, so the wallpaper keeps the screen.
+                val clockMiddle = AerialSettings.clockMiddle
+                // Fork: where the large clock lies in this layer, for the subject drawn in front of it.
+                var clockBox by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
+                var timeBox by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
                 if (AerialSettings.largeClock) {
                     ShelfClock(
                         now = now,
                         alignEnd = clockRight,
+                        center = clockMiddle,
+                        huge = AerialSettings.hugeClock,
                         modifier = Modifier
-                            .align(if (clockRight) Alignment.TopEnd else Alignment.TopStart)
+                            .align(if (clockRight) Alignment.TopEnd else if (clockMiddle) Alignment.TopCenter else Alignment.TopStart)
                             .padding(horizontal = metrics.margin)
                             .padding(top = metrics.clockY)
+                            .onGloballyPositioned { clockBox = it.boundsInParent() }
                             // No offscreen buffer while it fades: it would be the clock's capBox, and the
                             // Chinese, the icon and the shadows above and below it were cut off (#727).
                             .graphicsLayer {
@@ -754,12 +768,24 @@ fun HomeScreen(
                         toSaver = { clockToSaver.value },
                         saving = vm.screensaverVisible,
                         away = carrying,
+                        onTime = { if (it != timeBox) timeBox = it },
+                    )
+                    // The time's cards, in this layer: the clock's place plus where the time lies in it.
+                    DepthOverClock(
+                        clockBox?.let { c -> timeBox?.translate(c.topLeft) },
+                        scroll = { scroll.value },
+                        alpha = {
+                            // Gone as the clock goes to the screensaver, and as it fades on scrolling.
+                            if (vm.screensaverVisible || clockToSaver.value > 0.01f) 0f
+                            else 1f - (scroll.value / collapsePx * 1.6f).coerceIn(0f, 1f)
+                        },
                     )
                 } else if (!clockRight) {
                     CornerClock(
                         now = now,
                         modifier = Modifier
-                            .padding(start = metrics.margin, top = 28.dp)
+                            .align(if (clockMiddle) Alignment.TopCenter else Alignment.TopStart)
+                            .padding(start = if (clockMiddle) 0.dp else metrics.margin, top = 28.dp)
                             .graphicsLayer {
                                 alpha = 1f - (scroll.value / collapsePx * 1.6f).coerceIn(0f, 1f)
                                 compositingStrategy = CompositingStrategy.ModulateAlpha

@@ -27,6 +27,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
@@ -70,26 +73,28 @@ internal fun HeadlinesOverlay(now: LocalDateTime) {
     Box(Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha }) {
         Canvas(Modifier.fillMaxSize()) {
             // A soft shade from the bottom-right corner, just enough for white text over snow or sky.
-            drawRect(Brush.radialGradient(0f to Color.Black.copy(alpha = 0.42f), 1f to Color.Transparent, center = Offset(size.width, size.height), radius = size.width * 0.55f))
+            drawRect(Brush.radialGradient(0f to Color.Black.copy(alpha = 0.48f), 1f to Color.Transparent, center = Offset(size.width, size.height), radius = size.width * 0.5f))
         }
         AnimatedContent(
             targetState = item,
             transitionSpec = { fadeIn(tween(600, delayMillis = 400, easing = Motion.EaseOut)) togetherWith fadeOut(tween(400, easing = Motion.EaseOut)) },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 56.dp, bottom = 44.dp)
+            modifier = Modifier.align(Alignment.BottomEnd).padding(end = SaverClockSide, bottom = SAVER_FOOT)
                 .graphicsLayer { translationX = -drift.x.toPx(); translationY = -drift.y.toPx() },
             label = "headline",
         ) { h ->
-            Column(Modifier.width(330.dp)) {
+            // Fork: the source line above the headline, as a news app sets it, and the headline at
+            // 16 rather than 20: it is something to glance at, and it ends on the credit's line.
+            Column(Modifier.width(340.dp)) {
                 BasicText(
-                    h.title, maxLines = 2, overflow = TextOverflow.Ellipsis,
-                    style = Type.Title.copy(color = Color.White.copy(alpha = 0.94f), shadow = TextShade),
-                )
-                Spacer(Modifier.height(6.dp))
-                BasicText(
-                    // Fork: the topic first, so a mixed list says what each story is about.
+                    // The topic first, so a mixed list says what each story is about.
                     listOf(stringResource(h.topic.label).uppercase(), h.source, age(h.published)).filter { it.isNotBlank() }.joinToString(" · "),
                     maxLines = 1,
-                    style = Type.Callout.copy(color = Color.White.copy(alpha = 0.62f), shadow = TextShade),
+                    style = Type.Caption.copy(color = Color.White.copy(alpha = 0.66f), fontSize = 12.sp, fontWeight = FontWeight.W600, letterSpacing = 0.04.em, shadow = TextShade),
+                )
+                Spacer(Modifier.height(5.dp))
+                BasicText(
+                    h.title, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                    style = Type.Headline.copy(color = Color.White.copy(alpha = 0.94f), shadow = TextShade),
                 )
             }
         }

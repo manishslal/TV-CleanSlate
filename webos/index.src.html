@@ -9,7 +9,7 @@
   --panel: rgba(32,32,34,.99); --row: rgba(120,120,128,.18); --focus: #f5f5f7; --onfocus: #1d1d1f; --sheet-a: rgba(30,33,40,.44); --sheet-b: rgba(20,22,28,.56); --plain-a: rgba(46,50,58,.9); --plain-b: rgba(24,26,32,.94);
   --dock-a: rgba(255,255,255,.14); --dock-b: rgba(255,255,255,.05); --rim: rgba(255,255,255,.4); --ring: #f5f5f7; --ringgap: rgba(0,0,0,.75);
   --onwall: #fff; --onwall-shadow: rgba(0,0,0,.75); --onsheet: #fff; --onsheet-shadow: rgba(0,0,0,.75); --lift: rgba(0,0,0,.6); --dockshadow: rgba(0,0,0,.42); --cleartile: var(--glass); --glowalpha: .32; }
-body.light { --label: #1d1d1f; --dim: rgba(60,60,67,.62); --glass: rgba(226,226,230,.52); --hair: rgba(0,0,0,.12); --shine: rgba(255,255,255,.3); --edge: rgba(0,0,0,.08); --panel: rgba(228,228,233,.99); --row: rgba(120,120,128,.16);
+body.light { --label: #1d1d1f; --dim: rgba(60,60,67,.62); --glass: rgba(226,226,230,.52); --hair: rgba(0,0,0,.12); --shine: rgba(255,255,255,.3); --edge: rgba(0,0,0,.08); --panel: rgba(204,206,212,.86); --row: rgba(255,255,255,.72);
   --focus: #1d1d1f; --onfocus: #fff; --sheet-a: rgba(226,229,234,.42); --sheet-b: rgba(212,216,222,.5); --plain-a: rgba(228,230,235,.9); --plain-b: rgba(206,210,218,.92); --dock-a: rgba(255,255,255,.22); --dock-b: rgba(255,255,255,.1); --rim: rgba(255,255,255,.9); --ringgap: rgba(0,0,0,.4);
   --onsheet: #1d1d1f; --onsheet-shadow: rgba(255,255,255,.7); --lift: rgba(0,0,0,.3); --dockshadow: rgba(0,0,0,.22); --cleartile: rgba(44,44,48,.88); --glowalpha: .32; }
 * { box-sizing: border-box; margin: 0; }
@@ -20,6 +20,10 @@ video, #photo { position: fixed; left: 0; top: 0; width: 100%; height: 100%; obj
 video.on, #photo.on { opacity: 1; }
 #shade { transition: opacity .8s; background-image: radial-gradient(62% 58% at 0 0, rgba(0,0,0,.62), rgba(0,0,0,0) 72%), linear-gradient(180deg, rgba(0,0,0,.3) 0, rgba(0,0,0,.04) 40%, rgba(0,0,0,.34) 100%); }
 body.right #shade { background-image: radial-gradient(62% 58% at 100% 0, rgba(0,0,0,.62), rgba(0,0,0,0) 72%), linear-gradient(180deg, rgba(0,0,0,.3) 0, rgba(0,0,0,.04) 40%, rgba(0,0,0,.34) 100%); }
+body.middle #shade { background-image: radial-gradient(58% 52% at 50% 18%, rgba(0,0,0,.56), rgba(0,0,0,0) 72%), linear-gradient(180deg, rgba(0,0,0,.3) 0, rgba(0,0,0,.04) 40%, rgba(0,0,0,.34) 100%); }
+body.huge #shade { background-image: radial-gradient(76% 70% at 0 0, rgba(0,0,0,.66), rgba(0,0,0,0) 74%), linear-gradient(180deg, rgba(0,0,0,.3) 0, rgba(0,0,0,.04) 40%, rgba(0,0,0,.34) 100%); }
+body.huge.right #shade { background-image: radial-gradient(76% 70% at 100% 0, rgba(0,0,0,.66), rgba(0,0,0,0) 74%), linear-gradient(180deg, rgba(0,0,0,.3) 0, rgba(0,0,0,.04) 40%, rgba(0,0,0,.34) 100%); }
+body.huge.middle #shade { background-image: radial-gradient(68% 62% at 50% 24%, rgba(0,0,0,.6), rgba(0,0,0,0) 74%), linear-gradient(180deg, rgba(0,0,0,.3) 0, rgba(0,0,0,.04) 40%, rgba(0,0,0,.34) 100%); }
 #glow { position: fixed; left: 0; top: 0; width: 96px; height: 54px; transform-origin: 0 0; opacity: var(--glowalpha); transition: opacity .2s; }
 /* This TV's video plane can't be blurred, so softly blurred frames baked from the clip play over it in step: inside the dock at rest, over the whole screen further down */
 #fclip { position: fixed; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; opacity: 0; transition: clip-path .22s ease-out, opacity .3s;
@@ -40,6 +44,9 @@ body.down #hint { opacity: 0; }
 #top { position: fixed; left: calc(90 * var(--u)); top: calc(70 * var(--u)); transform-origin: 0 0; transition: transform .22s ease-out, opacity .4s; }
 body.right #top { left: auto; right: calc(90 * var(--u)); transform-origin: 100% 0; text-align: right; }
 body.big #top { transform: scale(1.3); }
+body.middle #top { left: 0; right: 0; text-align: center; transform-origin: 50% 0; }
+body.middle #clock { justify-content: center; }
+body.huge #top { transform: scale(1.7); }
 body.down #top { transform: translateY(calc(-30 * var(--u))) scale(.5); }
 body.down #line { opacity: 0; }
 #clock { display: flex; align-items: flex-end; font-family: Board, sans-serif; color: var(--ink); }
@@ -84,12 +91,13 @@ body.light:not(.idle) #clock.cards .half.bot { background: linear-gradient(#ebeb
 #line span { opacity: .78; }
 #line svg { width: calc(30 * var(--u)); height: calc(30 * var(--u)); vertical-align: calc(-5 * var(--u)); margin: 0 calc(6 * var(--u)); fill: currentColor; }
 
-#pill { position: fixed; right: calc(90 * var(--u)); top: calc(66 * var(--u)); height: calc(52 * var(--u)); padding: 0 calc(20 * var(--u)); border-radius: calc(26 * var(--u)); background: var(--glass);
+#pill { position: fixed; right: calc(90 * var(--u)); top: calc(66 * var(--u)); height: calc(52 * var(--u)); padding: 0 calc(20 * var(--u)); border-radius: calc(26 * var(--u)); background: linear-gradient(180deg, var(--dock-a), var(--dock-b)); color: var(--onwall); text-shadow: 0 1px calc(8 * var(--u)) var(--onwall-shadow);
   display: flex; align-items: center; font-size: calc(22 * var(--u)); box-shadow: inset 0 0 0 1.22px var(--shine), inset 0 0 0 .5px var(--edge); transition: opacity .8s, transform .16s ease-out; }
 body.right #pill { right: auto; left: calc(90 * var(--u)); }
 #pill svg { width: calc(26 * var(--u)); height: calc(26 * var(--u)); fill: currentColor; margin-right: calc(10 * var(--u)); }
 #pill span + svg { margin-left: calc(12 * var(--u)); margin-right: 0; }
-#pill.f { background: var(--focus); color: var(--onfocus); transform: scale(1.1); }
+/* Focus is the dock's glass, lit: brighter and rimmed, not a solid plate beside a clear dock */
+#pill.f { background: linear-gradient(180deg, rgba(255,255,255,.3), rgba(255,255,255,.14)); box-shadow: inset 0 0 0 calc(2 * var(--u)) var(--rim), 0 calc(10 * var(--u)) calc(28 * var(--u)) var(--dockshadow); transform: scale(1.1); }
 
 #gridwrap { position: fixed; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; transition: opacity .8s; }
 #grid { display: grid; grid-template-columns: repeat(6, calc(252 * var(--u))); grid-auto-rows: calc(186 * var(--u)); column-gap: calc(46 * var(--u)); row-gap: calc(14 * var(--u)); padding: 0 calc(89 * var(--u)); transition: transform .22s ease-out; }
@@ -186,10 +194,11 @@ body.light .row.f .bar { background: rgba(255,255,255,.35); }
 #pin .keys b.f { background: #f5f5f7; color: #1d1d1f; }
 
 /* screensaver */
-#caption, #news { position: fixed; bottom: calc(64 * var(--u)); opacity: 0; transition: opacity .8s; color: #fff; text-shadow: 0 calc(2 * var(--u)) calc(14 * var(--u)) rgba(0,0,0,.8); }
-#caption { left: calc(90 * var(--u)); font-size: calc(30 * var(--u)); }
-#news { right: calc(90 * var(--u)); max-width: calc(760 * var(--u)); text-align: right; font-size: calc(30 * var(--u)); line-height: 1.32; }
-#news small { display: block; font-size: calc(19 * var(--u)); letter-spacing: .08em; text-transform: uppercase; opacity: .72; margin-bottom: calc(6 * var(--u)); }
+#caption, #news { position: fixed; bottom: calc(72 * var(--u)); opacity: 0; transition: opacity .8s; color: #fff; text-shadow: 0 calc(2 * var(--u)) calc(12 * var(--u)) rgba(0,0,0,.8); }
+/* The credit is a footnote: one quiet line, the picture is the subject */
+#caption { left: calc(112 * var(--u)); max-width: calc(880 * var(--u)); font-size: calc(24 * var(--u)); color: rgba(255,255,255,.78); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#news { right: calc(112 * var(--u)); max-width: calc(680 * var(--u)); text-align: right; font-size: calc(32 * var(--u)); line-height: 1.3; }
+#news small { display: block; font-size: calc(22 * var(--u)); letter-spacing: .06em; text-transform: uppercase; opacity: .7; margin-bottom: calc(8 * var(--u)); }
 #tint { opacity: 0; transition: opacity .8s; }
 /* One tint for each appearance: Dim is how Dark deepens the picture, and lighter in Light */
 body.tintdim #tint { background: #000; opacity: .3; }
@@ -203,7 +212,7 @@ body.idle #tint, body.idle #gridwrap, body.idle #pill, body.idle #dock, body.idl
 body.idle #shade { opacity: 1; background-color: rgba(0,0,0,.16); }
 body.idle #caption, body.idle.news #news { opacity: 1; }
 body.idle.noclock #top { opacity: 0; }
-body.idle #top { transform: translate(var(--driftx, 0), var(--drifty, 0)); }
+body.idle #top { transform: translate(var(--driftx, 0), var(--drifty, 0)) scale(var(--saverscale, 1)); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 </head>
@@ -253,7 +262,7 @@ function svc(path) { return fetch(SVC + path).then(function (r) { return r.json(
 function esc(t) { var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
 /* ---- settings, the same names as Android Home's Personalize ---- */
-var S = Object.assign({ clockStyle: 'cards', clockRight: false, largeClock: false, h24: false, showWeather: true, fahrenheit: true, flapSound: false, uiSounds: true, focusStyle: 'high_contrast', focusGlow: 'medium', tintDark: 'dim', tintLight: 'dim', columns: 6, twoRows: false, peek: true, plate: true, pinArrows: false,
+var S = Object.assign({ clockStyle: 'cards', clockRight: false, largeClock: false, clockPos: '', clockSize: '', h24: false, showWeather: true, fahrenheit: true, flapSound: false, uiSounds: true, focusStyle: 'high_contrast', focusGlow: 'medium', tintDark: 'dim', tintLight: 'dim', columns: 6, twoRows: false, peek: true, plate: true, pinArrows: false,
   appearance: 'dark', tiles: 'full', effects: 'auto', showAllNames: false, cats: ['landscapes', 'cities'], source: 'aerial', quality: 'hd', saverMin: 5, saverClock: true, backSaver: true,
   headlines: true, topics: ['tech'], newsShuffle: false, place: 'New York', lat: 40.7128, lon: -74.0060, hidden: HIDDEN.slice(), folders: {}, order: null, pin: '', bootTarget: '' }, read('home-settings', {}));
 /* Before one tint for each appearance there was one, stacked on Dark's dimming: a chosen one carries over */
@@ -279,8 +288,14 @@ function darkNow() {
 function theme() {
   var c = document.body.classList;
   c.toggle('light', !darkNow());
-  c.toggle('right', S.clockRight);
-  c.toggle('big', S.largeClock);
+  // The clock's place and size; before mh37 two switches, Position and Large Clock.
+  if (!S.clockPos) S.clockPos = S.clockRight ? 'right' : 'left';
+  if (!S.clockSize) S.clockSize = S.largeClock ? 'large' : 'small';
+  c.toggle('right', clockAt() === 'right');
+  c.toggle('middle', clockAt() === 'middle');
+  c.toggle('big', S.clockSize === 'large');
+  c.toggle('huge', S.clockSize === 'huge');
+  document.documentElement.style.setProperty('--saverscale', saverScale());
   c.toggle('names', S.showAllNames);
   var lite = S.effects === 'lite', small = S.focusGlow === 'small';
   c.toggle('lite', lite);
@@ -357,10 +372,110 @@ function nextPhoto() {
   clearTimeout(photoTimer);
   photoTimer = setTimeout(nextPhoto, 30000);
 }
+/* ---- picture collections: NASA, Wikimedia and Google Earth View, a new picture a day (Android: Collections.kt) ---- */
+var EARTH = __EARTH__, COLLECTIONS = ['nasa', 'wiki', 'earth'], autoPos = read('home-autopos', 'left'), picAt = 0;
+var NASA_FEED = 'https://science.nasa.gov/feed/?science_org=19791%2C22453';
+function today() { var d = new Date(); return Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 86400000); }
+/* the collection the wallpaper shows; Every Source takes a different one each day */
+function collection() { return S.source === 'mix' ? COLLECTIONS[today() % 3] : COLLECTIONS.indexOf(S.source) >= 0 ? S.source : ''; }
+/* where the clock stands: the chosen place, or on Auto where the picture is calmest */
+function clockAt() { return S.clockPos === 'auto' ? autoPos : S.clockPos; }
+function unent(t) { return t.replace(/&#039;/g, "'").replace(/&#8217;/g, '\u2019').replace(/&#8216;/g, '\u2018').replace(/&quot;|&#034;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/<!\[CDATA\[|\]\]>/g, ''); }
+function plainText(t) { return String(t || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(); }
+function earthPics() {
+  var n = EARTH.length, out = [];
+  for (var back = 0; back < 6; back++) {
+    var e = EARTH[(((today() - back) * 619) % n + n) % n], place = e[1] || 'Earth';
+    out.push({ u: 'https://www.gstatic.com/prettyearth/assets/full/' + e[0] + '.jpg', c: place + ' (Google Earth View)' });
+  }
+  return Promise.resolve(out);
+}
+function nasaPics() {
+  return fetch(NASA_FEED).then(function (r) { return r.text(); }).then(function (rss) {
+    var out = [], items = rss.split('<item>').slice(1);
+    items.forEach(function (it) {
+      var t = /<title>([\s\S]*?)<\/title>/.exec(it), title = t ? unent(t[1]).trim() : '';
+      if (!title || /\b(map|maps|chart|graph|diagram|slice)\b/i.test(title)) return;
+      var m = /https:\/\/assets\.science\.nasa\.gov\/(?:content\/dam|dynamicimage\/assets)\/science\/esd\/eo\/[^"'<>\s]+?\.jpe?g/.exec(unent(it));
+      if (m && out.length < 6) out.push({ u: encodeURI(m[0].replace('/content/dam/', '/dynamicimage/assets/')) + '?w=1920', c: title + ' (NASA Earth Observatory)', x: 1 });
+    });
+    return out;
+  });
+}
+function wikiPics() {
+  var asks = [];
+  for (var back = 0; back < 8; back++) {
+    var d = new Date(Date.now() - back * 86400000), path = d.getFullYear() + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + ('0' + d.getDate()).slice(-2);
+    asks.push(fetch('https://api.wikimedia.org/feed/v1/wikipedia/en/featured/' + path).then(function (r) { return r.json(); }).catch(function () { return {}; }));
+  }
+  return Promise.all(asks).then(function (days) {
+    var out = [];
+    days.forEach(function (j) {
+      var i = j.image, f = i && i.image, th = i && i.thumbnail;
+      if (!f || !th || f.width < f.height * 1.3) return;
+      var desc = plainText(i.description && i.description.text), name = String(i.title || '').replace(/^File:/, '').replace(/\.[^.]+$/, '');
+      var title = desc.split('. ')[0]; if (!title || title.length > 70) title = name.slice(0, 70);
+      var artist = plainText(i.artist && i.artist.text), lic = i.license && i.license.type || '';
+      var credit = [artist ? '\u00a9 ' + artist : '', lic].filter(Boolean).join(', ');
+      out.push({ u: th.source.split('?')[0].replace(/\/\d+px-/, '/1920px-'), c: title + ' (' + (credit ? credit + ' / ' : '') + 'Wikimedia Commons)', x: 1 });
+    });
+    return out;
+  });
+}
+/* fetched once a day for each collection, kept between starts */
+function loadPics(src) {
+  var key = 'home-pics-' + src, hit = read(key, null);
+  if (hit && hit.day === today() && hit.list.length) return Promise.resolve(hit.list);
+  return (src === 'nasa' ? nasaPics() : src === 'wiki' ? wikiPics() : earthPics()).then(function (list) {
+    if (list.length) write(key, { day: today(), list: list });
+    return list.length ? list : (hit ? hit.list : []);
+  }).catch(function () { return hit ? hit.list : []; });
+}
+/* the calmest of three places along the top for the clock: least edge and contrast, not bright; the same rule as Android's Images.clockSpot */
+function spotOf(img) {
+  try {
+    var cv = document.createElement('canvas'); cv.width = 64; cv.height = 36;
+    /* the part the screen shows, as object-fit: cover crops it */
+    var g = cv.getContext('2d'), iw = img.naturalWidth, ih = img.naturalHeight, k = Math.max(64 / iw, 36 / ih), sw = 64 / k, sh = 36 / k;
+    g.drawImage(img, (iw - sw) / 2, (ih - sh) / 2, sw, sh, 0, 0, 64, 36);
+    var px = g.getImageData(0, 0, 64, 36).data, L = [];
+    for (var k = 0; k < 64 * 36; k++) L.push(.2126 * px[k * 4] + .7152 * px[k * 4 + 1] + .0722 * px[k * 4 + 2]);
+    var best = 'left', score = 1e9;
+    [['left', 0, 27, .6], ['middle', 18, 46, 0], ['right', 37, 64, 0]].forEach(function (r) {
+      var sum = 0, sq = 0, edge = 0, n = 0;
+      for (var y = 3; y < 16; y++) for (var x = r[1]; x < r[2]; x++) {
+        var v = L[y * 64 + x]; sum += v; sq += v * v; n++;
+        if (x + 1 < 64) edge += Math.abs(v - L[y * 64 + x + 1]);
+        edge += Math.abs(v - L[(y + 1) * 64 + x]);
+      }
+      var mean = sum / n, sd = Math.sqrt(Math.max(0, sq / n - mean * mean)), sc = edge / n + sd * .5 + Math.max(0, mean - 170) * .15 - r[3];
+      if (sc < score) { score = sc; best = r[0]; }
+    });
+    return best;
+  } catch (e) { return 'left'; } /* a picture from a server that does not share its pixels: Earth View */
+}
+function nextPic() {
+  var src = collection();
+  loadPics(src).then(function (list) {
+    if (!list.length || src !== collection()) return;
+    var idle = document.body.classList.contains('idle'), item = list[idle ? picAt++ % list.length : 0];
+    var el = $('photo');
+    el.crossOrigin = item.x ? 'anonymous' : null;
+    el.onload = function () {
+      el.className = 'on';
+      $('caption').textContent = item.c;
+      if (S.clockPos === 'auto') { autoPos = item.x ? spotOf(el) : 'left'; write('home-autopos', autoPos); theme(); }
+    };
+    el.src = item.u;
+    clearTimeout(photoTimer);
+    if (idle) photoTimer = setTimeout(nextPic, 30000);
+  });
+}
 var WALL_WAIT = 20000, wallGuard = 0;
 function next() {
   if (document.hidden || $('v' + (1 - active)).onplaying) return;
   /* Efficient keeps still pictures and stops moving wallpaper */
+  if (collection()) return nextPic();
   if (S.effects === 'lite' && S.source !== 'plexp') { if (STILLS.length) nextPhoto(); return; }
   if (S.source === 'plexp' && plexPhotos.length) return nextPhoto();
   if (!queue.length) queue = shuffle(pool().slice());
@@ -523,9 +638,12 @@ function nextStory() {
 
 /* ---- screensaver ---- */
 var driftTimer = 0;
+/* The screensaver's clock: the size Home shows it at, larger than the plain clock it used to drop to */
+function saverScale() { return S.clockSize === 'huge' ? 1.7 : S.clockSize === 'large' ? 1.4 : 1.15; }
+function driftSide() { return clockAt() === 'right' ? -1 : clockAt() === 'middle' ? (Math.random() < .5 ? -1 : 1) * .3 : 1; }
 function drift() {
   var r = document.documentElement.style;
-  r.setProperty('--driftx', (S.clockRight ? -1 : 1) * Math.round(Math.random() * 760) * window.innerWidth / 1920 + 'px');
+  r.setProperty('--driftx', driftSide() * Math.round(Math.random() * 760) * window.innerWidth / 1920 + 'px');
   r.setProperty('--drifty', Math.round(Math.random() * 520) * window.innerWidth / 1920 + 'px');
   driftTimer = setTimeout(drift, 60000);
 }
@@ -536,6 +654,8 @@ function saver(on) {
   c.toggle('noclock', on && !S.saverClock);
   if (on) { drift(); nextStory(); }
   else { clearTimeout(driftTimer); clearTimeout(storyTimer); c.remove('news'); }
+  /* a picture collection: the screensaver moves through the last few, Home keeps the newest */
+  if (collection()) { clearTimeout(photoTimer); nextPic(); }
 }
 
 /* ---- tiles ---- */
@@ -867,8 +987,8 @@ function pagePersonalize() {
   return { title: 'Personalize', rows: [
     { label: 'Clock', icon: 'CALENDAR_MONTH', to: { title: 'Clock', rows: function () { return [
       choice('Clock Style', [['cards', 'Cards'], ['plain', 'Plain']], function () { return S.clockStyle; }, function (v) { S.clockStyle = v; }),
-      choice('Position', [[false, 'Left'], [true, 'Right']], function () { return S.clockRight; }, function (v) { S.clockRight = v; }),
-      toggle('Large Clock', 'largeClock'),
+      choice('Position', [['auto', 'Auto'], ['left', 'Top Left'], ['middle', 'Top Center'], ['right', 'Top Right']], function () { return S.clockPos; }, function (v) { S.clockPos = v; S.clockRight = v === 'right'; }),
+      choice('Size', [['small', 'Small'], ['large', 'Large'], ['huge', 'Huge']], function () { return S.clockSize; }, function (v) { S.clockSize = v; S.largeClock = v !== 'small'; }),
       choice('Format', [[false, '5:39 PM'], [true, '17:39']], function () { return S.h24; }, function (v) { S.h24 = v; }),
       toggle('Flap Sound', 'flapSound') ]; } } },
     { label: 'Appearance', icon: 'LIGHT_MODE', to: { title: 'Appearance', rows: function () { return [
@@ -898,7 +1018,7 @@ function pagePersonalize() {
 function pageWall() {
   var cats = [['landscapes', 'Landscapes'], ['cities', 'Cities'], ['space', 'Space'], ['underwater', 'Underwater']];
   return { title: 'Wallpaper', rows: function () {
-    var rows = [choice('Source', [['aerial', 'Aerial Videos'], ['plexv', 'My Videos (Plex)'], ['plexp', 'My Photos (Plex)']], function () { return S.source; }, function (v) { S.source = v; restartWall(); })];
+    var rows = [choice('Source', [['aerial', 'Aerial Videos'], ['nasa', 'NASA Earth'], ['wiki', 'Wikimedia Daily'], ['earth', 'Earth View'], ['mix', 'Every Source, Daily'], ['plexv', 'My Videos (Plex)'], ['plexp', 'My Photos (Plex)']], function () { return S.source; }, function (v) { S.source = v; restartWall(); })];
     rows.push(choice('Aerial Quality', [['hd', '1080p'], ['uhd', '4K']], function () { return S.quality; }, function (v) { S.quality = v; queue = []; restartWall(); }));
     cats.forEach(function (c) {
       rows.push({ label: c[1], value: function () { return S.cats.indexOf(c[0]) >= 0 ? 'On' : 'Off'; }, step: function () {

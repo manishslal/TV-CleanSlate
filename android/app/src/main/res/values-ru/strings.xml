@@ -119,11 +119,13 @@
     <string name="st_clock">Часы</string>
     <string name="st_clock_left">Сверху слева</string>
     <string name="st_clock_right">Сверху справа</string>
-    <string name="st_clock_hint">Где расположены часы, дата и погода.</string>
+    <string name="st_clock_middle">Сверху по центру</string>
+    <string name="st_clock_hint">Где расположены часы, дата и погода. «Авто» смотрит на каждые обои и ставит часы туда, где картинка спокойнее.</string>
     <string name="st_clock_size">Размер часов</string>
     <string name="st_clock_small">Маленькие</string>
     <string name="st_clock_large">Большие</string>
-    <string name="st_clock_size_hint">«Маленькие» показывают время и погоду одной строкой в углу. «Большие» ставят крупные часы вверху экрана, дату над ними и погоду под ними.</string>
+    <string name="st_clock_huge">Огромные</string>
+    <string name="st_clock_size_hint">«Маленькие» показывают время и погоду одной строкой вверху. «Большие» ставят крупные часы вверху экрана, дату над ними и погоду под ними. «Огромные» делают время главным на экране, как на экране блокировки телефона.</string>
     <string name="st_names">Названия приложений</string>
     <string name="st_names_focused">Выбранное приложение</string>
     <string name="st_names_all">Все приложения</string>
@@ -331,4 +333,11 @@
     <string name="ss_cat_cities">Города</string>
     <string name="ss_cat_space">Космос</string>
     <string name="ss_cat_underwater">Под водой</string>
+    <string name="wp_src_nasa">NASA: Земля</string>
+    <string name="wp_src_wiki">Викисклад: фото дня</string>
+    <string name="wp_src_earth">Earth View</string>
+    <string name="wp_every_source">Все источники по очереди</string>
+    <string name="wp_every_source_note">Каждый день другой источник: Bing, NASA, Викисклад и Google Earth View по очереди.</string>
+    <string name="wp_source_note_latest">Самая новая картинка; меняется, когда источник добавляет новую.</string>
+    <string name="st_clock_auto">Авто</string>
 </resources>

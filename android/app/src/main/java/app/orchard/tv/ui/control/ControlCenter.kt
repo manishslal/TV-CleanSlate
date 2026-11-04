@@ -96,6 +96,7 @@ import app.orchard.tv.ui.components.Pressable
 import app.orchard.tv.ui.components.consumeTaps
 import app.orchard.tv.ui.components.dismissOnTap
 import app.orchard.tv.ui.components.liquidGlass
+import app.orchard.tv.ui.theme.LocalLightPanel
 import app.orchard.tv.ui.home.MenuRow
 import app.orchard.tv.ui.home.VpnBadge
 import app.orchard.tv.ui.home.dateText
@@ -375,7 +376,9 @@ private fun RoundButton(
 ) {
     Pressable(onClick = onClick, focusRequester = focusRequester, focusedScale = 1.1f) { state ->
         // On (a VPN that is up) fills blue, as iOS shows a switched-on control; focus is white.
-        val bg by animateColorAsState(if (state.focused) Palette.Focus else if (on) Palette.Blue else Color.Transparent, tween(Motion.Quick, easing = Motion.EaseOut), label = "round-bg")
+        // Fork: on a light panel a button at rest is a white card on the grey glass, as the groups are.
+        val rest = if (LocalLightPanel.current) Palette.Light.Section else Color.Transparent
+        val bg by animateColorAsState(if (state.focused) Palette.Focus else if (on) Palette.Blue else rest, tween(Motion.Quick, easing = Motion.EaseOut), label = "round-bg")
         val ink = if (state.focused) Palette.OnFocus else if (on) Color.White else Palette.Label
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(64.dp)) {
             Box(Modifier.size(48.dp).liquidGlass(24.dp, band = 10.dp).background(bg), contentAlignment = Alignment.Center) {
@@ -434,7 +437,8 @@ private fun SliderRow(
             true
         },
     ) { state ->
-        val bg by animateColorAsState(if (state.focused) Palette.Focus else Color.Transparent, tween(Motion.Quick, easing = Motion.EaseOut), label = "slider-bg")
+        val rest = if (LocalLightPanel.current) Palette.Light.Section else Color.Transparent
+        val bg by animateColorAsState(if (state.focused) Palette.Focus else rest, tween(Motion.Quick, easing = Motion.EaseOut), label = "slider-bg")
         val fg = if (state.focused) Palette.OnFocus else Palette.Label
         val fraction by animateFloatAsState(level, spring(dampingRatio = 1f, stiffness = 700f), label = "slider-level")
         Row(

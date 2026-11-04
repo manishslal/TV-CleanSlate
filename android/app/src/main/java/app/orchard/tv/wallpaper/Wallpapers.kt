@@ -17,6 +17,7 @@ import app.orchard.tv.ui.components.UhdCanvas
 import app.orchard.tv.BuildConfig
 import app.orchard.tv.guard.GuardSetup
 import app.orchard.tv.settings.AerialSettings
+import app.orchard.tv.settings.ClockPosition
 import app.orchard.tv.system.DiagLog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,7 +37,7 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-enum class WallpaperKind { Daily, Builtin, Photo, Auto, Live, Video, Source }
+enum class WallpaperKind { Daily, Builtin, Photo, Auto, Live, Video, Source, Collection }
 
 data class Wallpaper(
     val id: String,
@@ -81,6 +82,8 @@ object Wallpapers {
     private const val DAILY_RETRY_MS = 30 * 60 * 1000L
     const val AUTO = "auto"
     const val ROTATE_PHOTOS = "photos:rotate"
+    /** Fork: a different source's newest picture each day: Bing, NASA, Wikimedia and Earth View in turn (Collections). */
+    const val EVERY_SOURCE = "mix:daily"
     const val LIVE = "aerial:live"
     const val VIDEOS = "videos:mine"
     const val VIDEO_PREFIX = "video:"
@@ -113,6 +116,14 @@ object Wallpapers {
     private val thumbs = HashMap<String, Bitmap>()
 
     var items by mutableStateOf<List<Wallpaper>>(emptyList()); private set
+
+    /** Fork: where the clock stands on the picture now shown, and whether it is bright there (Images.clockSpot). */
+    var clockSpot by mutableStateOf(ClockSpot(ClockPosition.Left, false)); private set
+
+    private fun keepSpot(spot: ClockSpot) {
+        clockSpot = spot
+        prefs.edit { putString("clock_spot", spot.key) }
+    }
     var selectedId by mutableStateOf(LATEST_DAILY); private set
     /** The screensaver the owner chose; null while it follows the wallpaper ([screensaver]). */
     private var chosenScreensaver by mutableStateOf<ScreensaverMode?>(ScreensaverMode.Aerial)
@@ -182,6 +193,8 @@ object Wallpapers {
         if (started) return
         started = true
         app = context.applicationContext
+        // Fork: where the clock stood on the last picture, so the baked backdrop and the clock agree from the first frame.
+        ClockSpot.of(prefs.getString("clock_spot", null))?.let { clockSpot = it }
         Plex.init(app)
         // Home drawn at the panel's size (UhdCanvas) gets pictures of that size.
         val scale = UhdCanvas.scale(context)
@@ -253,7 +266,18 @@ object Wallpapers {
     }
 
     /** The concrete wallpaper the selection points at today. */
-    fun resolve(id: String = selectedId): Wallpaper? = when (id) {
+    fun resolve(id: String = selectedId): Wallpaper? = when {
+        id == EVERY_SOURCE -> (listOf(resolve(LATEST_DAILY)) + PictureSource.entries.map { resolve(it.latestId) }).filterNotNull()
+            .let { if (it.isEmpty()) null else it[Math.floorMod(today(), it.size)] }
+        PictureSource.entries.any { it.latestId == id } -> PictureSource.of(id)?.let { s -> items.firstOrNull { it.kind == WallpaperKind.Collection && PictureSource.of(it.id) == s } }
+            ?: resolve(LATEST_DAILY)
+        else -> resolveFixed(id)
+    }
+
+    /** Fork: an id that follows something (the newest picture, today's turn) rather than naming one picture. */
+    fun follows(id: String): Boolean = id == LATEST_DAILY || id == ROTATE_PHOTOS || id == EVERY_SOURCE || PictureSource.entries.any { it.latestId == id }
+
+    private fun resolveFixed(id: String): Wallpaper? = when (id) {
         LATEST_DAILY -> items.firstOrNull { it.kind == WallpaperKind.Daily }
         ROTATE_PHOTOS -> items.filter { it.kind == WallpaperKind.Photo }.sortedBy { it.id }.let { photos ->
             if (photos.isEmpty()) resolve(LATEST_DAILY) else photos[Math.floorMod(today(), photos.size)]
@@ -270,7 +294,7 @@ object Wallpapers {
 
     /** Moves "My Photos, rotating" on to today's photo; Aerial calls it whenever Home comes back. */
     fun rotateIfDue() {
-        if (!started || selectedId != ROTATE_PHOTOS || rotatedOn == today()) return
+        if (!started || (selectedId != ROTATE_PHOTOS && selectedId != EVERY_SOURCE) || rotatedOn == today()) return
         rebuildBackdrop()
     }
 
@@ -279,13 +303,14 @@ object Wallpapers {
     private fun fileFor(w: Wallpaper): File? = when (w.kind) {
         WallpaperKind.Daily -> File(dailyDir, w.id.removePrefix("daily:") + ".jpg")
         WallpaperKind.Photo -> File(photoDir, w.id.removePrefix("photo:") + ".jpg")
+        WallpaperKind.Collection -> PictureSource.of(w.id)?.let { Collections.file(app.filesDir, it, w.id.substringAfter(':')) }
         else -> null
     }
 
     /** Full picture at [w]×[h] without shading, for the photo screensaver. Call off the main thread. */
     fun picture(wp: Wallpaper, w: Int, h: Int): Bitmap? = when (wp.kind) {
         WallpaperKind.Builtin -> Gradients.byKey(wp.id.removePrefix("grad:"))?.let { Gradients.render(it, w, h) }
-        WallpaperKind.Daily, WallpaperKind.Photo -> fileFor(wp)?.takeIf { it.exists() }?.let { Images.decodeCover(it, w, h) }
+        WallpaperKind.Daily, WallpaperKind.Photo, WallpaperKind.Collection -> fileFor(wp)?.takeIf { it.exists() }?.let { Images.decodeCover(it, w, h) }
         WallpaperKind.Auto -> null
         // Until a film has stopped on a frame, the first built-in stands in.
         WallpaperKind.Live -> liveFrame.takeIf { it.exists() }?.let { Images.decodeCover(it, w, h) }
@@ -311,10 +336,15 @@ object Wallpapers {
     /** A 16:9 thumbnail for pickers and the phone page. Call off the main thread. */
     fun thumbnail(id: String): Bitmap? {
         synchronized(thumbs) { thumbs[id] }?.let { return it }
-        val wp = (if (id == LATEST_DAILY || id == ROTATE_PHOTOS) resolve(id) else items.firstOrNull { it.id == id }) ?: return null
+        val wp = (if (follows(id)) resolve(id) else items.firstOrNull { it.id == id }) ?: return null
         val b = if (wp.kind == WallpaperKind.Auto) Gradients.render(Gradients.autoThumb, 384, 216) else picture(wp, 384, 216)
         if (b != null) synchronized(thumbs) { thumbs[id] = b }
         return b
+    }
+
+    /** Fork: bakes the backdrop again with the shade where the clock now stands (Images.clockShade). */
+    fun reshade() {
+        if (::app.isInitialized) { bakedKey = null; rebuildBackdrop() }
     }
 
     private fun rebuildBackdrop() {
@@ -328,18 +358,42 @@ object Wallpapers {
             }
             rotatedOn = today()
             val wp = resolve(id) ?: resolve(DEFAULT_FALLBACK)
+            DiagLog.i("backdrop $id -> ${wp?.id} (${items.count { it.kind == WallpaperKind.Collection }} collection pictures)")
             val key = wp?.let(::bakedKey)
-            if (key != null && key == bakedKey && backdrop != null) return@launch
+            // Fork: a still picture's cut-out, for the subject over the clock (Depth); not for films.
+            val wantsDepth = wp != null && !moves(id) && wp.kind != WallpaperKind.Auto && wp.kind != WallpaperKind.Source &&
+                AerialSettings.depthEffect && AerialSettings.depthServer.isNotBlank()
+            if (key != null && key == bakedKey && backdrop != null) {
+                // The baked backdrop is up already: its cut-out, if the TV kept one.
+                val shown = backdrop
+                if (wantsDepth && Depth.front == null && shown != null) {
+                    val ready = withContext(Dispatchers.IO) { Depth.prepare(app, key, null, shown.asAndroidBitmap()) }
+                    if (selectedId == id) Depth.show(ready)
+                }
+                return@launch
+            }
+            if (!wantsDepth) Depth.clear()
+            var jpeg: ByteArray? = null
             val (bmp, frost) = withContext(Dispatchers.Default) {
                 val picture = wp?.let { picture(it, screenW, screenH) }
                 // Frosted from the picture before the home shading: the glass sits low on the
                 // screen, where the shading is darkest, and would read as a grey slab.
                 val frost = picture?.let(Images::frost)
-                picture?.let(Images::shadeForHome) to frost
-            }
+                val spot = picture?.let { Images.clockSpot(it, AerialSettings.clockPosition) }
+                // Sent before shading, which draws on the picture itself.
+                if (wantsDepth && picture != null) jpeg = Depth.jpegOf(picture)
+                Triple(picture?.let { p -> Images.shadeForHome(p, spot!!) }, frost, spot)
+            }.let { (b, f, spot) -> spot?.let(::keepSpot); b to f }
             backdrop = bmp?.asImageBitmap()
             frosted = frost?.asImageBitmap()
             if (key != null && bmp != null && frost != null) saveBaked(key, bmp, frost)
+            val sent = jpeg
+            if (wantsDepth && key != null && bmp != null && sent != null) {
+                Depth.clear()
+                val ready = withContext(Dispatchers.IO) { Depth.prepare(app, key, sent, bmp) }
+                // Still the picture Home shows: the owner may have moved on meanwhile.
+                if (selectedId == id) Depth.show(ready)
+            }
         }
     }
 
@@ -356,12 +410,12 @@ object Wallpapers {
     /** Changes with the picture behind [wp], the screen size, and Aerial's version (the baking may change). */
     private fun bakedKey(wp: Wallpaper): String {
         val stamp = when (wp.kind) {
-            WallpaperKind.Daily, WallpaperKind.Photo -> fileFor(wp)?.lastModified() ?: 0L
+            WallpaperKind.Daily, WallpaperKind.Photo, WallpaperKind.Collection -> fileFor(wp)?.lastModified() ?: 0L
             WallpaperKind.Live -> liveFrame.lastModified()
             WallpaperKind.Video -> if (videoFrameIsOf(wp.id)) videoFrame.lastModified() else 0L
             else -> 0L
         }
-        return "${wp.id}|$stamp|${screenW}x$screenH|${BuildConfig.VERSION_CODE}"
+        return "${wp.id}|$stamp|${screenW}x$screenH|${BuildConfig.VERSION_CODE}|${Images.shadeKey}"
     }
 
     /**
@@ -433,7 +487,9 @@ object Wallpapers {
                 .onFailure { Log.w(TAG, "could not keep the film's frame", it) }
             // Frosted before shading, which draws on the frame itself.
             val frost = Images.frost(frame)
-            Images.shadeForHome(frame) to frost
+            val spot = Images.clockSpot(frame, AerialSettings.clockPosition)
+            withContext(Dispatchers.Main) { keepSpot(spot) }
+            Images.shadeForHome(frame, spot) to frost
         }
         // The frame is both the film's own card and the card that plays them all in turn.
         synchronized(thumbs) { thumbs.remove(id); if (isVideo(id)) { thumbs.remove(VIDEOS); thumbs.remove(VIDEO_PREFIX + film) } }
@@ -618,7 +674,10 @@ object Wallpapers {
             listOf(Wallpaper(VIDEOS, WallpaperKind.Video, if (zh) "我的视频 · 轮播" else "My Videos, In Turn")) +
                 films.map { Wallpaper(VIDEO_PREFIX + it.id, WallpaperKind.Video, it.name.substringBeforeLast('.').ifBlank { it.name }) }
         val inputs = sources.map { (id, name) -> Wallpaper(SOURCE_PREFIX + id, WallpaperKind.Source, name) }
-        items = listOf(live) + videos + daily + builtins + photos + auto + inputs
+        val collections = PictureSource.entries.flatMap { s ->
+            Collections.index(app.filesDir, s).map { Wallpaper("${s.key}:${it.key}", WallpaperKind.Collection, it.title, it.caption) }
+        }
+        items = listOf(live) + videos + daily + collections + builtins + photos + auto + inputs
     }
 
     // ---- daily photos ----
@@ -709,10 +768,15 @@ object Wallpapers {
             }.onFailure { Log.w(TAG, "daily photos unavailable", it) }.isSuccess.also { dailyFailed = !it }
         }
         retryDailyLater()
-        if (added) {
-            synchronized(thumbs) { thumbs.remove(LATEST_DAILY) }
+        // Fork: the other collections on the same rounds as Bing's (Collections).
+        val more = withContext(Dispatchers.IO) { PictureSource.entries.map { Collections.refresh(app, app.filesDir, it) } }.any { it }
+        if (added || more) {
+            synchronized(thumbs) {
+                thumbs.remove(LATEST_DAILY); thumbs.remove(EVERY_SOURCE)
+                PictureSource.entries.forEach { thumbs.remove(it.latestId) }
+            }
             rebuildList()
-            if (selectedId.startsWith("daily:")) rebuildBackdrop()
+            if (selectedId.startsWith("daily:") || selectedId == EVERY_SOURCE || PictureSource.of(selectedId) != null) rebuildBackdrop()
         }
     }
 

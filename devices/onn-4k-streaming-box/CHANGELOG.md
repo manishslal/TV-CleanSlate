@@ -6,6 +6,11 @@
 **Latest build tested:** 1.67-mh17
 **Rooted:** No
 
+## Home mh37 — 2026-11-04
+
+- `1.67-mh37` installed over mh35 and compiled with `-m speed` while YouTube played; YouTube was not interrupted. Sounds are Home's own. Not looked at on screen.
+- Later mh37 build: the cut-out service answers here too (fish: solid 0.95). Put back on the daily photo, Large at the top left. Not looked at on screen.
+
 ## Home mh35 — 2026-11-04
 
 - `1.67-mh35` installed and compiled with `-m speed` while the TV slept. Not looked at on screen: smaller pill, Turn Off TV row (Home Guard is bound here), Aerial categories.

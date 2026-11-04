@@ -55,6 +55,8 @@ object Palette {
     val Fill: Color @Composable @ReadOnlyComposable get() = if (LocalLightPanel.current) Light.Fill else Dark.Fill
     val FillStrong: Color @Composable @ReadOnlyComposable get() = if (LocalLightPanel.current) Light.FillStrong else Dark.FillStrong
     val Hairline: Color @Composable @ReadOnlyComposable get() = if (LocalLightPanel.current) Light.Hairline else Dark.Hairline
+    /** Fork: a group of settings or a control set on a panel, one step off the panel behind it. */
+    val Section: Color @Composable @ReadOnlyComposable get() = if (LocalLightPanel.current) Light.Section else Dark.Section
     val Green = Color(0xFF30D158)
     val Orange = Color(0xFFFF9F0A)
     val Red = Color(0xFFFF453A)
@@ -83,6 +85,7 @@ object Palette {
         val Fill = Color(0x2E787880)
         val FillStrong = Color(0x52787880)
         val Hairline = Color(0x1AFFFFFF)
+        val Section = Color(0x0DFFFFFF)
         val Focus = Color(0xFFF5F5F7)
         val OnFocus = Color(0xFF1D1D1F)
     }
@@ -96,6 +99,12 @@ object Palette {
         val Fill = Color(0x29787880)
         val FillStrong = Color(0x3D787880)
         val Hairline = Color(0x1F000000)
+        /**
+         * Fork: white at 60% over the light glass. The panel is a grey glass and its groups the
+         * white cards on it, as iOS sets grouped settings: at 5% white (Dark's) the groups were
+         * invisible on a light panel (the owner, SHIELD).
+         */
+        val Section = Color(0x99FFFFFF)
         val Focus = Color(0xFF1D1D1F)
         val OnFocus = Color(0xFFFFFFFF)
     }

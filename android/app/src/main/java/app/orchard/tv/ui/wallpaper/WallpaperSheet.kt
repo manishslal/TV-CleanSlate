@@ -97,6 +97,8 @@ import app.orchard.tv.R
 import app.orchard.tv.settings.AerialSettings
 import app.orchard.tv.news.NewsTopic
 import app.orchard.tv.settings.Appearance
+import app.orchard.tv.settings.ClockPosition
+import app.orchard.tv.settings.ClockSize
 import app.orchard.tv.settings.ClockStyle
 import android.content.res.Configuration
 import androidx.compose.ui.platform.LocalConfiguration
@@ -125,6 +127,7 @@ import app.orchard.tv.wallpaper.ScreensaverMode
 import app.orchard.tv.system.SystemScreensaver
 import app.orchard.tv.wallpaper.Wallpaper
 import app.orchard.tv.wallpaper.WallpaperKind
+import app.orchard.tv.wallpaper.PictureSource
 import app.orchard.tv.wallpaper.Wallpapers
 import app.orchard.tv.weather.Weather
 import app.orchard.tv.weather.WeatherKind
@@ -268,7 +271,9 @@ private fun pageValue(page: PersonalizePage, hiddenCount: Int): String? = when (
         Wallpapers.VIDEOS -> stringResource(R.string.wp_videos_rotate)
         Wallpapers.LATEST_DAILY -> stringResource(R.string.wp_daily_latest)
         Wallpapers.ROTATE_PHOTOS -> stringResource(R.string.wp_photos_rotate)
-        else -> Wallpapers.items.firstOrNull { it.id == Wallpapers.selectedId }?.title
+        Wallpapers.EVERY_SOURCE -> stringResource(R.string.wp_every_source)
+        else -> PictureSource.entries.firstOrNull { it.latestId == Wallpapers.selectedId }?.let { sourceName(it) }
+            ?: Wallpapers.items.firstOrNull { it.id == Wallpapers.selectedId }?.title
     }
     PersonalizePage.Appearance -> stringResource(
         when (AerialSettings.appearance) {
@@ -279,7 +284,7 @@ private fun pageValue(page: PersonalizePage, hiddenCount: Int): String? = when (
     )
     PersonalizePage.Screensaver -> stringResource(screensaverName(Wallpapers.screensaver))
     PersonalizePage.Layout -> stringResource(if (AerialSettings.oneRowHome) R.string.st_home_one_row else R.string.st_home_standard) + ", ${AerialSettings.homeColumns}"
-    PersonalizePage.Clock -> stringResource(if (AerialSettings.largeClock) R.string.st_clock_large else R.string.st_clock_small)
+    PersonalizePage.Clock -> stringResource(when (AerialSettings.clockSize) { ClockSize.Small -> R.string.st_clock_small; ClockSize.Large -> R.string.st_clock_large; ClockSize.Huge -> R.string.st_clock_huge })
     PersonalizePage.Headlines -> stringResource(if (AerialSettings.headlines) R.string.st_on else R.string.st_off)
     PersonalizePage.Hidden -> hiddenCount.takeIf { it > 0 }?.toString()
     PersonalizePage.Passcode -> stringResource(if (AerialSettings.pinSet) R.string.st_pin_on else R.string.st_pin_off)
@@ -297,8 +302,8 @@ private fun screensaverName(mode: ScreensaverMode) = when (mode) {
 
 @Composable
 private fun ColumnScope.RootPage(hiddenCount: Int, cameFrom: PersonalizePage?, open: (PersonalizePage) -> Unit) {
-    PersonalizeGroup.entries.forEach { group ->
-        GroupTitle(group.title)
+    // Fork: each group on its own surface, as on the pages it opens, so the groups read as groups.
+    PersonalizeGroup.entries.forEach { group -> Group(group.title) {
         PersonalizePage.entries.filter { it.group == group }.forEach { to ->
             val row = remember { FocusRequester() }
             LaunchedEffect(Unit) {
@@ -311,7 +316,7 @@ private fun ColumnScope.RootPage(hiddenCount: Int, cameFrom: PersonalizePage?, o
                 trailing = (pageValue(to, hiddenCount)?.let { "$it " } ?: "") + "›",
             )
         }
-    }
+    } }
 }
 
 @Composable
@@ -399,13 +404,13 @@ private fun ClockPage() {
     Group(R.string.st_clock) {
         ValueRow(
             R.string.fk_label_position, stringResource(R.string.st_clock_hint),
-            listOf(false to R.string.st_clock_left, true to R.string.st_clock_right),
-            AerialSettings.clockRight, AerialSettings::chooseClockRight,
+            listOf(ClockPosition.Auto to R.string.st_clock_auto, ClockPosition.Left to R.string.st_clock_left, ClockPosition.Middle to R.string.st_clock_middle, ClockPosition.Right to R.string.st_clock_right),
+            AerialSettings.clockPosition, AerialSettings::chooseClockPosition,
         )
         ValueRow(
             R.string.fk_label_size, stringResource(R.string.st_clock_size_hint),
-            listOf(false to R.string.st_clock_small, true to R.string.st_clock_large),
-            AerialSettings.largeClock, AerialSettings::chooseLargeClock,
+            listOf(ClockSize.Small to R.string.st_clock_small, ClockSize.Large to R.string.st_clock_large, ClockSize.Huge to R.string.st_clock_huge),
+            AerialSettings.clockSize, AerialSettings::chooseClockSize,
         )
         ValueRow(
             R.string.ss_kind, stringResource(R.string.fk_flip_hint),
@@ -565,7 +570,9 @@ private fun WallpaperGrid(modifier: Modifier) {
     val dailyTitle = stringResource(R.string.wp_daily_latest)
     val rotateTitle = stringResource(R.string.wp_photos_rotate)
     val videosTitle = stringResource(R.string.wp_videos_rotate)
-    val list = remember(items, selected, dailyTitle, rotateTitle, videosTitle) {
+    val everyTitle = stringResource(R.string.wp_every_source)
+    val sourceTitles = PictureSource.entries.map { sourceName(it) }
+    val list = remember(items, selected, dailyTitle, rotateTitle, videosTitle, everyTitle) {
         buildList {
             addAll(items.filter { it.kind == WallpaperKind.Live })
             // Each video on its own, and with two or more one card that plays them in turn (#762).
@@ -574,6 +581,13 @@ private fun WallpaperGrid(modifier: Modifier) {
             addAll(videos)
             if (items.any { it.kind == WallpaperKind.Daily }) add(Wallpaper(Wallpapers.LATEST_DAILY, WallpaperKind.Daily, dailyTitle))
             addAll(items.filter { it.kind == WallpaperKind.Daily && it.id == selected })
+            // Fork: the free collections, each following its newest picture, and one card that
+            // takes a different source each day.
+            PictureSource.entries.forEachIndexed { i, src ->
+                if (items.any { it.kind == WallpaperKind.Collection && PictureSource.of(it.id) == src }) add(Wallpaper(src.latestId, WallpaperKind.Collection, sourceTitles[i]))
+            }
+            if (items.any { it.kind == WallpaperKind.Collection }) add(Wallpaper(Wallpapers.EVERY_SOURCE, WallpaperKind.Collection, everyTitle))
+            addAll(items.filter { it.kind == WallpaperKind.Collection && it.id == selected })
             val photos = items.filter { it.kind == WallpaperKind.Photo }
             // With two or more, one card takes turns through all of them, one a day (#27).
             if (photos.size > 1) add(Wallpaper(Wallpapers.ROTATE_PHOTOS, WallpaperKind.Photo, rotateTitle))
@@ -606,6 +620,14 @@ private fun WallpaperGrid(modifier: Modifier) {
     }
 }
 
+/** Fork: a picture collection's name, as the owner reads it. */
+@Composable
+private fun sourceName(s: PictureSource): String = stringResource(when (s) {
+    PictureSource.Nasa -> R.string.wp_src_nasa
+    PictureSource.Wiki -> R.string.wp_src_wiki
+    PictureSource.Earth -> R.string.wp_src_earth
+})
+
 /** What a wallpaper card is, for the panel's note; null where its picture says it all. */
 @Composable
 private fun wallpaperNote(wp: Wallpaper): String? = when {
@@ -615,6 +637,9 @@ private fun wallpaperNote(wp: Wallpaper): String? = when {
     wp.kind == WallpaperKind.Source -> stringResource(R.string.wp_source_note)
     wp.id == Wallpapers.LATEST_DAILY -> stringResource(R.string.wp_daily_note)
     wp.id == Wallpapers.ROTATE_PHOTOS -> stringResource(R.string.wp_photos_rotate_note)
+    wp.id == Wallpapers.EVERY_SOURCE -> stringResource(R.string.wp_every_source_note)
+    PictureSource.entries.any { it.latestId == wp.id } -> stringResource(R.string.wp_source_note_latest)
+    wp.kind == WallpaperKind.Collection -> wp.caption
     wp.kind == WallpaperKind.Photo -> stringResource(R.string.wp_photo_note)
     wp.kind == WallpaperKind.Auto -> stringResource(R.string.wp_auto_note)
     wp.kind == WallpaperKind.Daily -> wp.caption
@@ -736,7 +761,7 @@ private fun Group(title: Int? = null, note: String? = null, rows: @Composable Co
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color.White.copy(alpha = 0.05f))
+            .background(Palette.Section)
             .padding(4.dp),
     ) { rows() }
     Spacer(Modifier.height(10.dp))

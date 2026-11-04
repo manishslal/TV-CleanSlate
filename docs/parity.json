@@ -504,6 +504,109 @@
       "tizen": "not-possible",
       "lite": "done",
       "note": "Samsung web apps cannot uninstall apps, so the row is removed."
+    },
+    {
+      "id": "clock-huge",
+      "name": "Clock size Huge: the time at 1.5x the large clock, its date and weather at 1.25x",
+      "android": "done",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen",
+      "note": "Web scales the whole clock block (1.7x the plain clock) rather than the time apart from its lines."
+    },
+    {
+      "id": "clock-middle",
+      "name": "Clock position Top Center, on Home and in the screensaver",
+      "android": "done",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen"
+    },
+    {
+      "id": "clock-shade-follows",
+      "name": "The wallpaper's shade behind the clock moves with it (left, middle, right) and deepens for Huge",
+      "android": "done",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen"
+    },
+    {
+      "id": "calm-sounds",
+      "name": "Home's own calm interface sounds (tools/make-sounds.py), the default",
+      "android": "done",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen",
+      "note": "Android still offers the TV's own sounds. Samsung shipped no sound files before mh37, so its sounds were silent."
+    },
+    {
+      "id": "saver-labels",
+      "name": "Screensaver: one small credit line bottom left, news headline on the same line with its source above",
+      "android": "done",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen"
+    },
+    {
+      "id": "saver-clock-size",
+      "name": "Screensaver clock follows the clock size, with a dark pool and shadow behind it",
+      "android": "done",
+      "webos": "partial",
+      "tizen": "partial",
+      "lite": "frozen",
+      "note": "Web keeps Home's clock size in the screensaver and its existing corner shade; no separate pool."
+    },
+    {
+      "id": "light-sections",
+      "name": "Light menus: grey see-through glass with white section cards",
+      "android": "done",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen",
+      "note": "Android's light glass shows 58% of the picture and adds white by the picture's brightness; web's TVs cannot blur, so the panel is a grey wash at 86%."
+    },
+    {
+      "id": "pill-dock-glass",
+      "name": "Status pill's focus is the dock's clear glass, white ink",
+      "android": "done",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen"
+    },
+    {
+      "id": "picture-collections",
+      "name": "NASA Earth Observatory, Wikimedia Picture of the Day and Google Earth View as daily wallpapers, and Every Source, Daily",
+      "android": "done",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen",
+      "note": "Web has no Bing, so Every Source there takes NASA, Wikimedia and Earth View in turn."
+    },
+    {
+      "id": "clock-auto",
+      "name": "Clock Position Auto: the clock goes where the wallpaper is calmest",
+      "android": "done",
+      "webos": "partial",
+      "tizen": "partial",
+      "lite": "frozen",
+      "note": "Web reads NASA and Wikimedia pictures; Earth View's server does not share its pixels, so the clock stays at the left on them."
+    },
+    {
+      "id": "clock-shade-bright",
+      "name": "The shade behind the clock deepens where the picture is bright",
+      "android": "done",
+      "webos": "missing",
+      "tizen": "missing",
+      "lite": "frozen"
+    },
+    {
+      "id": "depth-effect",
+      "name": "The wallpaper's subject in front of the time, from a home cut-out service",
+      "android": "done",
+      "webos": "missing",
+      "tizen": "missing",
+      "lite": "frozen",
+      "note": "Needs a cut-out service on the home network (server/cutout). The web builds can ask it (it allows their pages) but do not draw the subject yet."
     }
   ]
 }

@@ -6,6 +6,12 @@
 **ADB:** 5555, turned on by the user in Developer options. The user accepted the prompt on the TV.
 **Rooted:** No
 
+## Home mh37 — 2026-11-04
+
+- `1.67-mh37` installed over mh35 and compiled with `-m speed`. Sounds are Home's own.
+- Checked in Light: Control Center's panel shows the picture through grey glass, with white cards for the buttons and volume; Personalize's three groups sit on white sections. 0 crash entries.
+- Later mh37 build: the cut-out service on the home server answers here; Wikimedia's fish stood in front of the time (14% of it, no digit over 20%). Android 11 refuses plain HTTP to an unnamed host, so Home asks the service on a socket, home addresses only. Put back on the daily photo, Large at the top left.
+
 ## Home mh35 — 2026-11-04
 
 - `1.67-mh35` installed and compiled with `-m speed` while the TV slept. Not looked at on screen: smaller pill, Turn Off TV row (Home Guard is bound here), Aerial categories.

@@ -18,6 +18,8 @@ For Android Home on Android and Google TV. tvOS is the reference; it deliberatel
 - The middle of a panel shows the frosted picture with 30% of the sharp one on Liquid. Light's floor is 56% grey, so dark text holds on a black wallpaper.
 - Keep the bend narrow: 26 dp on panels, 16 on the top row, 8 to 10 on controls.
 - Lite draws flat panels.
+- Light glass shows 58% of the picture; the white added brings its average to 204, between 96 and 150 (`lightPanelTint`). Groups and controls on a light panel are white cards (`Palette.Section`), so dark text sits on white, not on the glass.
+- Home's own controls on the wallpaper (the status pill's focus) use the dock's clear glass (`liquidGlass(clear = true)`), with white ink.
 
 ## Tiles
 - A logo keeps one size and position on every tile style. Only the plate and sometimes the ink change.
@@ -57,6 +59,10 @@ For Android Home on Android and Google TV. tvOS is the reference; it deliberatel
 ## Clock
 - Clock cards follow Mode on Home: white with black type in Light.
 - The screensaver's cards stay dark in both modes.
+- Sizes: Small (one line), Large (104 sp time), Huge (the time 1.5x, date and weather 1.25x). Positions: Auto, Top Left, Top Center, Top Right. Auto takes the calmest of the three on each picture (`Images.clockSpot`); a bright spot there deepens the shade by a third.
+- The wallpaper's shade lies behind the clock wherever it stands (`Images.clockShade`), and is part of the baked backdrop's key.
+- Depth: with a cut-out service (`AerialSettings.depthServer`), a still wallpaper's subject is drawn over the time cards only, never the date or weather, when the cut-out is firm (0.7), covers 3-35% of the time and no digit-wide slice by more than half (`DepthOverClock`).
+- The screensaver's time is 44, 60 or 80 sp by clock size, over a soft dark pool. Its credit is one 12 sp line at the bottom left; the headline ends on the same line.
 
 - Tile Style: System follows Mode, Clear, Dark, Color. New installs start on Color and Frosted.
 - A Dark logo comes from the pack when there is one. Logos are personal use and stay out of public builds.

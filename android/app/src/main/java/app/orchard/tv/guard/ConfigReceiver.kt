@@ -157,11 +157,18 @@ class ConfigReceiver : BroadcastReceiver() {
             intent.getStringExtra("focus_style")?.let { AerialSettings.chooseFocusStyle(app.orchard.tv.settings.FocusStyle.of(it)) }
             intent.getStringExtra("focus_glow")?.let { AerialSettings.chooseFocusGlow(app.orchard.tv.settings.FocusGlow.of(it)) }
             intent.getStringExtra("wallpaper_tint")?.let { AerialSettings.chooseWallpaperTint(app.orchard.tv.settings.WallpaperTint.of(it)) }
+            // Fork: ... --es clock_size small|large|huge --es clock_position left|middle|right --es ui_sounds tv|aerial|off
+            intent.getStringExtra("clock_size")?.let { app.orchard.tv.settings.ClockSize.of(it)?.let(AerialSettings::chooseClockSize) }
+            intent.getStringExtra("clock_position")?.let { app.orchard.tv.settings.ClockPosition.of(it)?.let(AerialSettings::chooseClockPosition) }
+            intent.getStringExtra("ui_sounds")?.let { app.orchard.tv.settings.UiSounds.of(it)?.let(AerialSettings::chooseUiSounds) }
+            // Fork: ... --es depth_server http://<host>:8890 (empty to turn it off) --ez depth_effect true|false
+            intent.getStringExtra("depth_server")?.let { AerialSettings.chooseDepthServer(it) }
+            if (intent.hasExtra("depth_effect")) AerialSettings.chooseDepthEffect(intent.getBooleanExtra("depth_effect", true))
         }
         if (intent.getBooleanExtra("show_look", false)) {
             AerialSettings.init(context)
             Wallpapers.init(context)
-            resultData = "mode=${AerialSettings.homeMode.key} wallpaper=${Wallpapers.selectedId} saver=${Wallpapers.screensaver.key} glass=${AerialSettings.liquidGlass} effects=${AerialSettings.effects.key} clock=${AerialSettings.clockStyle.key} lite=${AerialSettings.lite} focusLite=${AerialSettings.focusLite} lowEnd=${AerialSettings.lowEnd} headlines=${AerialSettings.headlines}"
+            resultData = "mode=${AerialSettings.homeMode.key} wallpaper=${Wallpapers.selectedId} saver=${Wallpapers.screensaver.key} glass=${AerialSettings.liquidGlass} effects=${AerialSettings.effects.key} clock=${AerialSettings.clockStyle.key} lite=${AerialSettings.lite} focusLite=${AerialSettings.focusLite} lowEnd=${AerialSettings.lowEnd} headlines=${AerialSettings.headlines} clockSize=${AerialSettings.clockSize.key} clockPosition=${AerialSettings.clockPosition.key} placed=${AerialSettings.placedClock.key} sounds=${AerialSettings.uiSounds.key} depth=${app.orchard.tv.wallpaper.Depth.front != null} solid=${app.orchard.tv.wallpaper.Depth.solid}"
             return
         }
         // Opt-in for an input ("*" = any recognized Apple TV input). Empty input disables.
@@ -178,4 +185,4 @@ class ConfigReceiver : BroadcastReceiver() {
     }
 }
 
-private val LOOK_EXTRAS = listOf("appearance", "home_mode", "glass", "effects", "clock_style", "headlines", "tile_style", "wallpaper", "focus_style", "focus_glow", "wallpaper_tint")
+private val LOOK_EXTRAS = listOf("appearance", "home_mode", "glass", "effects", "clock_style", "headlines", "tile_style", "wallpaper", "focus_style", "focus_glow", "wallpaper_tint", "clock_size", "clock_position", "ui_sounds", "depth_server", "depth_effect")

@@ -58,7 +58,12 @@ for brand, m in json.loads((pack / 'manifest.json').read_text()).items():
     plates.update({i: [readable(m.get('plate'), m.get('ink')), m.get('ink'), m.get('size'), m.get('glow')] for i in m.get('webos', []) if m.get('plate') or m.get('size') or m.get('glow')})
 
 s = (here / 'index.src.html').read_text()
-for name, data in (('__VIDEOS__', videos), ('__ICONS__', icons), ('__TOPICS__', topics), ('__LOGOS__', logos), ('__PLATES__', plates), ('__STILLS__', [p.name for p in sorted((here / 'stills').glob('still-*.jpg'))]), ('__FROST__', json.loads((here / 'frost.json').read_text()))):
+for name, data in (('__VIDEOS__', videos), ('__ICONS__', icons), ('__TOPICS__', topics), ('__LOGOS__', logos), ('__PLATES__', plates), ('__STILLS__', [p.name for p in sorted((here / 'stills').glob('still-*.jpg'))]), ('__FROST__', json.loads((here / 'frost.json').read_text())), ('__EARTH__', json.loads((android / 'assets/earthview.json').read_text())['items'])):
     s = s.replace(name, json.dumps(data, separators=(',', ':')))
 (here / 'index.html').write_text(s)
+
+# Home's own interface sounds (tools/make-sounds.py), the same files Android plays; deployed beside index.html
+import shutil  # noqa: E402
+for wav in (android / 'res/raw').glob('ui_*.wav'):
+    shutil.copy(wav, here / wav.name)
 print(len(videos), 'videos', len(icons), 'icons', len(topics), 'topics', len(s), 'bytes')

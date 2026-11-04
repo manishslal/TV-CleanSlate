@@ -6,6 +6,12 @@
 
 ---
 
+## Home mh37 — 2026-11-04
+
+- `1.67-mh37-guard` installed over mh36 and compiled with `-m speed`. Sounds switched from the TV's to Home's own (they had been chosen as TV).
+- Checked: Top Center at Small, Large and Huge, and Huge at the right; the screensaver's small credit, news and larger clock over a Photos picture; the pill's clear focus glass; Control Center in Light with white button and slider cards (Lite's flat panel). Put back to Large at the top left. 0 crash entries.
+- Later mh37 build: NASA Earth Observatory, Wikimedia and Google Earth View load here (6, 5 and 6 pictures) and show in the picker. Auto put the clock right on Earth View, left on NASA, middle on Wikimedia. Put back on the daily photo, Large at the top left. 0 crash entries.
+
 ## Home mh36 — 2026-11-04
 
 - `1.67-mh36-guard` installed over mh35 and compiled with `-m speed`.

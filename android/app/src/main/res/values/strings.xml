@@ -128,11 +128,13 @@
     <string name="st_clock">Clock</string>
     <string name="st_clock_left">Top Left</string>
     <string name="st_clock_right">Top Right</string>
-    <string name="st_clock_hint">Where the clock, date and weather sit.</string>
+    <string name="st_clock_middle">Top Center</string>
+    <string name="st_clock_hint">Where the clock, date and weather sit. Auto reads each wallpaper and puts the clock where the picture is calmest.</string>
     <string name="st_clock_size">Clock Size</string>
     <string name="st_clock_small">Small</string>
     <string name="st_clock_large">Large</string>
-    <string name="st_clock_size_hint">Small puts the time and weather in one line in the corner. Large puts a big clock at the top of the screen, the date over it and the weather under it.</string>
+    <string name="st_clock_huge">Huge</string>
+    <string name="st_clock_size_hint">Small puts the time and weather in one line at the top. Large puts a big clock at the top of the screen, the date over it and the weather under it. Huge makes the time the centerpiece, as on a phone\'s lock screen.</string>
     <string name="st_names">App Names</string>
     <string name="st_names_focused">Selected App</string>
     <string name="st_names_all">All Apps</string>
@@ -342,4 +344,11 @@
     <string name="ss_cat_cities">Cities</string>
     <string name="ss_cat_space">Space</string>
     <string name="ss_cat_underwater">Underwater</string>
+    <string name="wp_src_nasa">NASA Earth</string>
+    <string name="wp_src_wiki">Wikimedia Daily</string>
+    <string name="wp_src_earth">Earth View</string>
+    <string name="wp_every_source">Every Source, Daily</string>
+    <string name="wp_every_source_note">A different source each day: Bing, NASA, Wikimedia and Google Earth View in turn.</string>
+    <string name="wp_source_note_latest">The newest picture, changing as the source adds one.</string>
+    <string name="st_clock_auto">Auto</string>
 </resources>

@@ -60,6 +60,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.findRootCoordinates
 import androidx.compose.ui.layout.AlignmentLine
@@ -269,7 +270,7 @@ fun HomeBackground(
             // Deep in the grid its glass covers everything.
             if (stopped < 0.01f || cover() < 0.01f || scroll() > collapse * 0.7f) return@Canvas
             drawRect(Brush.verticalGradient(*Images.SHADE_AT.indices.map { Images.SHADE_AT[it] to Color.Black.copy(alpha = Images.SHADE[it]) }.toTypedArray()), alpha = stopped)
-            drawRect(Brush.horizontalGradient(0f to Color.Black.copy(alpha = Images.SHADE_LEFT), 1f to Color.Transparent, endX = size.width / 2), alpha = stopped)
+            drawRect(ShaderBrush(Images.clockShade(size.width, size.height)), alpha = stopped)
         }
         Pictures(backdrop, gridGlass ?: frosted, filmGlass.takeIf { glassAwaitsStop }, wallpaper, scroll, collapse, cover, filmStopped, toSaver)
         if (saverImage != null) Canvas(Modifier.fillMaxSize()) {
@@ -281,12 +282,7 @@ fun HomeBackground(
         // tintLight). Dim is how Dark deepens the room, as iOS does in dark mode, so dark tiles and
         // white type sit on it; in Light it is lighter, so a bright sky behind clear glass is not
         // glaring. The screensaver it hands over to is shown without it.
-        val (washColor, washAlpha) = when (AerialSettings.wallpaperTint) {
-            WallpaperTint.Off -> Color.Black to 0f
-            WallpaperTint.Dim -> Color.Black to if (AerialSettings.darkNow) DARK_DIM else LIGHT_DIM
-            WallpaperTint.Warm -> Palette.Orange to 0.14f
-            WallpaperTint.Cool -> Palette.Blue to 0.14f
-        }
+        val (washColor, washAlpha) = wallpaperWash()
         val wash by animateFloatAsState(washAlpha, tween(400, easing = Motion.EaseInOut), label = "wallpaper-tint")
         if (wash > 0.005f) Canvas(Modifier.fillMaxSize()) {
             drawRect(washColor, alpha = wash * (1f - toSaver()))
@@ -303,6 +299,14 @@ private const val PLATE_SWAP_MS = 900
 
 /** How strong the dock is behind Clear tiles. */
 private const val CLEAR_PLATE = 0.5f
+
+/** Fork: the wash over the wallpaper now, its color and strength; DepthOverClock lays the same over the subject. */
+internal fun wallpaperWash(): Pair<Color, Float> = when (AerialSettings.wallpaperTint) {
+    WallpaperTint.Off -> Color.Black to 0f
+    WallpaperTint.Dim -> Color.Black to if (AerialSettings.darkNow) DARK_DIM else LIGHT_DIM
+    WallpaperTint.Warm -> Palette.Orange to 0.14f
+    WallpaperTint.Cool -> Palette.Blue to 0.14f
+}
 
 /** How much Dim darkens the wallpaper in Dark, and in Light. */
 private const val DARK_DIM = 0.3f
@@ -700,12 +704,18 @@ fun ShelfClock(
     now: LocalDateTime,
     modifier: Modifier = Modifier,
     alignEnd: Boolean = false,
+    /** Fork: the three lines centred on one another, for the clock in the middle. */
+    center: Boolean = false,
+    /** Fork: the huge clock: the time at [HUGE_TIME] times its size, the date and weather at [HUGE_LINES]. */
+    huge: Boolean = false,
     /** How far the time has moved to the screensaver's place ([toSaverClock]); the date and weather go. */
     toSaver: () -> Float = { 0f },
     /** The screensaver is up over Home, carrying this clock: it wanders as the screensaver's does. */
     saving: Boolean = false,
     /** The screensaver is carrying Home's wallpaper on: the date and weather go before the time moves. */
     away: Boolean = false,
+    /** Fork: where the time lies in this clock, cards and all, for the subject drawn in front of it (DepthOverClock). */
+    onTime: ((androidx.compose.ui.geometry.Rect) -> Unit)? = null,
 ) {
     val drift = heldDrift(saving, now)
     val shadow = Shadow(Color.Black.copy(alpha = 0.6f), Offset(0f, 2f), blurRadius = 18f)
@@ -728,7 +738,17 @@ fun ShelfClock(
         compositingStrategy = CompositingStrategy.ModulateAlpha
     }
     val cardsOn = AerialSettings.clockStyle == app.orchard.tv.settings.ClockStyle.Cards
-    Column(modifier, horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start) {
+    val k = if (huge) HUGE_LINES else 1f
+    val t = if (huge) HUGE_TIME else 1f
+    val boardDate = if (huge) BoardDate.copy(fontSize = BoardDate.fontSize * k) else BoardDate
+    val boardDetail = if (huge) BoardDetail.copy(fontSize = BoardDetail.fontSize * k) else BoardDetail
+    val clockDate = Type.ClockDate.let { if (huge) it.copy(fontSize = it.fontSize * k) else it }
+    val clockDetail = Type.ClockDetail.let { if (huge) it.copy(fontSize = it.fontSize * k) else it }
+    val clock = Type.Clock.let { if (huge) it.copy(fontSize = it.fontSize * t) else it }
+    // The huge time throws a wider shadow, as a bigger object would.
+    val timePx = with(LocalDensity.current) { clock.fontSize.toPx() }
+    val timeShadow = if (huge) Shadow(Color.Black.copy(alpha = 0.55f), Offset(0f, 4f), blurRadius = 32f) else shadow
+    Column(modifier, horizontalAlignment = if (alignEnd) Alignment.End else if (center) Alignment.CenterHorizontally else Alignment.Start) {
         // On a TV set to Chinese, the Chinese calendar's date follows, as on the iPhone's lock screen.
         val lunar = if (Locale.getDefault().language == "zh") Lunar.text(now.toLocalDate()) else null
         // Fork: with the board's cards, the date is set as a board line: "THU 29 OCT", wide and
@@ -736,34 +756,40 @@ fun ShelfClock(
         val boardLines = cardsOn && lunar == null
         if (boardLines) BasicText(
             now.format(DateTimeFormatter.ofPattern("EEE d MMM", Locale.getDefault())).uppercase(Locale.getDefault()).replace(".", ""),
-            style = BoardDate.copy(shadow = shadow),
-            modifier = aside.capBox(BoardDate.fontSize),
+            style = boardDate.copy(shadow = shadow),
+            modifier = aside.capBox(boardDate.fontSize),
         ) else BasicText(
             buildAnnotatedString {
                 append(dateText(now))
                 if (lunar != null) withStyle(SpanStyle(color = dim, fontWeight = FontWeight.W500)) { append("  $lunar") }
             },
-            style = Type.ClockDate.copy(shadow = shadow),
-            modifier = aside.capBox(Type.ClockDate.fontSize),
+            style = clockDate.copy(shadow = shadow),
+            modifier = aside.capBox(clockDate.fontSize),
         )
         FlipText(
             timeText(now),
-            style = Type.Clock.copy(shadow = shadow),
+            style = clock.copy(shadow = timeShadow),
             cards = true,
             sound = !saving,
             // Fork: cards reach past the digits, so the date and weather stand further off.
-            modifier = Modifier.padding(top = if (cardsOn) 26.dp else 16.dp)
-                .toSaverClock(toSaver, Type.Clock.fontSize, 0.dp, drift)
-                .capBox(Type.Clock.fontSize),
+            modifier = Modifier.padding(top = (if (cardsOn) 26.dp else 16.dp) * t)
+                .then(if (onTime == null) Modifier else Modifier.onGloballyPositioned { c ->
+                    // The cards reach past the digits' capitals, which are this line's box.
+                    val b = c.boundsInParent()
+                    val f = timePx
+                    onTime(androidx.compose.ui.geometry.Rect(b.left - f * 0.08f, b.top - f * 0.15f, b.right + f * 0.08f, b.bottom + f * 0.15f))
+                })
+                .toSaverClock(toSaver, clock.fontSize, 0.dp, drift)
+                .capBox(clock.fontSize),
         )
         Weather.now?.takeIf { AerialSettings.showWeather }?.let { w ->
             val place = Weather.place?.takeIf { it.length <= 12 }
             val range = if (w.high != null && w.low != null) stringResource(R.string.weather_high_low, w.highDegrees!!, w.lowDegrees!!) else null
             val detail = listOfNotNull(place, stringResource(conditionName(w.kind)), range).joinToString(" · ")
             // Fork: on the board, the weather is a departure line too: "72°  PARIS · CLEAR · H:72° L:50°".
-            val detailStyle = if (boardLines) BoardDetail else Type.ClockDetail
-            Row(aside.padding(top = if (cardsOn) 28.dp else 18.dp).capBox(detailStyle.fontSize), verticalAlignment = Alignment.CenterVertically) {
-                GlyphIcon(glyphFor(w), if (boardLines) BoardInk else Color.White, 18.dp, Modifier.padding(end = 7.dp))
+            val detailStyle = if (boardLines) boardDetail else clockDetail
+            Row(aside.padding(top = (if (cardsOn) 28.dp else 18.dp) * k).capBox(detailStyle.fontSize), verticalAlignment = Alignment.CenterVertically) {
+                GlyphIcon(glyphFor(w), if (boardLines) BoardInk else Color.White, 18.dp * k, Modifier.padding(end = 7.dp * k))
                 BasicText(
                     buildAnnotatedString {
                         append("${w.degrees}°")
@@ -789,6 +815,10 @@ private fun heldDrift(saving: Boolean, now: LocalDateTime): DpOffset {
     if (saving) held = saverDrift(now)
     return held
 }
+
+/** Fork: the huge clock's time against the large one's, and its date and weather lines. */
+private const val HUGE_TIME = 1.5f
+private const val HUGE_LINES = 1.25f
 
 /** Inter's cap top below the top of a line of natural height, as a share of the font size. */
 private const val CAP_TOP = 0.242f
@@ -816,7 +846,11 @@ private fun Modifier.toSaverClock(progress: () -> Float, fontSize: TextUnit, cap
             scaleX = k
             scaleY = k
             val targetCapTop = SaverClockTop.toPx() + SaverClockStyle.fontSize.toPx() * CAP_TOP
-            val targetLeft = if (AerialSettings.clockRight) rootW - SaverClockSide.toPx() - box.width * s else SaverClockSide.toPx()
+            val targetLeft = when {
+                AerialSettings.clockRight -> rootW - SaverClockSide.toPx() - box.width * s
+                AerialSettings.clockMiddle -> (rootW - box.width * s) / 2f
+                else -> SaverClockSide.toPx()
+            }
             translationX = p * (targetLeft - box.left + drift.x.toPx())
             translationY = p * (targetCapTop - s * capTop.toPx() - box.top + drift.y.toPx())
             // The screensaver shows no time: Home's goes as the screensaver comes.
@@ -922,11 +956,14 @@ fun StatusPill(
         LaunchedEffect(state.focused) { onFocused(state.focused) }
         // Fork: focus is a drop of glass over the wallpaper, not a plate, here where the glass has
         // the picture itself to bend. It fades in, kept composed so its first showing is not its first draw.
+        // Fork: the dock's clear glass, not a panel's: it sits on the wallpaper as the dock does, so
+        // it is the same glass, lit at the rim. A panel's tint made the pill a solid slab beside it.
+        // White ink either way, as on the dock: dark ink on clear glass sank into a dark picture.
         val light = !AerialSettings.darkNow
         val glass by animateFloatAsState(if (state.focused) 1f else 0f, tween(Motion.Quick, easing = Motion.EaseOut), label = "pill-glass")
-        val fg = if (state.focused && light) Palette.Light.Label else Color.White.copy(alpha = if (state.focused) 1f else 0.9f)
+        val fg = Color.White.copy(alpha = if (state.focused) 1f else 0.9f)
         CompositionLocalProvider(LocalLightPanel provides light) {
-            Box(Modifier.matchParentSize().graphicsLayer { alpha = glass }.liquidGlass(15.dp, band = 11.dp))
+            Box(Modifier.matchParentSize().graphicsLayer { alpha = glass }.liquidGlass(15.dp, band = 11.dp, clear = true))
         }
         Row(
             Modifier

@@ -119,11 +119,13 @@
     <string name="st_clock">Сағат</string>
     <string name="st_clock_left">Жоғарғы сол жақ</string>
     <string name="st_clock_right">Жоғарғы оң жақ</string>
-    <string name="st_clock_hint">Сағат, күн және ауа райы қайда орналасады.</string>
+    <string name="st_clock_middle">Жоғарғы ортада</string>
+    <string name="st_clock_hint">Сағат, күн және ауа райы қайда орналасады. «Авто» әр тұсқағазды қарап, сағатты суреттің ең тыныш жеріне қояды.</string>
     <string name="st_clock_size">Сағат өлшемі</string>
     <string name="st_clock_small">Кіші</string>
     <string name="st_clock_large">Үлкен</string>
-    <string name="st_clock_size_hint">«Кіші» уақыт пен ауа райын бұрышта бір жолда көрсетеді. «Үлкен» экранның жоғарғы жағына үлкен сағатты, оның үстіне күнді, астына ауа райын қояды.</string>
+    <string name="st_clock_huge">Өте үлкен</string>
+    <string name="st_clock_size_hint">«Кіші» уақыт пен ауа райын жоғарыда бір жолда көрсетеді. «Үлкен» экранның жоғарғы жағына үлкен сағатты, оның үстіне күнді, астына ауа райын қояды. «Өте үлкен» уақытты телефонның құлып экранындағыдай басты етеді.</string>
     <string name="st_names">Қолданба атаулары</string>
     <string name="st_names_focused">Таңдалған қолданба</string>
     <string name="st_names_all">Барлық қолданбалар</string>
@@ -331,4 +333,11 @@
     <string name="ss_cat_cities">Қалалар</string>
     <string name="ss_cat_space">Ғарыш</string>
     <string name="ss_cat_underwater">Су асты</string>
+    <string name="wp_src_nasa">NASA: Жер</string>
+    <string name="wp_src_wiki">Wikimedia: күн суреті</string>
+    <string name="wp_src_earth">Earth View</string>
+    <string name="wp_every_source">Барлық көз кезекпен</string>
+    <string name="wp_every_source_note">Күн сайын басқа көз: Bing, NASA, Wikimedia және Google Earth View кезекпен.</string>
+    <string name="wp_source_note_latest">Ең жаңа сурет; көз жаңасын қосқанда ауысады.</string>
+    <string name="st_clock_auto">Авто</string>
 </resources>

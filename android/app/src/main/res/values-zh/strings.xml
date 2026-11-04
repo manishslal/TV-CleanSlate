@@ -126,11 +126,13 @@
     <string name="st_clock">时钟</string>
     <string name="st_clock_left">左上</string>
     <string name="st_clock_right">右上</string>
-    <string name="st_clock_hint">时钟、日期和天气显示的位置。</string>
+    <string name="st_clock_middle">上方居中</string>
+    <string name="st_clock_hint">时钟、日期和天气显示的位置。自动：看每张壁纸，把时钟放在画面最安静的地方。</string>
     <string name="st_clock_size">时钟大小</string>
     <string name="st_clock_small">小</string>
     <string name="st_clock_large">大</string>
-    <string name="st_clock_size_hint">小：时间和天气在角上一行小字。大：屏幕上方一个大时钟，上面是日期，下面是天气。</string>
+    <string name="st_clock_huge">特大</string>
+    <string name="st_clock_size_hint">小：时间和天气在上方一行小字。大：屏幕上方一个大时钟，上面是日期，下面是天气。特大：时间成为画面的主角，像手机锁屏一样。</string>
     <string name="st_names">App 名称</string>
     <string name="st_names_focused">只显示选中的</string>
     <string name="st_names_all">全部显示</string>
@@ -338,4 +340,11 @@
     <string name="ss_cat_cities">城市</string>
     <string name="ss_cat_space">太空</string>
     <string name="ss_cat_underwater">水下</string>
+    <string name="wp_src_nasa">NASA 地球</string>
+    <string name="wp_src_wiki">维基每日图片</string>
+    <string name="wp_src_earth">Google 地球景观</string>
+    <string name="wp_every_source">每天换一个来源</string>
+    <string name="wp_every_source_note">每天换一个来源：必应、NASA、维基共享资源和 Google 地球景观轮流。</string>
+    <string name="wp_source_note_latest">最新的一张，来源更新时随之更换。</string>
+    <string name="st_clock_auto">自动</string>
 </resources>

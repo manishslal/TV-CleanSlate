@@ -38,6 +38,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.ShaderBrush
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.em
+import app.orchard.tv.settings.ClockSize
+import app.orchard.tv.settings.ClockPosition
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -243,21 +253,43 @@ private fun Labels(caption: String?, now: LocalDateTime, showTime: Boolean = tru
     // Fades in where Home's own clock has moved to, as the photos cover it.
     val time by animateFloatAsState(if (showTime) 1f else 0f, tween(2000), label = "time")
     Box(Modifier.fillMaxSize()) {
+        val clockShown = time > 0f && AerialSettings.screensaverClock
         Canvas(Modifier.fillMaxSize()) {
-            // Just enough shade under the text to read it over bright sky or snow.
-            drawRect(Brush.verticalGradient(0.7f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.45f)))
-            drawRect(Brush.verticalGradient(0f to Color.Black.copy(alpha = 0.3f), 0.18f to Color.Transparent))
+            // Just enough shade under the credit to read it over bright sky or snow.
+            drawRect(Brush.verticalGradient(0.8f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.34f)))
+            drawRect(Brush.verticalGradient(0f to Color.Black.copy(alpha = 0.22f), 0.2f to Color.Transparent))
+            // Fork: a soft dark pool behind the time, so it stands off the picture rather than
+            // sitting on it; an oval around where the time is, fading out well before the edges.
+            if (clockShown) {
+                val fs = SaverClockStyle.fontSize.toPx()
+                val side = SaverClockSide.toPx()
+                val cw = fs * SAVER_TIME_WIDTH
+                val cx = when (AerialSettings.placedClock) {
+                    ClockPosition.Left, ClockPosition.Auto -> side + cw / 2f
+                    ClockPosition.Middle -> size.width / 2f
+                    ClockPosition.Right -> size.width - side - cw / 2f
+                }
+                val cy = SaverClockTop.toPx() + fs * 0.6f
+                val r = fs * 1.5f
+                drawRect(
+                    ShaderBrush(
+                        android.graphics.RadialGradient(cx, cy, r, intArrayOf(Color.Black.copy(alpha = 0.42f).toArgb(), Color.Black.copy(alpha = 0.2f).toArgb(), 0), floatArrayOf(0f, 0.55f, 1f), android.graphics.Shader.TileMode.CLAMP)
+                            .apply { setLocalMatrix(android.graphics.Matrix().apply { setScale(cw / (r * 1.3f), 1f, cx, cy) }) },
+                    ),
+                    alpha = time,
+                )
+            }
         }
         val drift = saverDrift(now)
         // Fork: the screensaver's time turns on cards as Home's large clock does.
-        if (time > 0f && AerialSettings.screensaverClock) FlipText(
+        if (clockShown) FlipText(
             timeText(now),
-            style = SaverClockStyle,
+            style = SaverClockStyle.copy(shadow = Shadow(Color.Black.copy(alpha = 0.6f), Offset(0f, 3f), blurRadius = 24f)),
             cards = true,
             // Fork: dark in either mode: white cards are harsh in the dark room a screensaver runs in.
             darkCards = true,
             modifier = Modifier
-                .align(if (AerialSettings.clockRight) Alignment.TopEnd else Alignment.TopStart)
+                .align(if (AerialSettings.clockRight) Alignment.TopEnd else if (AerialSettings.clockMiddle) Alignment.TopCenter else Alignment.TopStart)
                 .padding(top = SaverClockTop, start = SaverClockSide, end = SaverClockSide)
                 .graphicsLayer {
                     alpha = time
@@ -269,15 +301,20 @@ private fun Labels(caption: String?, now: LocalDateTime, showTime: Boolean = tru
             targetState = caption.orEmpty(),
             // One after the other: two names fading across each other in the same place smeared.
             transitionSpec = { fadeIn(tween(600, delayMillis = 400, easing = Motion.EaseOut)) togetherWith fadeOut(tween(400, easing = Motion.EaseOut)) },
-            modifier = Modifier.align(Alignment.BottomStart).padding(start = 56.dp, bottom = 44.dp)
+            modifier = Modifier.align(Alignment.BottomStart).padding(start = SaverClockSide, bottom = SAVER_FOOT)
                 .graphicsLayer { translationX = drift.x.toPx(); translationY = -drift.y.toPx() },
             label = "caption",
         ) { text ->
+            // Fork: the credit is a footnote, not a title: the picture is the subject. One quiet
+            // line at the size of the smallest text (12), set wide enough to read from the couch.
             BasicText(
-                text, maxLines = 2, overflow = TextOverflow.Ellipsis,
-                style = Type.Title.copy(color = Color.White.copy(alpha = 0.92f)),
-                // Fork: the headline takes the right side (HeadlinesOverlay); the place name keeps clear of it.
-                modifier = Modifier.widthIn(max = if (AerialSettings.headlines) 460.dp else 620.dp),
+                text, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                style = Type.Caption.copy(
+                    color = Color.White.copy(alpha = 0.78f), fontSize = 12.sp, fontWeight = FontWeight.W500, letterSpacing = 0.01.em,
+                    shadow = Shadow(Color.Black.copy(alpha = 0.7f), Offset(0f, 1f), 6f),
+                ),
+                // Fork: the headline takes the right side (HeadlinesOverlay); the credit keeps clear of it.
+                modifier = Modifier.widthIn(max = if (AerialSettings.headlines) 440.dp else 620.dp),
             )
         }
     }
@@ -307,7 +344,23 @@ private val SaverDriftX = 24.dp
 private val SaverDriftY = 14.dp
 
 // The same style as the small clock, which grows into it, so the hand-off does not jump.
-internal val SaverClockStyle = Type.OnWallpaper.SmallClock.copy(fontSize = Type.OnWallpaper.LargeTitle.fontSize * 1.3f, color = Color.White.copy(alpha = 0.92f))
+// Fork: sized from Home's clock (Small, Large, Huge), and larger than before at each: at 34 sp the
+// screensaver's time was a label from across the room. A dark room needs no bigger than this.
+internal val SaverClockStyle: TextStyle
+    get() = Type.OnWallpaper.SmallClock.copy(
+        fontSize = when (AerialSettings.clockSize) {
+            ClockSize.Small -> 44.sp
+            ClockSize.Large -> 60.sp
+            ClockSize.Huge -> 80.sp
+        },
+        color = Color.White.copy(alpha = 0.94f),
+    )
+
+/** Fork: how wide the time ("10:45" and its AM or PM) is against its font size, for the pool behind it. */
+private const val SAVER_TIME_WIDTH = 3.4f
+
+/** Fork: the credit's and the headline's baseline above the bottom edge, one line for both. */
+internal val SAVER_FOOT = 36.dp
 internal val SaverClockTop = 40.dp
 internal val SaverClockSide = 56.dp
 
@@ -515,7 +568,8 @@ private fun PhotoSaver(
     val pool = remember(Wallpapers.items) {
         // The owner's own photos when there are any, else the daily ones (issue #27).
         val pictures = Wallpapers.items.filter { it.kind == WallpaperKind.Photo }
-            .ifEmpty { Wallpapers.items.filter { it.kind == WallpaperKind.Daily } }
+            // Fork: with the free collections (NASA, Wikimedia, Earth View) as well as Bing's.
+            .ifEmpty { Wallpapers.items.filter { it.kind == WallpaperKind.Daily || it.kind == WallpaperKind.Collection } }
         val rest = (pictures.ifEmpty { Wallpapers.items.filter { it.kind == WallpaperKind.Builtin } }).shuffled()
         if (first == null) rest else listOf(first) + rest.filter { it.id != first.id }
     }

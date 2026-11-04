@@ -12,7 +12,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.edit
 import android.os.SystemClock
-import android.provider.Settings
 import app.orchard.tv.guard.GuardSetup
 import app.orchard.tv.system.DeviceClass
 import app.orchard.tv.wallpaper.AerialQuality
@@ -112,6 +111,26 @@ enum class WallpaperTint(val key: String) {
  * Where interface sounds come from. The TV's own are silent wherever its key sound setting is off,
  * which many TVs ship with (Sony, issue #160; #169), so that is not the default there.
  */
+/** Fork: the clock's size on Home. Huge is the lock screen's: the time as the centrepiece. */
+enum class ClockSize(val key: String) {
+    Small("small"), Large("large"), Huge("huge");
+
+    companion object {
+        fun of(key: String?) = entries.firstOrNull { it.key == key }
+    }
+}
+
+/** Fork: where the clock stands on Home and in the screensaver. */
+enum class ClockPosition(val key: String) {
+    Left("left"), Middle("middle"), Right("right"),
+    /** Fork: where each picture is calmest (Images.clockSpot), as a phone's lock screen places its clock. */
+    Auto("auto");
+
+    companion object {
+        fun of(key: String?) = entries.firstOrNull { it.key == key }
+    }
+}
+
 enum class UiSounds(val key: String) {
     Tv("tv"), Aerial("aerial"), Off("off");
 
@@ -188,11 +207,48 @@ object AerialSettings {
     /** The Liquid Glass plate under the top row; some prefer the apps straight on the wallpaper (#151). */
     var homePlate by mutableStateOf(true); private set
 
-    /** The clock, with the date and weather, in the top right instead of the top left. */
-    var clockRight by mutableStateOf(false); private set
+    /** Fork: where the clock, with the date and weather, stands: top left, middle or right. */
+    var clockPosition by mutableStateOf(ClockPosition.Left); private set
 
-    /** The date and weather over a big clock above the top row, instead of one small line in the corner. */
-    var largeClock by mutableStateOf(false); private set
+    /** Fork: Small is one line in the corner; Large and Huge put the date over a big clock and the weather under it. */
+    var clockSize by mutableStateOf(ClockSize.Small); private set
+
+    /** Fork: where the clock stands now: the chosen place, or on Auto the one the picture leaves calmest. */
+    val placedClock: ClockPosition get() = if (clockPosition == ClockPosition.Auto) Wallpapers.clockSpot.position else clockPosition
+
+    /** The clock in the top right. */
+    val clockRight: Boolean get() = placedClock == ClockPosition.Right
+
+    /** Fork: the clock in the middle, as on a phone's lock screen. */
+    val clockMiddle: Boolean get() = placedClock == ClockPosition.Middle
+
+    /** The date and weather over a big clock above the top row (Large or Huge), instead of one small line in the corner. */
+    val largeClock: Boolean get() = clockSize != ClockSize.Small
+
+    /**
+     * Fork: the home's cut-out service (server/cutout), as http://host:port; empty where there is
+     * none. Set from a computer (ConfigReceiver depth_server) or the phone page; never built in, as
+     * every home's address is its own.
+     */
+    var depthServer by mutableStateOf(""); private set
+
+    /** Fork: the wallpaper's subject over the clock, where a cut-out service gives one. */
+    var depthEffect by mutableStateOf(true); private set
+
+    fun chooseDepthServer(address: String) {
+        depthServer = address.trim()
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString("fork_depth_server", depthServer) }
+        Wallpapers.reshade()
+    }
+
+    fun chooseDepthEffect(on: Boolean) {
+        depthEffect = on
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("fork_depth_effect", on) }
+        Wallpapers.reshade()
+    }
+
+    /** Fork: the big clock at its largest. */
+    val hugeClock: Boolean get() = clockSize == ClockSize.Huge
 
     /**
      * The moving wallpaper (aerial films, the owner's own videos) plays on the top row whatever the
@@ -357,8 +413,13 @@ object AerialSettings {
         oneRowHome = prefs.getBoolean("one_row_home", true)
         peekNextRow = prefs.getBoolean("peek_next_row", true)
         homeColumns = prefs.getInt("home_columns", DEFAULT_HOME_COLUMNS).takeIf { it in HOME_COLUMNS } ?: DEFAULT_HOME_COLUMNS
-        clockRight = prefs.getBoolean("clock_right", false)
-        largeClock = prefs.getBoolean("large_clock", false)
+        // Fork: before mh37 these were two switches, Large Clock and clock on the right.
+        clockPosition = ClockPosition.of(prefs.getString("fork_clock_position", null))
+            ?: if (prefs.getBoolean("clock_right", false)) ClockPosition.Right else ClockPosition.Left
+        depthServer = prefs.getString("fork_depth_server", "") ?: ""
+        depthEffect = prefs.getBoolean("fork_depth_effect", true)
+        clockSize = ClockSize.of(prefs.getString("fork_clock_size", null))
+            ?: if (prefs.getBoolean("large_clock", false)) ClockSize.Large else ClockSize.Small
         homePlate = prefs.getBoolean("home_plate", true)
         showAllNames = prefs.getBoolean("show_all_names", false)
         wallpaperAlwaysMoves = prefs.getBoolean("wallpaper_always_moves", false)
@@ -386,7 +447,7 @@ object AerialSettings {
         // Before 1.28 this was on or off; on meant whichever sounds Aerial played.
         uiSounds = UiSounds.of(prefs.getString("ui_sounds_kind", null)) ?: when {
             !prefs.getBoolean("ui_sounds", true) -> UiSounds.Off
-            Settings.System.getInt(app.contentResolver, Settings.System.SOUND_EFFECTS_ENABLED, 1) == 1 -> UiSounds.Tv
+            // Fork: Home's own calm set (tools/make-sounds.py) unless the TV's was chosen.
             else -> UiSounds.Aerial
         }
         backStartsScreensaver = prefs.getBoolean("back_starts_screensaver", true)
@@ -464,15 +525,24 @@ object AerialSettings {
         app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("home_plate", on) }
     }
 
-    fun chooseClockRight(on: Boolean) {
-        clockRight = on
-        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("clock_right", on) }
+    fun chooseClockPosition(choice: ClockPosition) {
+        if (choice == clockPosition) return
+        clockPosition = choice
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString("fork_clock_position", choice.key) }
+        // The wallpaper's shade lies behind the clock, so it moves with it.
+        Wallpapers.reshade()
     }
 
-    fun chooseLargeClock(on: Boolean) {
-        largeClock = on
-        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("large_clock", on) }
+    fun chooseClockSize(choice: ClockSize) {
+        if (choice == clockSize) return
+        clockSize = choice
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString("fork_clock_size", choice.key) }
+        Wallpapers.reshade()
     }
+
+    fun chooseClockRight(on: Boolean) = chooseClockPosition(if (on) ClockPosition.Right else ClockPosition.Left)
+
+    fun chooseLargeClock(on: Boolean) = chooseClockSize(if (on) ClockSize.Large else ClockSize.Small)
 
     fun chooseShowAllNames(on: Boolean) {
         showAllNames = on

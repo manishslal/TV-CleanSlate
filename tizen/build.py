@@ -173,10 +173,10 @@ page = re.sub(r'var PLATES = \{.*?\};\n', 'var PLATES = ' + json.dumps(plates) +
 sub('461', '10009')
 # Chromium M47 has no CSS variables: the screensaver clock drifts by an inline transform instead,
 # cleared when the screensaver ends.
-sub("""  r.setProperty('--driftx', (S.clockRight ? -1 : 1) * Math.round(Math.random() * 760) * window.innerWidth / 1920 + 'px');
+sub("""  r.setProperty('--driftx', driftSide() * Math.round(Math.random() * 760) * window.innerWidth / 1920 + 'px');
   r.setProperty('--drifty', Math.round(Math.random() * 520) * window.innerWidth / 1920 + 'px');""",
-    """  var dx = (S.clockRight ? -1 : 1) * Math.round(Math.random() * 760) * window.innerWidth / 1920, dy = Math.round(Math.random() * 520) * window.innerWidth / 1920;
-  if (document.body.classList.contains('idle')) $('top').style.webkitTransform = 'translate(' + dx + 'px,' + dy + 'px)';""")
+    """  var dx = driftSide() * Math.round(Math.random() * 760) * window.innerWidth / 1920, dy = Math.round(Math.random() * 520) * window.innerWidth / 1920;
+  if (document.body.classList.contains('idle')) $('top').style.webkitTransform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + saverScale() + ')';""")
 sub("c.toggle('idle', on);", "c.toggle('idle', on); if (!on) $('top').style.webkitTransform = '';")
 sub("el.style.setProperty('--halo', halo(t.id));", '')
 sub("if (t && zone === 'grid' && !down) $('glow')", "if (t) haloStyle(halo(t.id));\n  if (t && zone === 'grid' && !down) $('glow')")
@@ -232,5 +232,8 @@ for sheet in () if lean else (web / 'frost').glob('sheet-*.jpg'):
     shutil.copy(sheet, out)
 for logo in (web / 'logo').iterdir():
     shutil.copy(logo, out)
+# Home's own interface sounds (tools/make-sounds.py), the same files Android plays
+for wav in (root / 'android/app/src/main/res/raw').glob('ui_*.wav'):
+    shutil.copy(wav, out)
 left = re.findall(r'var\(--|display: grid', style)
 print(len(page), 'bytes', len(logos), 'logos', len(ids), 'ordered', len(left), 'unsupported CSS left')

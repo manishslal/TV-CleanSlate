@@ -62,12 +62,14 @@ import kotlin.math.roundToInt
  * The continuous outline is a baked mask (see SmoothCorners.kt); children are clipped to a plain
  * rounded rect, which holds it.
  */
-fun Modifier.liquidGlass(corner: Dp, bottomCorners: Boolean = true, band: Dp = 26.dp, lightPanel: Boolean? = null, tile: Boolean = false): Modifier = composed {
+fun Modifier.liquidGlass(corner: Dp, bottomCorners: Boolean = true, band: Dp = 26.dp, lightPanel: Boolean? = null, tile: Boolean = false, clear: Boolean = false): Modifier = composed {
     val (frost, under, swap) = rememberFrostSwap(Wallpapers.frosted.takeIf { Wallpapers.backdrop != null })
     // Fork: a light panel brightens the frosted picture instead of dimming it.
     val light = lightPanel ?: LocalLightPanel.current
-    val tint = if (light) LightPanelTint else PanelTint
-    val plain = if (light) Palette.Light.Glass else Palette.Dark.Glass
+    // Fork: [clear] is the dock's glass (most of the picture, a little lift), for Home's own
+    // controls that sit on the wallpaper beside it, such as the status pill's focus.
+    val tint = if (clear) ClearTint else if (light) frost?.let(::lightPanelTint) ?: LightPanelTint else PanelTint
+    val plain = if (clear) Color.White.copy(alpha = 0.16f) else if (light) Palette.Light.Glass else Palette.Dark.Glass
     var at by remember { mutableStateOf(Offset.Zero) }
     var root by remember { mutableStateOf(IntSize.Zero) }
     val shape = if (bottomCorners) RoundedCornerShape(corner) else RoundedCornerShape(topStart = corner, topEnd = corner)
@@ -107,7 +109,7 @@ fun Modifier.liquidGlass(corner: Dp, bottomCorners: Boolean = true, band: Dp = 2
                     // the glass would dim it, without the layer the glass needs every frame, which
                     // weak GPUs feel most while a panel slides in. Solid: the plain glass color is
                     // see-through and showed the tiles under the Personalize sheet.
-                    drawImage(flat, dstSize = IntSize(w, h), colorFilter = ColorFilter.tint(liteGlass(frost, light)))
+                    drawImage(flat, dstSize = IntSize(w, h), colorFilter = ColorFilter.tint(if (clear) liteClear(frost) else liteGlass(frost, light)))
                     drawGlassEdge(size, radius, bottomCorners, light)
                 } else {
                     val t = swap()
@@ -293,6 +295,18 @@ object Glisse {
     const val LIGHT_KEEP = 0.48f
     const val LIGHT_ADD = 226f * 0.52f
     /**
+     * Fork: light glass made for its picture (lightPanelTint): 58% of the picture shows; white brings
+     * the panel's average to 204, never less than 96 nor more than 150 white added. Over black it
+     * stays at least 96 + the white cards' lift: dark text sits in the white groups, not on the glass.
+     */
+    const val LIGHT_CLEAR = 0.58f
+    const val LIGHT_TARGET = 204f
+    const val LIGHT_ADD_MIN = 96f
+    const val LIGHT_ADD_MAX = 150f
+    /** Fork: the dock's glass, which the pill's focus matches: 84% of the picture and 16 lift. */
+    const val CLEAR_KEEP = 0.84f
+    const val CLEAR_ADD = 16f
+    /**
      * Glisse's pointer press spring: stiffness and damping ratio (its 29.2 damping). Its release
      * bounce (230, 0.78) isn't used: an overshoot on focus made the focus ring shimmer.
      */
@@ -322,7 +336,10 @@ private fun liteGlass(frost: ImageBitmap, light: Boolean): Color = synchronized(
             val c = small.getPixel(x, y)
             r += android.graphics.Color.red(c); g += android.graphics.Color.green(c); b += android.graphics.Color.blue(c)
         }
-        fun dim(sum: Float) = ((sum / 144f) * (if (light) Glisse.LIGHT_KEEP else Glisse.DARK_KEEP) + (if (light) Glisse.LIGHT_ADD else Glisse.DARK_ADD)).coerceIn(0f, 255f) / 255f
+        // Light: as lightPanelTint makes it, the white brought in to lift the average to its target.
+        val luma = (0.2126f * r + 0.7152f * g + 0.0722f * b) / 144f
+        val lightAdd = (Glisse.LIGHT_TARGET - Glisse.LIGHT_CLEAR * luma).coerceIn(Glisse.LIGHT_ADD_MIN, Glisse.LIGHT_ADD_MAX)
+        fun dim(sum: Float) = ((sum / 144f) * (if (light) Glisse.LIGHT_CLEAR else Glisse.DARK_KEEP) + (if (light) lightAdd else Glisse.DARK_ADD)).coerceIn(0f, 255f) / 255f
         Color(dim(r), dim(g), dim(b))
     }
 }
@@ -331,5 +348,48 @@ private val liteColors = HashMap<Pair<ImageBitmap, Boolean>, Color>()
 
 /** Fork: a light panel, the frosted picture under clear white glass, so dark text reads on night skies. */
 private val LightPanelTint = glassTint(Glisse.LIGHT_KEEP, Glisse.LIGHT_ADD, Glisse.LIGHT_ADD + 3f)
+
+/**
+ * Fork: light glass made for [frost]: [Glisse.LIGHT_CLEAR] of the picture shows, and the white
+ * added brings the panel's average to [Glisse.LIGHT_TARGET], so a dark wallpaper gets more white
+ * and a bright one less. With one fixed amount (52% white) the light panel was a milky sheet over
+ * a bright picture and the glass barely showed (the owner, SHIELD); the white is held between
+ * [Glisse.LIGHT_ADD_MIN] and [Glisse.LIGHT_ADD_MAX] so dark text still reads. Made once per picture.
+ */
+private fun lightPanelTint(frost: ImageBitmap): ColorFilter = synchronized(lightTints) {
+    lightTints.getOrPut(frost) {
+        val avg = averageLuma(frost)
+        val add = (Glisse.LIGHT_TARGET - Glisse.LIGHT_CLEAR * avg).coerceIn(Glisse.LIGHT_ADD_MIN, Glisse.LIGHT_ADD_MAX)
+        glassTint(Glisse.LIGHT_CLEAR, add, add + 3f)
+    }
+}
+
+private val lightTints = java.util.WeakHashMap<ImageBitmap, ColorFilter>()
+
+/** The picture's average brightness, 0-255, after the glass's saturation (which keeps luma). */
+private fun averageLuma(frost: ImageBitmap): Float {
+    val small = android.graphics.Bitmap.createScaledBitmap(frost.asAndroidBitmap(), 16, 9, true)
+    var sum = 0f
+    for (y in 0 until 9) for (x in 0 until 16) {
+        val c = small.getPixel(x, y)
+        sum += 0.2126f * android.graphics.Color.red(c) + 0.7152f * android.graphics.Color.green(c) + 0.0722f * android.graphics.Color.blue(c)
+    }
+    return sum / 144f
+}
+
+/** Fork: the dock's glass (HomeChrome's PlateTint): most of the picture, saturated, a little lifted. */
+private val ClearTint = glassTint(Glisse.CLEAR_KEEP, Glisse.CLEAR_ADD)
+
+/** Lite's clear glass for [frost]: its average color as [ClearTint] would leave it. */
+private fun liteClear(frost: ImageBitmap): Color {
+    val small = android.graphics.Bitmap.createScaledBitmap(frost.asAndroidBitmap(), 16, 9, true)
+    var r = 0f; var g = 0f; var b = 0f
+    for (y in 0 until 9) for (x in 0 until 16) {
+        val c = small.getPixel(x, y)
+        r += android.graphics.Color.red(c); g += android.graphics.Color.green(c); b += android.graphics.Color.blue(c)
+    }
+    fun v(sum: Float) = ((sum / 144f) * Glisse.CLEAR_KEEP + Glisse.CLEAR_ADD).coerceIn(0f, 255f) / 255f
+    return Color(v(r), v(g), v(b))
+}
 
 private val PanelTint = glassTint(Glisse.DARK_KEEP, Glisse.DARK_ADD)
