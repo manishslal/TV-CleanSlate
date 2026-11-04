@@ -6,6 +6,10 @@
 **Latest build tested:** 1.67-mh17
 **Rooted:** No
 
+## Home mh35 — 2026-11-04
+
+- `1.67-mh35` installed and compiled with `-m speed` while the TV slept. Not looked at on screen: smaller pill, Turn Off TV row (Home Guard is bound here), Aerial categories.
+
 ## 2026-10-28
 ### Phase 1: backup + reboot test (read-only)
 - Backup: `backups//`. 0 packages disabled at baseline. Stock Home = `com.google.android.apps.tv.launcherx/.home.HomeActivity`.

@@ -85,6 +85,7 @@ import app.orchard.tv.system.VpnApps
 import androidx.core.graphics.drawable.toBitmap
 import app.orchard.tv.settings.HomeMode
 import app.orchard.tv.guard.FireKeeper
+import app.orchard.tv.guard.HomeGuardService
 import app.orchard.tv.system.HomeStatus
 import app.orchard.tv.system.LaunchFallback
 import app.orchard.tv.system.NetKind
@@ -308,6 +309,14 @@ private fun MainPage(vm: HomeViewModel, now: LocalDateTime, takeFocus: Boolean, 
                 onClick = { vm.overlay = Overlay.ControlCenter(CcPage.InputSettings) },
                 trailing = "$name ›",
             )
+        }
+        // As the web Home has it. Needs Home Guard (an accessibility service): without it Android
+        // lets no app put the TV to sleep, so the row is left out (Fire OS, guard switched off).
+        if (HomeGuardService.canTurnOff) {
+            MenuRow(Glyph.Power, stringResource(R.string.cc_turn_off), onClick = {
+                vm.overlay = Overlay.None
+                HomeGuardService.turnOff()
+            })
         }
         // Installed from the APK alone: how to finish, on the TV or with a computer.
         if (vm.homeStatus == HomeStatus.NotDefault) {

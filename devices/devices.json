@@ -103,7 +103,7 @@
       "os": "Fire OS 6.7.1.1",
       "sdk": 25,
       "ram_gb": 1.3,
-      "latest_build_tested": "1.67-mh34-guard",
+      "latest_build_tested": "1.67-mh35-guard",
       "note": "FireKeeper sends Home to the front; Amazon's launcher stays enabled. Run tools/fire-reapply.sh after a Fire OS update."
     },
     {

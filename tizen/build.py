@@ -171,8 +171,13 @@ page = re.sub(r"var HIDDEN = \[.*?\];", 'var HIDDEN = [];', page, count=1, flags
 page = re.sub(r'var LOGOS = \{.*?\};\n', 'var LOGOS = ' + json.dumps(logos) + ';\n', page, count=1, flags=re.S)
 page = re.sub(r'var PLATES = \{.*?\};\n', 'var PLATES = ' + json.dumps(plates) + ';\n', page, count=1, flags=re.S)
 sub('461', '10009')
-sub("r.setProperty('--driftx'", "(function () {})('--driftx'")
-sub("r.setProperty('--drifty'", "(function () {})('--drifty'")
+# Chromium M47 has no CSS variables: the screensaver clock drifts by an inline transform instead,
+# cleared when the screensaver ends.
+sub("""  r.setProperty('--driftx', (S.clockRight ? -1 : 1) * Math.round(Math.random() * 760) * window.innerWidth / 1920 + 'px');
+  r.setProperty('--drifty', Math.round(Math.random() * 520) * window.innerWidth / 1920 + 'px');""",
+    """  var dx = (S.clockRight ? -1 : 1) * Math.round(Math.random() * 760) * window.innerWidth / 1920, dy = Math.round(Math.random() * 520) * window.innerWidth / 1920;
+  if (document.body.classList.contains('idle')) $('top').style.webkitTransform = 'translate(' + dx + 'px,' + dy + 'px)';""")
+sub("c.toggle('idle', on);", "c.toggle('idle', on); if (!on) $('top').style.webkitTransform = '';")
 sub("el.style.setProperty('--halo', halo(t.id));", '')
 sub("if (t && zone === 'grid' && !down) $('glow')", "if (t) haloStyle(halo(t.id));\n  if (t && zone === 'grid' && !down) $('glow')")
 sub("t.el.style.setProperty('--dx'", "(function () {})('--dx'")
@@ -192,6 +197,12 @@ sub('old.pause(); old.removeAttribute', 'aerialStop(old); old.pause(); old.remov
 sub('v.play().catch(function () {});', 'v.play();')
 sub('WALL_WAIT = 20000', 'WALL_WAIT = 10000')
 sub('function readInputs(j) {', 'function readInputs() { return []; }\nfunction readWebOSInputs(j) {')
+# Rows a Samsung web app cannot act on: brightness is Samsung's own picture menu (the Settings row
+# opens it), no input list reaches a web app, and nothing can be opened when the TV turns on.
+sub("      { label: 'Brightness', icon: 'LIGHT_MODE', value: 'Picture Settings', ok: function () { closeAll(); open({ id: 'com.palm.app.settings' }); } },\n", '')
+sub("      { label: 'Inputs', icon: 'INPUT', to: pageInputs },\n", '')
+sub(",\n      { label: 'When TV Turns On', icon: 'POWER', value: function () { var t = allInputs.concat(allApps).filter(function (x) { return x.id === S.bootTarget; })[0]; return t ? t.title : 'Home'; }, to: pageBoot } ]", ' ]')
+sub("'X-Plex-Platform': 'webOS', 'X-Plex-Device': 'LG TV', 'X-Plex-Device-Name': 'LG TV'", "'X-Plex-Platform': 'Tizen', 'X-Plex-Device': 'Samsung TV', 'X-Plex-Device-Name': 'Samsung TV'")
 sub("'com.palm.app.settings'", "'org.tizen.menu'")
 page = re.sub(r"'calc\(' \+ (.+?) \+ ' \* var\(--u\)\)'", r"(\1) + 'px'", page)
 sub('/* ---- settings, the same names', (here / 'adapter.js').read_text() + (here / 'aerial.js').read_text() + '\n/* ---- settings, the same names', 1)

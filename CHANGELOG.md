@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Android 1.67-mh35: the status pill is smaller (14 pt name, 18 dp icon), below the time beside it, and says "Wi-Fi" when Android withholds the network's name
+- Android 1.67-mh35: Turn Off TV in Control Center wherever Home Guard runs (standby on Android 9+, else the TV's power menu)
+- Android 1.67-mh35: Aerial categories (Landscapes, Cities, Space, Underwater), as the web Home has them
+- Android 1.67-mh35: Android 7 TVs (Fire TV Stick 4K) get Inter instead of Roboto; Focus Glow is hidden where Lite draws none
+- Web: rename a folder, and hold OK on an app in a folder to move it out or hide it; offline reads "Not Connected" as on Android
+- Samsung: Inputs, Brightness and When TV Turns On are gone from Control Center, where they did nothing; the screensaver clock drifts again; Plex sees a Samsung TV
+- Parity ledger: corrected Turn Off TV and Peek, and added 13 features it did not list
+- Android 1.67-mh35: on Fire TV, Home's text is the same size as on Google TV and SHIELD. Fire OS ships its text size at 1.0 where they ship 0.85, so everything (most visibly the Wi-Fi name) drew 18% larger
 - Android 1.67-mh34 and web: every app's focused tile glows. Black-and-white and grey apps glow white (Apple TV), and dark brand colors are lifted to a bright one of the same hue (Windscribe's navy to blue). A logo can set its glow color in `logos/manifest.json` (HBO Max: purple)
 - Android 1.67-mh32: a moving wallpaper slows to a stop when a menu opens and gathers pace when it closes, instead of freezing and jumping
 - Android 13 and later: the liquid glass stays liquid while its picture changes, fading from the old picture to the new over 0.9 s, where it used to drop to flat glass and pop back

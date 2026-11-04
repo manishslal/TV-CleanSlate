@@ -6,6 +6,14 @@
 
 ---
 
+## Home mh35 — 2026-11-04
+
+- `1.67-mh35-guard` installed over mh34 and compiled with `-m speed`.
+- Text size: Fire OS ships with the system text size at 1.0, while the onn and SHIELD ship at 0.85, which is what Home's type was sized on. Every sp size drew 18% larger here, most visibly the Wi-Fi name in the pill. Home now reads Fire OS's text size against 1.0, so its default matches the others. A larger Fire OS text size still enlarges Home.
+- Checked: the pill, date, clock and weather line are smaller and match the onn's proportions. 0 crash entries.
+- Later mh35 build, from the parity audit: the pill is smaller (14 sp name, 18 dp icon), the type is Inter (four static weights, since Android 7 cannot vary a font), and Focus Glow is hidden in Appearance because Lite draws none. Checked: pill, Control Center, Personalize and Appearance; there is no Turn Off TV row, because Fire OS binds no accessibility service. 0 crash entries.
+- The focus glow stays off here: Auto effects choose Lite on this 1.3 GB stick, and Lite leaves the glow out by the owner's choice.
+
 ## Home mh34 — 2026-11-03
 
 - `1.67-mh34-guard` installed over mh23 through `tools/install.sh guard`, then compiled with `-m speed`. `fire-reapply.sh`: 0 drifted, 0 refused.

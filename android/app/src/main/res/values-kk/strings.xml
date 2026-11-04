@@ -326,4 +326,9 @@
     <string name="fk_tint_dim">Күңгірт</string>
     <string name="fk_tint_warm">Жылы</string>
     <string name="fk_tint_cool">Салқын</string>
+    <string name="cc_turn_off">Теледидарды өшіру</string>
+    <string name="ss_cat_landscapes">Табиғат</string>
+    <string name="ss_cat_cities">Қалалар</string>
+    <string name="ss_cat_space">Ғарыш</string>
+    <string name="ss_cat_underwater">Су асты</string>
 </resources>

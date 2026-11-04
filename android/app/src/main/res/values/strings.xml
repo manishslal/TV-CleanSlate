@@ -337,4 +337,9 @@
     <string name="fk_tint_dim">Dim</string>
     <string name="fk_tint_warm">Warm</string>
     <string name="fk_tint_cool">Cool</string>
+    <string name="cc_turn_off">Turn Off TV</string>
+    <string name="ss_cat_landscapes">Landscapes</string>
+    <string name="ss_cat_cities">Cities</string>
+    <string name="ss_cat_space">Space</string>
+    <string name="ss_cat_underwater">Underwater</string>
 </resources>

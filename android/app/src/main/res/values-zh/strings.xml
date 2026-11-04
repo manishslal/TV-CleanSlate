@@ -333,4 +333,9 @@
     <string name="fk_tint_dim">变暗</string>
     <string name="fk_tint_warm">暖色</string>
     <string name="fk_tint_cool">冷色</string>
+    <string name="cc_turn_off">关闭电视</string>
+    <string name="ss_cat_landscapes">风景</string>
+    <string name="ss_cat_cities">城市</string>
+    <string name="ss_cat_space">太空</string>
+    <string name="ss_cat_underwater">水下</string>
 </resources>

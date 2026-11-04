@@ -17,7 +17,7 @@ videos = [[v['url'], v.get('label', ''), v['category'], v.get('uhd', '')]
 videos = [v[:3] + [i, v[3]] for i, v in enumerate(videos)]  # the number names the clip's baked frost, frost/frost-<n>.jpg; the last is the 4K file
 
 paths = dict(re.findall(r'const val (\w+) = "([^"]+)"', (kt / 'ui/theme/GlyphPaths.kt').read_text()))
-wanted = 'WIFI LAN WIFI_OFF SETTINGS INPUT VOLUME_UP VOLUME_OFF VISIBILITY_OFF FOLDER OPEN_WITH DELETE CHEVRON_RIGHT HDMI LIGHT_MODE IMAGE PLAY_CIRCLE PARTLY_CLOUDY_DAY CALENDAR_MONTH VERIFIED_USER LANGUAGE BEDTIME CLOUD RAINY WEATHER_SNOWY FOGGY THUNDERSTORM POWER CONTRAST'.split()
+wanted = 'WIFI LAN WIFI_OFF SETTINGS INPUT VOLUME_UP VOLUME_OFF VISIBILITY_OFF FOLDER OPEN_WITH DELETE CHEVRON_RIGHT HDMI LIGHT_MODE IMAGE PLAY_CIRCLE PARTLY_CLOUDY_DAY CALENDAR_MONTH VERIFIED_USER LANGUAGE BEDTIME CLOUD RAINY WEATHER_SNOWY FOGGY THUNDERSTORM POWER CONTRAST EDIT'.split()
 icons = {k: paths[k] for k in wanted}
 
 labels = {'tech': 'Tech', 'ai': 'AI', 'us': 'US', 'world': 'World', 'business': 'Business', 'science': 'Science', 'sports': 'Sports', 'gaming': 'Gaming', 'entertainment': 'Entertainment', 'health': 'Health'}

@@ -1246,6 +1246,30 @@ class HomeGuardService : AccessibilityService() {
 
         fun refreshCecHome() { instance?.run { watchCecInput(); updateKeyFilter() } }
 
+        /** Whether Control Center can offer Turn Off TV: it goes through this service. */
+        val canTurnOff: Boolean get() = isRunning
+
+        /**
+         * Turn Off TV: puts the TV to sleep, as its power key does (Android 9+ lock-screen action,
+         * which on a TV is standby, and HDMI-CEC takes the screen with it). Where the firmware
+         * ignores that, the TV's own power menu opens instead, one press from standby.
+         */
+        fun turnOff(): Boolean {
+            val s = instance ?: return false
+            if (Build.VERSION.SDK_INT >= 28 && s.performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN)) {
+                s.handler.postDelayed({
+                    // Still awake with the screen on: this firmware ignored it. A screen already
+                    // off is the action working, so no menu over it.
+                    val on = s.getSystemService<android.hardware.display.DisplayManager>()
+                        ?.getDisplay(android.view.Display.DEFAULT_DISPLAY)?.state == android.view.Display.STATE_ON
+                    if (on && s.getSystemService<PowerManager>()?.isInteractive == true) s.performGlobalAction(GLOBAL_ACTION_POWER_DIALOG)
+                }, TURN_OFF_CHECK_MS)
+                return true
+            }
+            return s.performGlobalAction(GLOBAL_ACTION_POWER_DIALOG)
+        }
+        private const val TURN_OFF_CHECK_MS = 1500L
+
         /** Looks once more at boot completion; false if the guard is not running. */
         fun onBootCompleted(): Boolean {
             val s = instance ?: return false

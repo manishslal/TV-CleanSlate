@@ -26,6 +26,16 @@ fun canvasDensity(metrics: android.util.DisplayMetrics): Float =
     minOf(metrics.widthPixels, metrics.heightPixels * 16 / 9) / 960f
 
 /**
+ * Fork: Home's type is sized for Google TV and SHIELD, which ship with the system text size at
+ * 0.85. Fire OS ships at 1.0, so the same type drew 18% larger there (the Wi-Fi name in the pill
+ * crowded its icons). On Fire OS the system size is read against 1.0 instead, so its default looks
+ * like the others' and a larger choice in Fire OS still enlarges Home's type.
+ */
+fun canvasFontScale(system: Float): Float =
+    if (android.os.Build.MANUFACTURER.equals("Amazon", ignoreCase = true)) system * GOOGLE_TV_FONT_SCALE else system
+private const val GOOGLE_TV_FONT_SCALE = 0.85f
+
+/**
  * Fork: true inside a panel (Control Center, Personalize, menus) while Appearance is light: the
  * panel is light frosted glass with dark type, as iOS draws its sheets in light mode. Home's own
  * type over the wallpaper stays white either way. Provided around the panels (HomeScreen).
@@ -113,9 +123,17 @@ val LocalReducedMotion = staticCompositionLocalOf { false }
 
 // Inter has an optical size axis. Text sizes get the 14pt master, display sizes the 32pt master,
 // the way SF Pro switches between Text and Display. Font variations need Android 8.0; before that
-// every weight would come out as Inter Regular, so those TVs use the system's Roboto instead.
+// every weight would come out as Inter Regular, so those TVs (Fire TV Stick 4K, Android 7.1) get four
+// static Inter weights cut from the same font at the text size, and Android picks the nearest.
+private val InterStatic = FontFamily(
+    Font(R.font.inter_static_regular, FontWeight.W400),
+    Font(R.font.inter_static_medium, FontWeight.W500),
+    Font(R.font.inter_static_semibold, FontWeight.W600),
+    Font(R.font.inter_static_bold, FontWeight.W700),
+)
+
 @OptIn(ExperimentalTextApi::class)
-private fun inter(opticalSize: Float) = if (Build.VERSION.SDK_INT < 26) FontFamily.SansSerif else FontFamily(
+private fun inter(opticalSize: Float) = if (Build.VERSION.SDK_INT < 26) InterStatic else FontFamily(
     (1..9).map { i ->
         val w = i * 100
         Font(

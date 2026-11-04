@@ -185,7 +185,7 @@ fun LiveWallpaper(
     fun open(): ExoPlayer {
         val quality = AerialFormats.forWallpaper(context)
         val overHttp = Build.VERSION.SDK_INT < Build.VERSION_CODES.N
-        val all = Aerials.all(context).shuffled()
+        val all = Aerials.chosen(context).shuffled()
         // The film the picture on screen came from, at that moment; else one fetched ahead.
         if (fresh) Wallpapers.forgetLeftLiveSpot()
         val spot = Wallpapers.liveSpot().takeIf { !fresh }
@@ -266,7 +266,7 @@ fun LiveWallpaper(
     // fresh start after a Dolby Vision screensaver (only the screensaver's quality had them).
     LaunchedEffect(live.film, showing) {
         val film = live.film ?: return@LaunchedEffect
-        if (showing) AerialStream.prepareOpener(context, Aerials.all(context), film, AerialFormats.forWallpaper(context), Build.VERSION.SDK_INT < Build.VERSION_CODES.N)
+        if (showing) AerialStream.prepareOpener(context, Aerials.chosen(context), film, AerialFormats.forWallpaper(context), Build.VERSION.SDK_INT < Build.VERSION_CODES.N)
     }
 
     LaunchedEffect(play) {

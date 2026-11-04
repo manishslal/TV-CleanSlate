@@ -746,7 +746,7 @@ function build() {
   allInputs.forEach(function (x) { if (S.hidden.indexOf(x.id) < 0) by[x.id] = x; });
   by['com.palm.app.settings'] = { id: 'com.palm.app.settings', title: 'Settings', short: 'Settings', glyph: 'SETTINGS' };
   Object.keys(S.folders).forEach(function (k) {
-    var f = S.folders[k], items = f.items.map(function (id) { var a = allApps.filter(function (x) { return x.id === id; })[0]; return a && appEntry(a); }).filter(Boolean);
+    var f = S.folders[k], items = f.items.filter(function (id) { return S.hidden.indexOf(id) < 0; }).map(function (id) { var a = allApps.filter(function (x) { return x.id === id; })[0]; return a && appEntry(a); }).filter(Boolean);
     by[k] = { id: k, title: f.name, folder: true, items: items };
   });
   (S.order || []).concat(ORDER, allInputs.map(function (x) { return x.id; }), ['com.palm.app.settings'], Object.keys(by)).forEach(function (id) {
@@ -776,7 +776,7 @@ function netPill() {
   svc('/net').then(function (j) {
     var on = (j.wired && j.wired.state === 'connected'), wifi = j.wifi && j.wifi.state === 'connected';
     net = j;
-    $('pill').innerHTML = svg(on ? 'LAN' : wifi ? 'WIFI' : 'WIFI_OFF') + '<span>' + esc(on ? 'Ethernet' : wifi ? (j.wifi.ssid || 'Wi-Fi') : 'Offline') + '</span>' + svg('SETTINGS');
+    $('pill').innerHTML = svg(on ? 'LAN' : wifi ? 'WIFI' : 'WIFI_OFF') + '<span>' + esc(on ? 'Ethernet' : wifi ? (j.wifi.ssid || 'Wi-Fi') : 'Not Connected') + '</span>' + svg('SETTINGS');
   }).catch(function () { $('pill').innerHTML = svg('SETTINGS') + '<span>Home</span>'; });
 }
 function refresh() {
@@ -828,7 +828,7 @@ function drawPage(keep) {
   if (!keep) { pageAt = 0; while (rows[pageAt] && rows[pageAt].note) pageAt++; }
   rows.forEach(function (r, i) {
     var v = r.value ? (typeof r.value === 'function' ? r.value() : r.value) : '';
-    h += '<div class="row' + (r.note ? ' note' : '') + (i === pageAt ? ' f' : '') + '">' + (r.icon ? svg(r.icon) : '') + (r.input ? '<input id="field" placeholder="' + esc(r.input) + '">' : '<span class="l">' + esc(r.label) + '</span>') +
+    h += '<div class="row' + (r.note ? ' note' : '') + (i === pageAt ? ' f' : '') + '">' + (r.icon ? svg(r.icon) : '') + (r.input ? '<input id="field" placeholder="' + esc(r.input) + '" value="' + esc(r.text || '').replace(/"/g, '&quot;') + '">' : '<span class="l">' + esc(r.label) + '</span>') +
       (r.bar !== undefined ? '<span class="bar"><i style="width:' + (typeof r.bar === 'function' ? r.bar() : r.bar) + '%"></i></span>' : '') + (v !== '' ? '<span class="v">' + esc(v) + '</span>' : '') + (r.to ? svg('CHEVRON_RIGHT') : '') + '</div>';
   });
   el.innerHTML = h + '</div>';
@@ -1019,7 +1019,7 @@ function pageControl() {
 }
 function tileMenu(t) {
   var rows = [{ label: 'Move', icon: 'OPEN_WITH', ok: function () { closeAll(); setMoving(true); } }, { label: 'Hide', icon: 'VISIBILITY_OFF', ok: function () { closeAll(); S.hidden.push(t.id); save(); build(); } }];
-  if (t.folder) rows = [rows[0], { label: 'Delete Folder', icon: 'DELETE', ok: function () { closeAll(); delete S.folders[t.id]; save(); build(); } }];
+  if (t.folder) rows = [rows[0], { label: 'Rename Folder', icon: 'EDIT', to: function () { return pageRename(t.id); } }, { label: 'Delete Folder', icon: 'DELETE', ok: function () { closeAll(); delete S.folders[t.id]; save(); build(); } }];
   else if (t.icon) {
     Object.keys(S.folders).forEach(function (k) { rows.push({ label: 'Add to ' + S.folders[k].name, icon: 'FOLDER', ok: function () { closeAll(); S.folders[k].items.push(t.id); save(); build(); } }); });
     rows.push({ label: 'New Folder', icon: 'FOLDER', ok: function () { closeAll(); var k = 'folder:' + Date.now(); S.folders[k] = { name: 'Folder ' + (Object.keys(S.folders).length + 1), items: [t.id] }; S.order = tiles.map(function (x) { return x.id; }); S.order.splice(focus, 0, k); save(); build(); } });
@@ -1060,6 +1060,23 @@ function lock(then) {
 }
 
 /* ---- folders ---- */
+/* the name is typed on the TV's keyboard; OK or Done keeps it (up to 40 letters), Back leaves it as it was */
+function pageRename(k) {
+  return { title: 'Rename Folder', rows: function () { return [{ input: 'Folder name', text: S.folders[k] ? S.folders[k].name : '', icon: 'EDIT' }]; },
+    search: function (q, typing) { if (typing || !S.folders[k]) return; q = q.replace(/^\s+|\s+$/g, ''); if (q) S.folders[k].name = q.slice(0, 40); save(); closeAll(); build(); } };
+}
+/* hold OK on an app in a folder: take it out (an emptied folder goes too), or hide it */
+function folderItemMenu(t) {
+  var k = folderOpen.id;
+  function out(hide) {
+    closeAll(); closeFolder();
+    var f = S.folders[k];
+    if (f) { f.items = f.items.filter(function (id) { return id !== t.id; }); if (!f.items.length) delete S.folders[k]; }
+    if (hide) S.hidden.push(t.id);
+    save(); build();
+  }
+  return { title: t.title, rows: [{ label: 'Move Out of Folder', icon: 'OPEN_WITH', ok: function () { out(false); } }, { label: 'Hide', icon: 'VISIBILITY_OFF', ok: function () { out(true); } }] };
+}
 var folderOpen = null, folderAt = 0;
 function drawFolder() {
   var g = $('fgrid');
@@ -1075,7 +1092,7 @@ function openFolder(t) {
   drawFolder();
   modal();
 }
-function closeFolder() { folderOpen = null; $('folder').className = ''; modal(); }
+function closeFolder() { if (typeof held === 'number') { clearTimeout(held); held = 'drop'; } folderOpen = null; $('folder').className = ''; modal(); }
 function folderKey(k) {
   var n = folderOpen.items.length, f = folderAt;
   if (k === 461 || k === 8) { sound('back'); return closeFolder(); }
@@ -1083,7 +1100,7 @@ function folderKey(k) {
   else if (k === 39 && f + 1 < n && (f + 1) % 5 > 0) f++;
   else if (k === 38 && f >= 5) f -= 5;
   else if (k === 40 && f + 5 < n) f += 5;
-  else if (k === 13) { var t = folderOpen.items[f]; closeFolder(); return open(t); }
+  else if (k === 13) { if (!held) held = setTimeout(function () { held = 'hold'; var t = folderOpen && folderOpen.items[folderAt]; if (t) push(folderItemMenu(t)); }, 650); return; }
   if (f !== folderAt) sound('move');
   folderAt = f;
   drawFolder();
@@ -1160,6 +1177,8 @@ document.addEventListener('keydown', function (e) {
     return;
   }
   if (pinCb) { e.preventDefault(); return pinKey(k); }
+  /* OK still held from the hold that opened this menu: its repeats must not pick the first row */
+  if (stack.length && k === 13 && (e.repeat || held === 'hold')) { e.preventDefault(); return; }
   if (stack.length) { e.preventDefault(); return pageKey(k); }
   if (folderOpen) { e.preventDefault(); return folderKey(k); }
   if (zone === 'pill') {
@@ -1196,10 +1215,17 @@ document.addEventListener('keydown', function (e) {
 });
 document.addEventListener('keyup', function (e) {
   if (e.keyCode !== 13) return;
-  if (typeof held === 'number') { clearTimeout(held); if (zone === 'grid' && tiles[focus] && !stack.length) open(tiles[focus]); }
+  if (typeof held === 'number') {
+    clearTimeout(held);
+    if (folderOpen && !stack.length) { var t = folderOpen.items[folderAt]; closeFolder(); if (t) open(t); }
+    else if (zone === 'grid' && tiles[focus] && !stack.length) open(tiles[focus]);
+  }
   held = null;
 });
-document.addEventListener('webOSRelaunch', function () { saver(false); closeAll(); if (folderOpen) closeFolder(); lastKey = Date.now(); refresh(); if (!$('v0').src && !$('v1').src) next(); });
+/* a release lost while the app was away (relaunch, hidden) must not leave OK held */
+function dropHeld() { if (typeof held === 'number') clearTimeout(held); held = null; }
+document.addEventListener('visibilitychange', dropHeld);
+document.addEventListener('webOSRelaunch', function () { dropHeld(); saver(false); closeAll(); if (folderOpen) closeFolder(); lastKey = Date.now(); refresh(); if (!$('v0').src && !$('v1').src) next(); });
 
 /* ---- start ---- */
 $('glow').style.transform = 'scale(' + window.innerWidth / 96 + ')';

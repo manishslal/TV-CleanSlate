@@ -46,7 +46,7 @@
       "webos": "done",
       "tizen": "partial",
       "lite": "frozen",
-      "note": "Samsung's focus glow has no app color."
+      "note": "Samsung's focus glow has no app color. Android Lite draws no focus glow, by the owner's choice."
     },
     {
       "id": "readable-text",
@@ -82,7 +82,7 @@
       "webos": "done",
       "tizen": "partial",
       "lite": "frozen",
-      "note": "Built in from the web page, not yet looked at on a Samsung."
+      "note": "Android Lite (Auto on low-end devices such as the Fire TV Stick 4K) draws no glow, so the row is hidden there. Built in from the web page, not yet looked at on a Samsung."
     },
     {
       "id": "wallpaper-tint",
@@ -115,10 +115,10 @@
       "id": "peek",
       "name": "Peek at Next Row",
       "android": "done",
-      "webos": "missing",
-      "tizen": "missing",
+      "webos": "done",
+      "tizen": "done",
       "lite": "done",
-      "note": "The web dock has no room for a peek; it needs a design decision."
+      "note": "The web dock lifts and the next row shows 46 units tall below it, with a toggle in Personalize (index.src.html layout()). Not yet looked at on a Samsung."
     },
     {
       "id": "dock",
@@ -208,16 +208,16 @@
       "webos": "done",
       "tizen": "not-possible",
       "lite": "done",
-      "note": "No app can open Samsung's Source panel, so the Inputs tile is gone and Source takes two presses."
+      "note": "No app can open Samsung's Source panel, so the Inputs tile is gone and Source takes two presses. The Control Center Inputs row is removed on Samsung from mh35, as no input list reaches a web app."
     },
     {
       "id": "power-off",
       "name": "Turn Off TV in Control Center",
-      "android": "done",
+      "android": "partial",
       "webos": "done",
       "tizen": "not-possible",
-      "lite": "done",
-      "note": "Samsung web apps can turn the screen off but not the TV, so the row is removed."
+      "lite": "frozen",
+      "note": "Android has it from mh35 through Home Guard (an accessibility service): standby on Android 9+, else the TV's power menu. No row where the guard is not bound: on Fire OS 6 the guard build installs but Fire OS never binds its accessibility service (dumpsys accessibility lists none), so FireKeeper keeps Home in front instead. Samsung web apps can turn the screen off but not the TV, so the row is removed."
     },
     {
       "id": "home-button",
@@ -298,7 +298,7 @@
       "webos": "done",
       "tizen": "not-applicable",
       "lite": "frozen",
-      "note": "Android hides it on boxes and sticks (no inputs and no panel it knows), where the setting moves nothing, and keeps it on every TV. LG's row opens Picture Settings; Samsung has none."
+      "note": "Android hides it on boxes and sticks (no inputs and no panel it knows), where the setting moves nothing, and keeps it on every TV. LG's row opens Picture Settings; Samsung's is removed (its Settings row opens the same menu)."
     },
     {
       "id": "rim-light",
@@ -369,7 +369,8 @@
       "android": "done",
       "webos": "done",
       "tizen": "done",
-      "lite": "done"
+      "lite": "done",
+      "note": "Android from mh35: 14sp name, 18dp icon, 30dp pill, smaller than the time beside it; \"Wi-Fi\" when Android withholds the name, \"Not Connected\" offline, matching the web."
     },
     {
       "id": "film-eases",
@@ -379,6 +380,130 @@
       "tizen": "not-applicable",
       "lite": "frozen",
       "note": "The web builds pause their video without easing; their glass is baked frost, which doesn't change under a menu."
+    },
+    {
+      "id": "boot-target-row",
+      "name": "When the TV Turns On",
+      "android": "done",
+      "webos": "done",
+      "tizen": "not-possible",
+      "lite": "frozen",
+      "note": "A Samsung web app cannot open anything when the TV turns on (the Tizen adapter has no boot target), so the row and its page are removed there from mh35."
+    },
+    {
+      "id": "vpn-badge",
+      "name": "VPN badge and VPN button while a VPN is up",
+      "android": "done",
+      "webos": "not-possible",
+      "tizen": "not-possible",
+      "lite": "done",
+      "note": "LG and Samsung web apps cannot see the TV's VPN state, and neither TV runs VPN apps."
+    },
+    {
+      "id": "folder-edit",
+      "name": "Rename a folder and move an app out of it",
+      "android": "done",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen",
+      "note": "Web from mh35: Rename Folder types on the TV keyboard; hold OK on an app inside a folder for Move Out of Folder or Hide."
+    },
+    {
+      "id": "aerial-categories",
+      "name": "Aerial categories (Landscapes, Cities, Space, Underwater)",
+      "android": "done",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen",
+      "note": "Android from mh35, in the Screensaver section; the last one on stays on. Applies to the wallpaper and screensaver."
+    },
+    {
+      "id": "saver-drift",
+      "name": "Screensaver clock drifts against burn-in",
+      "android": "done",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen",
+      "note": "Samsung (no CSS variables) drifts by an inline transform from mh35."
+    },
+    {
+      "id": "focus-tilt",
+      "name": "Focus tilt and sheen",
+      "android": "partial",
+      "webos": "partial",
+      "tizen": "not-possible",
+      "lite": "frozen",
+      "note": "Android Lite drops both; webOS has tilt only; Samsung's Chromium M47 has neither."
+    },
+    {
+      "id": "plex-identity",
+      "name": "Plex sees the right device",
+      "android": "done",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen",
+      "note": "Samsung says Tizen / Samsung TV from mh35 instead of LG TV."
+    },
+    {
+      "id": "typeface",
+      "name": "Inter typeface",
+      "android": "done",
+      "webos": "not-applicable",
+      "tizen": "not-applicable",
+      "lite": "frozen",
+      "note": "Android 7 and older (Fire TV Stick 4K) get four static Inter weights from mh35 instead of Roboto. The web builds use the TV's own fonts."
+    },
+    {
+      "id": "fire-text-size",
+      "name": "Text size matches across Android devices",
+      "android": "done",
+      "webos": "not-applicable",
+      "tizen": "not-applicable",
+      "lite": "frozen",
+      "note": "Fire OS ships its text size at 1.0, Google TV and SHIELD at 0.85; Home reads Fire OS against 1.0 from mh35."
+    },
+    {
+      "id": "hidden-apps",
+      "name": "Hidden Apps",
+      "android": "done",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen"
+    },
+    {
+      "id": "passcode",
+      "name": "Passcode for settings",
+      "android": "done",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen"
+    },
+    {
+      "id": "sounds",
+      "name": "Interface sounds",
+      "android": "done",
+      "webos": "partial",
+      "tizen": "partial",
+      "lite": "frozen",
+      "note": "Android has TV, Home and Off; the web builds have on and off."
+    },
+    {
+      "id": "weather-line",
+      "name": "Weather condition, city and units",
+      "android": "partial",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen",
+      "note": "Android's corner clock leaves out the condition and long city names; its big clock has them with H and L."
+    },
+    {
+      "id": "uninstall",
+      "name": "Uninstall from a tile",
+      "android": "done",
+      "webos": "done",
+      "tizen": "not-possible",
+      "lite": "done",
+      "note": "Samsung web apps cannot uninstall apps, so the row is removed."
     }
   ]
 }

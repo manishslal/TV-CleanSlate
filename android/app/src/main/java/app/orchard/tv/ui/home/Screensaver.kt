@@ -343,7 +343,7 @@ private fun AerialSaver(
         mutableStateOf(aerialQualityCap?.takeIf { it.ordinal < wanted.ordinal } ?: wanted)
     }
     val films = remember {
-        val all = Aerials.all(context).shuffled()
+        val all = Aerials.chosen(context).shuffled()
         // In another format than the wallpaper's (Dolby Vision chosen by hand) there is no going on
         // from it: the screen goes black as the TV changes mode whatever plays. A film whose start
         // is on disk shows first instead: 0.5 s to its first frame, where the wallpaper's moment,

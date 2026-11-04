@@ -926,37 +926,38 @@ fun StatusPill(
         val glass by animateFloatAsState(if (state.focused) 1f else 0f, tween(Motion.Quick, easing = Motion.EaseOut), label = "pill-glass")
         val fg = if (state.focused && light) Palette.Light.Label else Color.White.copy(alpha = if (state.focused) 1f else 0.9f)
         CompositionLocalProvider(LocalLightPanel provides light) {
-            Box(Modifier.matchParentSize().graphicsLayer { alpha = glass }.liquidGlass(17.dp, band = 12.dp))
+            Box(Modifier.matchParentSize().graphicsLayer { alpha = glass }.liquidGlass(15.dp, band = 11.dp))
         }
         Row(
             Modifier
-                .height(34.dp)
-                .padding(horizontal = 14.dp),
+                .height(30.dp)
+                .padding(horizontal = 13.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             val glyph = when (network.kind) {
                 NetKind.Wifi -> Glyph.Wifi
                 NetKind.Ethernet -> Glyph.Ethernet
                 NetKind.Offline -> Glyph.Offline
             }
-            GlyphIcon(glyph, fg, 22.dp, level = network.level)
-            // The network's name, as the web Home and Lite show it.
+            GlyphIcon(glyph, fg, 18.dp, level = network.level)
+            // The network's name, as the web Home and Lite show it; "Wi-Fi" when Android withholds it.
+            // Smaller than the time beside it (Headline 16): the name is a label, not the headline.
             val name = when (network.kind) {
-                NetKind.Wifi -> network.name
+                NetKind.Wifi -> network.name ?: stringResource(R.string.net_wifi)
                 NetKind.Ethernet -> stringResource(R.string.net_ethernet)
                 NetKind.Offline -> stringResource(R.string.net_offline)
             }
-            if (name != null) BasicText(
+            BasicText(
                 name, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                style = Type.Caption.copy(color = fg, fontSize = 17.sp, fontWeight = FontWeight.W500),
-                modifier = Modifier.widthIn(max = 200.dp),
+                style = Type.Caption.copy(color = fg, fontSize = 14.sp, fontWeight = FontWeight.W500),
+                modifier = Modifier.widthIn(max = 180.dp),
             )
             if (network.vpn) VpnBadge(fg)
             if (showTime) {
                 FlipText(timeText(now), style = Type.Headline.copy(color = fg))
             }
-            GlyphIcon(Glyph.Switches, fg, 17.dp)
+            GlyphIcon(Glyph.Switches, fg, 15.dp)
         }
     }
 }

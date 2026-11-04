@@ -6,6 +6,10 @@
 **ADB:** 5555, turned on by the user in Developer options. The user accepted the prompt on the TV.
 **Rooted:** No
 
+## Home mh35 — 2026-11-04
+
+- `1.67-mh35` installed and compiled with `-m speed` while the TV slept. Not looked at on screen: smaller pill, Turn Off TV row (Home Guard is bound here), Aerial categories.
+
 ## Baseline (2026-10-30, read-only)
 - `scripts/01-preflight-backup.sh <tv-ip>` saved `backups//`. Its `stock-launcher.txt` is empty because the script looks for `launcherx`, and this device's stock launcher is `tvlauncher`.
 - Stock Home: `com.google.android.tvlauncher/.MainActivity` (priority 2), the same launcher as the TCL, not the Onn's `launcherx`. The other candidate is `com.android.tv.settings/.system.FallbackHome` (-1000).

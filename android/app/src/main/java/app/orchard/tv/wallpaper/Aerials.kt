@@ -130,6 +130,12 @@ object Aerials {
     @Volatile
     private var cache: List<Aerial>? = null
 
+    /** The films the chosen categories allow (AerialSettings.aerialCats); all of them if none match. */
+    fun chosen(context: Context): List<Aerial> {
+        val cats = app.orchard.tv.settings.AerialSettings.aerialCats
+        return all(context).filter { it.category in cats }.ifEmpty { all(context) }
+    }
+
     fun all(context: Context): List<Aerial> = cache ?: synchronized(this) {
         cache ?: load(context).also { cache = it }
     }

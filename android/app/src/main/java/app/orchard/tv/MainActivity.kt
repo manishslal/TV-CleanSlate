@@ -62,6 +62,7 @@ import app.orchard.tv.ui.theme.LocalReducedMotion
 import app.orchard.tv.ui.home.TileFaces
 import app.orchard.tv.ui.theme.FontWarmup
 import app.orchard.tv.ui.theme.canvasDensity
+import app.orchard.tv.ui.theme.canvasFontScale
 import app.orchard.tv.ui.components.UhdCanvas
 import app.orchard.tv.settings.AerialSettings
 import app.orchard.tv.wallpaper.PhoneServer
@@ -251,7 +252,7 @@ class MainActivity : ComponentActivity() {
             // designed on a 960×540 canvas, so it scales that canvas to whatever the panel is.
             val canvas = Density(
                 density = canvasDensity(resources.displayMetrics),
-                fontScale = LocalDensity.current.fontScale,
+                fontScale = canvasFontScale(LocalDensity.current.fontScale),
             )
             CompositionLocalProvider(LocalReducedMotion provides reducedMotion, LocalDensity provides canvas) {
                 HomeScreen(

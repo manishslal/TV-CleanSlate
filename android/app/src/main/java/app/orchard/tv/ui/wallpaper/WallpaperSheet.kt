@@ -370,7 +370,8 @@ private fun AppearancePage() {
             listOf(FocusStyle.HighContrast to R.string.st_focus_high, FocusStyle.Standard to R.string.st_focus_standard, FocusStyle.Invert to R.string.st_focus_invert),
             AerialSettings.focusStyle, AerialSettings::chooseFocusStyle,
         )
-        ValueRow(
+        // Lite draws no focus glow (AppTile), so its size is not offered there.
+        if (!AerialSettings.lite) ValueRow(
             R.string.fk_focus_glow, stringResource(R.string.fk_focus_glow_hint),
             listOf(FocusGlow.Small to R.string.fk_size_small, FocusGlow.Medium to R.string.fk_size_medium, FocusGlow.Large to R.string.fk_size_large),
             AerialSettings.focusGlow, AerialSettings::chooseFocusGlow,
@@ -461,6 +462,10 @@ private fun ScreensaverPage(onStart: () -> Unit) {
                     .filter { it.first in qualities },
             AerialSettings.aerialQuality, AerialSettings::chooseAerialQuality,
         )
+        // Which films play, on the wallpaper and the screensaver alike; the last one on stays on.
+        listOf("landscapes" to R.string.ss_cat_landscapes, "cities" to R.string.ss_cat_cities, "space" to R.string.ss_cat_space, "underwater" to R.string.ss_cat_underwater).forEach { (cat, label) ->
+            SwitchRow(label, null, cat in AerialSettings.aerialCats, { AerialSettings.toggleAerialCat(cat) })
+        }
         // The clock screensaver is its clock, and the others show none.
         if (Wallpapers.screensaver == ScreensaverMode.Aerial || Wallpapers.screensaver == ScreensaverMode.Photos) {
             SwitchRow(R.string.ss_show_time, stringResource(R.string.ss_show_time_hint), AerialSettings.screensaverClock, AerialSettings::chooseScreensaverClock)

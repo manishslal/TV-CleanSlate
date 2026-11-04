@@ -15,6 +15,7 @@ import app.orchard.tv.MainActivity
 import app.orchard.tv.system.DiagLog
 import app.orchard.tv.system.MissingClipboard
 import app.orchard.tv.ui.theme.canvasDensity
+import app.orchard.tv.ui.theme.canvasFontScale
 import app.orchard.tv.weather.Weather
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -68,7 +69,7 @@ class AerialDream : DreamService(), LifecycleOwner, SavedStateRegistryOwner {
         setContentView(
             ComposeView(this).apply {
                 setContent {
-                    CompositionLocalProvider(LocalDensity provides Density(canvas, LocalDensity.current.fontScale)) {
+                    CompositionLocalProvider(LocalDensity provides Density(canvas, canvasFontScale(LocalDensity.current.fontScale))) {
                         val now by rememberNow()
                         Screensaver(visible = true, apps = emptyList(), now = now, skips = skips)
                     }

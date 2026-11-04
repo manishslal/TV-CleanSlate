@@ -304,6 +304,10 @@ object AerialSettings {
     /** Which of Apple's files the aerial screensaver plays; Auto is the best this TV decodes (issues #198, #217). */
     var aerialQuality by mutableStateOf(AerialQuality.Auto); private set
 
+    /** Fork: which Aerial categories play (landscapes, cities, space, underwater), as the web Home has it. */
+    val AERIAL_CATS = listOf("landscapes", "cities", "space", "underwater")
+    var aerialCats by mutableStateOf(AERIAL_CATS.toSet()); private set
+
     var effects by mutableStateOf(Effects.Auto); private set
 
     /** This TV counts as low-end for [Effects.Auto]; see DeviceClass. */
@@ -377,6 +381,7 @@ object AerialSettings {
         backStartsScreensaver = prefs.getBoolean("back_starts_screensaver", true)
         screensaverMinutes = prefs.getInt("screensaver_minutes", DEFAULT_SCREENSAVER_MINUTES)
         aerialQuality = AerialQuality.of(prefs.getString("aerial_quality", null))
+        aerialCats = prefs.getString("fork_aerial_cats", null)?.split(",")?.filter { it in AERIAL_CATS }?.toSet()?.takeIf { it.isNotEmpty() } ?: AERIAL_CATS.toSet()
         effects = Effects.of(prefs.getString("effects", null))
         applyTiles()
         lowEnd = DeviceClass.lowEnd(app)
@@ -621,6 +626,14 @@ object AerialSettings {
     fun chooseBackStartsScreensaver(on: Boolean) {
         backStartsScreensaver = on
         app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("back_starts_screensaver", on) }
+    }
+
+    /** At least one category stays on: with none, there would be nothing to play. */
+    fun toggleAerialCat(cat: String) {
+        val next = if (cat in aerialCats) aerialCats - cat else aerialCats + cat
+        if (next.isEmpty()) return
+        aerialCats = next
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString("fork_aerial_cats", next.joinToString(",")) }
     }
 
     fun chooseAerialQuality(quality: AerialQuality) {

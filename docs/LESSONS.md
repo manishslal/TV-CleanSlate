@@ -97,3 +97,8 @@ See [Logos we still need](../logos/README.md#logos-we-still-need).
 - Change appearance with Home's config broadcast (`--es appearance light`) rather than keys, and set it back when done.
 - Don't open pages on a TV that is in use or asleep just to look. A box asleep can wake the TV over HDMI-CEC.
 
+
+## Type size across devices
+
+- Google TV and SHIELD ship with the system text size (`settings get system font_scale`) at 0.85, while Fire OS ships at 1.0. Home's type was sized on the first two, so every sp size drew 18% larger on the Fire TV. Check `font_scale` on each device before judging text size from a screenshot; `canvasFontScale` in `Theme.kt` now evens it out.
+- Look at a new element on every device class it ships to, not only the one in front of you. The Wi-Fi name was checked on the onn only.

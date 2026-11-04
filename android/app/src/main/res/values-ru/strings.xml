@@ -326,4 +326,9 @@
     <string name="fk_tint_dim">Темнее</string>
     <string name="fk_tint_warm">Тёплый</string>
     <string name="fk_tint_cool">Холодный</string>
+    <string name="cc_turn_off">Выключить телевизор</string>
+    <string name="ss_cat_landscapes">Пейзажи</string>
+    <string name="ss_cat_cities">Города</string>
+    <string name="ss_cat_space">Космос</string>
+    <string name="ss_cat_underwater">Под водой</string>
 </resources>
