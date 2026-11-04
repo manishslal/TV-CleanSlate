@@ -75,6 +75,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
@@ -694,7 +696,8 @@ private fun WallpaperCard(wp: Wallpaper, focusRequester: FocusRequester?, onFocu
             Spacer(Modifier.height(5.dp))
             BasicText(
                 wp.title, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                style = Type.Caption.copy(color = if (state.focused) Palette.Label else Palette.SecondaryLabel),
+                // Fork: 14, the value size: 12 was small for a card's name from the couch.
+                style = Type.Caption.copy(fontSize = 14.sp, color = if (state.focused) Palette.Label else Palette.SecondaryLabel),
             )
         }
     }

@@ -131,14 +131,24 @@ object Images {
             listOf(app.orchard.tv.settings.ClockPosition.Left, app.orchard.tv.settings.ClockPosition.Middle, app.orchard.tv.settings.ClockPosition.Right)
                 .minByOrNull { p ->
                     val (mean, busy) = stats(region(p))
-                    busy + (mean - 170f).coerceAtLeast(0f) * 0.15f - if (p == app.orchard.tv.settings.ClockPosition.Left) 0.6f else 0f
+                    // Brightness weighs as much as detail: a calm sand or sky still needs a deep shade
+                    // for white type, which costs the picture more than a busier dark spot does.
+                    busy + (mean - 140f).coerceAtLeast(0f) * 0.35f - if (p == app.orchard.tv.settings.ClockPosition.Left) 0.6f else 0f
                 }!!
         }
-        return ClockSpot(pos, stats(region(pos)).first > BRIGHT)
+        // The pill's corner too, top right, which a bright sky or the edge of the Earth can wash out.
+        var pill = 0f
+        var pn = 0
+        for (y in 0 until 5) for (x in 50 until 64) { pill += luma[y * w + x]; pn++ }
+        return ClockSpot(pos, stats(region(pos)).first.toInt(), (pill / pn).toInt())
     }
 
-    /** Fork: a clock's place where the picture is lighter than this (of 255) takes a deeper shade. */
-    private const val BRIGHT = 150f
+    /**
+     * Fork: how much black under white type on a picture this bright (0-255) brings it to 4.5:1:
+     * white on a background of relative luminance under 0.183, which is sRGB 118. Held to [cap].
+     */
+    fun shadeFor(luma: Int, floor: Float, cap: Float): Float =
+        if (luma <= 0) floor else (1f - 118f / luma).coerceIn(floor, cap)
 
     fun shadeForHome(b: Bitmap, spot: ClockSpot = clockSpot(b, app.orchard.tv.settings.AerialSettings.clockPosition)): Bitmap {
         val out = if (b.isMutable) b else b.copy(Bitmap.Config.ARGB_8888, true)
@@ -153,7 +163,18 @@ object Images {
             )
         })
         c.drawRect(0f, 0f, w, h, Paint().apply { shader = clockShade(w, h, spot) })
+        pillShade(w, h, spot)?.let { s -> c.drawRect(0f, 0f, w, h, Paint().apply { shader = s }) }
         return out
+    }
+
+    /** Fork: a soft shade behind the status pill where the picture is bright there; null where it is not. */
+    fun pillShade(w: Float, h: Float, spot: ClockSpot): Shader? {
+        val a = shadeFor(spot.pillLuma, 0f, 0.4f)
+        if (a < 0.03f) return null
+        val cx = w * 0.9f
+        val cy = h * 0.075f
+        return RadialGradient(cx, cy, h * 0.16f, intArrayOf(black(a), black(a * 0.5f), 0), floatArrayOf(0f, 0.5f, 1f), Shader.TileMode.CLAMP)
+            .apply { setLocalMatrix(Matrix().apply { setScale(2.2f, 1f, cx, cy) }) }
     }
 
     /**
@@ -165,13 +186,15 @@ object Images {
      */
     fun clockShade(w: Float, h: Float, spot: ClockSpot = Wallpapers.clockSpot): Shader {
         val huge = app.orchard.tv.settings.AerialSettings.hugeClock
-        // Fork: a bright sky or snow where the clock stands takes a third more shade.
-        val a = (if (huge) SHADE_HUGE else SHADE_LEFT) * if (spot.bright) 1.35f else 1f
+        // Fork: as much as white type needs over this picture where the clock stands, never less than before.
+        val a = shadeFor(spot.luma, if (huge) SHADE_HUGE else SHADE_LEFT, 0.55f)
         val reach = if (huge) 0.62f else 0.5f
         val pos = app.orchard.tv.settings.AerialSettings.clockPosition.takeIf { it != app.orchard.tv.settings.ClockPosition.Auto } ?: spot.position
         return when (pos) {
-            app.orchard.tv.settings.ClockPosition.Left, app.orchard.tv.settings.ClockPosition.Auto -> LinearGradient(0f, 0f, w * reach, 0f, black(a), 0, Shader.TileMode.CLAMP)
-            app.orchard.tv.settings.ClockPosition.Right -> LinearGradient(w, 0f, w * (1f - reach), 0f, black(a), 0, Shader.TileMode.CLAMP)
+            // Fork: full strength across the clock's width (the first ~60% of the reach), then fading:
+            // fading from the edge, a right-hand clock got a quarter of it, too little on sand.
+            app.orchard.tv.settings.ClockPosition.Left, app.orchard.tv.settings.ClockPosition.Auto -> LinearGradient(0f, 0f, w * reach, 0f, intArrayOf(black(a), black(a), 0), floatArrayOf(0f, 0.6f, 1f), Shader.TileMode.CLAMP)
+            app.orchard.tv.settings.ClockPosition.Right -> LinearGradient(w, 0f, w * (1f - reach), 0f, intArrayOf(black(a), black(a), 0), floatArrayOf(0f, 0.6f, 1f), Shader.TileMode.CLAMP)
             app.orchard.tv.settings.ClockPosition.Middle -> {
                 // A circle stretched sideways into an oval, centred on the clock.
                 val cy = h * (if (huge) 0.3f else 0.24f)
@@ -187,7 +210,7 @@ object Images {
 
     /** Changes when [clockShade] would: part of the baked backdrop's key. */
     val shadeKey: String
-        get() = "${app.orchard.tv.settings.AerialSettings.clockPosition.key}-${app.orchard.tv.settings.AerialSettings.hugeClock}"
+        get() = "${app.orchard.tv.settings.AerialSettings.clockPosition.key}-${app.orchard.tv.settings.AerialSettings.hugeClock}-3"
 
     /**
      * A home backdrop frosted: shrunk and blurred three times over. Small
@@ -252,14 +275,14 @@ object Images {
 }
 
 /** Fork: where the clock stands on a picture, and whether the picture is bright there (Images.clockSpot). */
-data class ClockSpot(val position: app.orchard.tv.settings.ClockPosition, val bright: Boolean) {
-    val key: String get() = "${position.key}${if (bright) "+" else ""}"
+data class ClockSpot(val position: app.orchard.tv.settings.ClockPosition, val luma: Int, val pillLuma: Int = 0) {
+    val key: String get() = "${position.key}:$luma:$pillLuma"
 
     companion object {
         fun of(key: String?): ClockSpot? {
-            if (key == null) return null
-            val p = app.orchard.tv.settings.ClockPosition.of(key.removeSuffix("+")) ?: return null
-            return ClockSpot(p, key.endsWith("+"))
+            val parts = key?.split(':') ?: return null
+            val p = app.orchard.tv.settings.ClockPosition.of(parts.getOrNull(0)) ?: return null
+            return ClockSpot(p, parts.getOrNull(1)?.toIntOrNull() ?: 0, parts.getOrNull(2)?.toIntOrNull() ?: 0)
         }
     }
 }

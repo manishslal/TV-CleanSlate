@@ -3,6 +3,7 @@
 //   GET /net                    network status
 //   GET /news?u=<feed>          a Google News RSS feed, cached 30 minutes (the page itself gets 403)
 //   GET /target?id=<app>        what opens when the TV turns on ('' is Home)
+//   GET /bing                   Bing's last eight photos of the day (its list does not allow web pages), cached an hour
 const http = require('http'), https = require('https'), cp = require('child_process'), fs = require('fs'), url = require('url');
 const TARGET = '/media/developer/cleanyourtv/boot-target';
 const cache = {};
@@ -36,6 +37,20 @@ function news(u) {
     }).on('error', () => resolve(hit ? hit.xml : ''));
   });
 }
+function bing() {
+  const hit = cache.bing;
+  if (hit && Date.now() - hit.at < 60 * 60000) return Promise.resolve(hit.json);
+  return new Promise(resolve => {
+    https.get(Object.assign(url.parse('https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8&mkt=en-US'), { headers: { 'User-Agent': 'curl/8' } }), r => {
+      let b = '';
+      r.setEncoding('utf8');
+      r.on('data', d => { b += d; });
+      r.on('end', () => {
+        try { const json = JSON.parse(b); cache.bing = { at: Date.now(), json }; resolve(json); } catch (e) { resolve(hit ? hit.json : { images: [] }); }
+      });
+    }).on('error', () => resolve(hit ? hit.json : { images: [] }));
+  });
+}
 // the sharper 192 px icon that store apps ship; the page falls back to the helper's 130 px one on a 404
 function icon(id, res) {
   const dir = '/media/cryptofs/apps/usr/palm/applications/' + id.replace(/[^\w.-]/g, '');
@@ -56,6 +71,7 @@ http.createServer((req, res) => {
   if (q.pathname === '/net') return luna('luna://com.webos.service.connectionmanager/getStatus').then(send);
   if (q.pathname === '/news') return news(String(q.query.u || '')).then(xml => send({ xml }));
   if (q.pathname === '/icon') return icon(String(q.query.id || ''), res);
+  if (q.pathname === '/bing') return bing().then(send);
   if (q.pathname === '/target') { fs.writeFileSync(TARGET, String(q.query.id || '').replace(/[^\w.-]/g, '')); return send({ returnValue: true }); }
   res.writeHead(404);
   res.end();

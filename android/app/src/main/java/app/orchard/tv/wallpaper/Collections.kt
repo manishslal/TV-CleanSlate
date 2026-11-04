@@ -96,12 +96,15 @@ internal object Collections {
 
     /** NASA Earth Observatory: each item's first picture of Earth Observatory's own, maps left out. */
     private fun nasa(): List<Pair<Entry, String>> {
-        val rss = get("https://earthobservatory.nasa.gov/feeds/image-of-the-day.rss").decodeToString()
+        // The feed's own address now: earthobservatory.nasa.gov redirects here twice, and the web Home,
+        // which may not follow redirects across hosts, asks here too.
+        val rss = get("https://science.nasa.gov/feed/?science_org=19791%2C22453").decodeToString()
         val picture = Regex("""https://assets\.science\.nasa\.gov/(?:content/dam|dynamicimage/assets)/science/esd/eo/[^"'<>\s]+?\.jpe?g""")
         return Regex("""<item>(.*?)</item>""", RegexOption.DOT_MATCHES_ALL).findAll(rss).mapNotNull { m ->
             val item = m.groupValues[1]
             val title = unescape(Regex("""<title>(.*?)</title>""", RegexOption.DOT_MATCHES_ALL).find(item)?.groupValues?.get(1).orEmpty()).trim()
-            if (title.isEmpty() || Regex("""(?i)\b(map|maps|chart|graph|diagram|slice)\b""").containsMatchIn(title)) return@mapNotNull null
+            // Maps and charts, and pictures NASA says it labelled: their own words compete with Home's.
+            if (title.isEmpty() || Regex("""(?i)\b(map|maps|chart|graph|diagram|slice|labeled|labelled|annotated)\b""").containsMatchIn(title + " " + item.substringAfter("<description>", "").substringBefore("</description>"))) return@mapNotNull null
             val src = picture.find(unescape(item))?.value ?: return@mapNotNull null
             val sized = src.replace("/content/dam/", "/dynamicimage/assets/") + "?w=1920"
             val key = "n" + Integer.toHexString(src.hashCode())
@@ -128,7 +131,8 @@ internal object Collections {
             val artist = img.optJSONObject("artist")?.optString("text").orEmpty().let(::plain)
             val license = img.optJSONObject("license")?.optString("type").orEmpty()
             val credit = listOf(artist.takeIf { it.isNotEmpty() }?.let { "© $it" }, license.takeIf { it.isNotEmpty() }).filterNotNull().joinToString(", ")
-            Entry("w%04d%02d%02d".format(d.year, d.monthValue, d.dayOfMonth), title, "$title ($credit / Wikimedia Commons)".replace("( / ", "(")) to url
+            // "Wikimedia" for the source: the full name pushed the licence off a 12 sp line.
+            Entry("w%04d%02d%02d".format(d.year, d.monthValue, d.dayOfMonth), title, "$title (${listOf(credit, "Wikimedia").filter { it.isNotEmpty() }.joinToString(" / ")})") to url
         }
     }
 

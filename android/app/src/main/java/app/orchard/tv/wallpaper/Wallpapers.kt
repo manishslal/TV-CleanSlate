@@ -118,7 +118,7 @@ object Wallpapers {
     var items by mutableStateOf<List<Wallpaper>>(emptyList()); private set
 
     /** Fork: where the clock stands on the picture now shown, and whether it is bright there (Images.clockSpot). */
-    var clockSpot by mutableStateOf(ClockSpot(ClockPosition.Left, false)); private set
+    var clockSpot by mutableStateOf(ClockSpot(ClockPosition.Left, 0)); private set
 
     private fun keepSpot(spot: ClockSpot) {
         clockSpot = spot
@@ -195,6 +195,10 @@ object Wallpapers {
         app = context.applicationContext
         // Fork: where the clock stood on the last picture, so the baked backdrop and the clock agree from the first frame.
         ClockSpot.of(prefs.getString("clock_spot", null))?.let { clockSpot = it }
+        // Fork: Depth's state made here, on the main thread, before anything draws: made first on the
+        // thread that fetches a cut-out, while a frame was being composed, Compose stopped Home with
+        // "reading a state that was created after the snapshot was taken" (SHIELD).
+        Depth.clear()
         Plex.init(app)
         // Home drawn at the panel's size (UhdCanvas) gets pictures of that size.
         val scale = UhdCanvas.scale(context)
@@ -267,7 +271,8 @@ object Wallpapers {
 
     /** The concrete wallpaper the selection points at today. */
     fun resolve(id: String = selectedId): Wallpaper? = when {
-        id == EVERY_SOURCE -> (listOf(resolve(LATEST_DAILY)) + PictureSource.entries.map { resolve(it.latestId) }).filterNotNull()
+        // Only sources with a picture of their own: an empty one would fall back to Bing, twice over.
+        id == EVERY_SOURCE -> (listOf(resolve(LATEST_DAILY)) + PictureSource.entries.map { s -> items.firstOrNull { it.kind == WallpaperKind.Collection && PictureSource.of(it.id) == s } }).filterNotNull()
             .let { if (it.isEmpty()) null else it[Math.floorMod(today(), it.size)] }
         PictureSource.entries.any { it.latestId == id } -> PictureSource.of(id)?.let { s -> items.firstOrNull { it.kind == WallpaperKind.Collection && PictureSource.of(it.id) == s } }
             ?: resolve(LATEST_DAILY)
@@ -330,12 +335,30 @@ object Wallpapers {
         } catch (_: Exception) { null } finally { runCatching { mmr.release() } }
     }
 
+    /** Every Source's card: up to four sources' newest pictures in a 2×2 mosaic. Off the main thread. */
+    private fun everySourceThumb(): Bitmap? {
+        val sources = (listOf(resolve(LATEST_DAILY)) + PictureSource.entries.map { s -> items.firstOrNull { it.kind == WallpaperKind.Collection && PictureSource.of(it.id) == s } }).filterNotNull()
+        if (sources.isEmpty()) return null
+        val w = 384
+        val h = 216
+        val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val c = android.graphics.Canvas(out)
+        sources.take(4).forEachIndexed { i, wp ->
+            val tile = picture(wp, w / 2, h / 2) ?: return@forEachIndexed
+            c.drawBitmap(tile, (i % 2) * (w / 2f), (i / 2) * (h / 2f), null)
+            tile.recycle()
+        }
+        return out
+    }
+
     /** Drops the thumbnails (about 330 KB each); the picker makes them again when it opens. */
     fun trimMemory() = synchronized(thumbs) { thumbs.clear() }
 
     /** A 16:9 thumbnail for pickers and the phone page. Call off the main thread. */
     fun thumbnail(id: String): Bitmap? {
         synchronized(thumbs) { thumbs[id] }?.let { return it }
+        // Fork: Every Source's card shows its sources, a quarter each, not just today's.
+        if (id == EVERY_SOURCE) return everySourceThumb()?.also { synchronized(thumbs) { thumbs[id] = it } }
         val wp = (if (follows(id)) resolve(id) else items.firstOrNull { it.id == id }) ?: return null
         val b = if (wp.kind == WallpaperKind.Auto) Gradients.render(Gradients.autoThumb, 384, 216) else picture(wp, 384, 216)
         if (b != null) synchronized(thumbs) { thumbs[id] = b }
@@ -352,6 +375,8 @@ object Wallpapers {
         val id = selectedId
         backdropJob = scope.launch {
             if (id == AUTO) {
+                // Follow App has no picture, so no subject over the clock either.
+                Depth.clear()
                 backdrop = null
                 frosted = null
                 return@launch
@@ -363,16 +388,17 @@ object Wallpapers {
             // Fork: a still picture's cut-out, for the subject over the clock (Depth); not for films.
             val wantsDepth = wp != null && !moves(id) && wp.kind != WallpaperKind.Auto && wp.kind != WallpaperKind.Source &&
                 AerialSettings.depthEffect && AerialSettings.depthServer.isNotBlank()
+            val depthKey = wp?.let(::depthKey)
             if (key != null && key == bakedKey && backdrop != null) {
                 // The baked backdrop is up already: its cut-out, if the TV kept one.
                 val shown = backdrop
-                if (wantsDepth && Depth.front == null && shown != null) {
-                    val ready = withContext(Dispatchers.IO) { Depth.prepare(app, key, null, shown.asAndroidBitmap()) }
+                if (!wantsDepth) Depth.clear()
+                else if (Depth.front == null && shown != null && depthKey != null) {
+                    val ready = withContext(Dispatchers.IO) { Depth.prepare(app, depthKey, null, shown.asAndroidBitmap()) }
                     if (selectedId == id) Depth.show(ready)
                 }
                 return@launch
             }
-            if (!wantsDepth) Depth.clear()
             var jpeg: ByteArray? = null
             val (bmp, frost) = withContext(Dispatchers.Default) {
                 val picture = wp?.let { picture(it, screenW, screenH) }
@@ -384,13 +410,15 @@ object Wallpapers {
                 if (wantsDepth && picture != null) jpeg = Depth.jpegOf(picture)
                 Triple(picture?.let { p -> Images.shadeForHome(p, spot!!) }, frost, spot)
             }.let { (b, f, spot) -> spot?.let(::keepSpot); b to f }
+            // The last picture's subject goes with it, before the new picture is up: kept while
+            // the new one saved, it stood over the new picture's clock (Fire TV: hundreds of ms).
+            Depth.clear()
             backdrop = bmp?.asImageBitmap()
             frosted = frost?.asImageBitmap()
             if (key != null && bmp != null && frost != null) saveBaked(key, bmp, frost)
             val sent = jpeg
-            if (wantsDepth && key != null && bmp != null && sent != null) {
-                Depth.clear()
-                val ready = withContext(Dispatchers.IO) { Depth.prepare(app, key, sent, bmp) }
+            if (wantsDepth && depthKey != null && bmp != null && sent != null) {
+                val ready = withContext(Dispatchers.IO) { Depth.prepare(app, depthKey, sent, bmp) }
                 // Still the picture Home shows: the owner may have moved on meanwhile.
                 if (selectedId == id) Depth.show(ready)
             }
@@ -406,6 +434,12 @@ object Wallpapers {
      * (issues #277, #294). Reading the baked pair back takes tens of milliseconds.
      */
     private var bakedKey: String? = null
+
+    /**
+     * Fork: changes only with the picture behind [wp] and the screen size: its cut-out depends on
+     * nothing else, so moving the clock or an update does not ask the cut-out service again.
+     */
+    private fun depthKey(wp: Wallpaper): String = bakedKey(wp).split('|').take(3).joinToString("|")
 
     /** Changes with the picture behind [wp], the screen size, and Aerial's version (the baking may change). */
     private fun bakedKey(wp: Wallpaper): String {
@@ -768,9 +802,22 @@ object Wallpapers {
             }.onFailure { Log.w(TAG, "daily photos unavailable", it) }.isSuccess.also { dailyFailed = !it }
         }
         retryDailyLater()
-        // Fork: the other collections on the same rounds as Bing's (Collections).
+        if (added) {
+            synchronized(thumbs) { thumbs.remove(LATEST_DAILY); thumbs.remove(EVERY_SOURCE) }
+            rebuildList()
+            if (selectedId.startsWith("daily:") || selectedId == EVERY_SOURCE) rebuildBackdrop()
+        }
+        // Fork: the other collections on the same rounds as Bing's, after it: Bing's new photo does
+        // not wait on eight Wikimedia requests (Collections).
+        // One round at a time: two writing the same folders deleted what the other had just kept.
+        if (collectionsJob?.isActive != true) collectionsJob = scope.launch { refreshCollections() }
+    }
+
+    private var collectionsJob: Job? = null
+
+    private suspend fun refreshCollections() {
         val more = withContext(Dispatchers.IO) { PictureSource.entries.map { Collections.refresh(app, app.filesDir, it) } }.any { it }
-        if (added || more) {
+        if (more) {
             synchronized(thumbs) {
                 thumbs.remove(LATEST_DAILY); thumbs.remove(EVERY_SOURCE)
                 PictureSource.entries.forEach { thumbs.remove(it.latestId) }

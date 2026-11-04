@@ -46,6 +46,8 @@ body.right #top { left: auto; right: calc(90 * var(--u)); transform-origin: 100%
 body.big #top { transform: scale(1.3); }
 body.middle #top { left: 0; right: 0; text-align: center; transform-origin: 50% 0; }
 body.middle #clock { justify-content: center; }
+/* centred, the hours and minutes stand on the axis and AM/PM hangs to the right of it */
+body.middle.h12 #clock { padding-left: calc(106 * var(--u)); }
 body.huge #top { transform: scale(1.7); }
 body.down #top { transform: translateY(calc(-30 * var(--u))) scale(.5); }
 body.down #line { opacity: 0; }
@@ -198,6 +200,8 @@ body.light .row.f .bar { background: rgba(255,255,255,.35); }
 /* The credit is a footnote: one quiet line, the picture is the subject */
 #caption { left: calc(112 * var(--u)); max-width: calc(880 * var(--u)); font-size: calc(24 * var(--u)); color: rgba(255,255,255,.78); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #news { right: calc(112 * var(--u)); max-width: calc(680 * var(--u)); text-align: right; font-size: calc(32 * var(--u)); line-height: 1.3; }
+/* a soft pool right behind the story, so white type holds over fur or snow (Android: HeadlinesOverlay) */
+#news::before { content: ''; position: absolute; left: calc(-140 * var(--u)); right: calc(-90 * var(--u)); top: calc(-80 * var(--u)); bottom: calc(-70 * var(--u)); background: radial-gradient(closest-side, rgba(0,0,0,.62), rgba(0,0,0,.55) 55%, rgba(0,0,0,0)); z-index: -1; }
 #news small { display: block; font-size: calc(22 * var(--u)); letter-spacing: .06em; text-transform: uppercase; opacity: .7; margin-bottom: calc(8 * var(--u)); }
 #tint { opacity: 0; transition: opacity .8s; }
 /* One tint for each appearance: Dim is how Dark deepens the picture, and lighter in Light */
@@ -295,6 +299,7 @@ function theme() {
   c.toggle('middle', clockAt() === 'middle');
   c.toggle('big', S.clockSize === 'large');
   c.toggle('huge', S.clockSize === 'huge');
+  c.toggle('h12', !S.h24);
   document.documentElement.style.setProperty('--saverscale', saverScale());
   c.toggle('names', S.showAllNames);
   var lite = S.effects === 'lite', small = S.focusGlow === 'small';
@@ -363,25 +368,45 @@ function frost(i) {
   };
   sheet.src = 'sheet-' + i + '.jpg';
 }
+/* a still meanwhile, and the collection tried again in 30 s rather than stills from then on */
+function stillsThenRetry() { nextPhoto(); clearTimeout(photoTimer); photoTimer = setTimeout(nextPic, 30000); }
+/* Auto: the clock where this picture is calmest, if its pixels can be read (Earth View's and Plex's may not) */
+function placeClock(el, readable) {
+  if (S.clockPos !== 'auto') return;
+  var at = readable ? spotOf(el) : 'left';
+  if (at === autoPos) return;
+  autoPos = at; write('home-autopos', autoPos); theme();
+}
 function nextPhoto() {
   if (document.hidden) return;
   var list = S.source === 'plexp' && plexPhotos.length ? plexPhotos : STILLS;
   var el = $('photo'), url = list[Math.floor(Math.random() * list.length)];
-  el.onload = function () { el.className = 'on'; };
+  el.crossOrigin = null;
+  el.onerror = null;
+  /* the built-in stills are the page's own, so Auto can read them; Plex's come from its server and may not allow it */
+  el.onload = function () { el.className = 'on'; placeClock(el, list === STILLS); };
   el.src = url;
   clearTimeout(photoTimer);
   photoTimer = setTimeout(nextPhoto, 30000);
 }
 /* ---- picture collections: NASA, Wikimedia and Google Earth View, a new picture a day (Android: Collections.kt) ---- */
-var EARTH = __EARTH__, COLLECTIONS = ['nasa', 'wiki', 'earth'], autoPos = read('home-autopos', 'left'), picAt = 0;
+var EARTH = __EARTH__, COLLECTIONS = ['bing', 'nasa', 'wiki', 'earth'], autoPos = read('home-autopos', 'left'), picAt = 0;
 var NASA_FEED = 'https://science.nasa.gov/feed/?science_org=19791%2C22453';
 function today() { var d = new Date(); return Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 86400000); }
 /* the collection the wallpaper shows; Every Source takes a different one each day */
-function collection() { return S.source === 'mix' ? COLLECTIONS[today() % 3] : COLLECTIONS.indexOf(S.source) >= 0 ? S.source : ''; }
+function collection() { return S.source === 'mix' ? COLLECTIONS[today() % COLLECTIONS.length] : COLLECTIONS.indexOf(S.source) >= 0 ? S.source : ''; }
 /* where the clock stands: the chosen place, or on Auto where the picture is calmest */
 function clockAt() { return S.clockPos === 'auto' ? autoPos : S.clockPos; }
 function unent(t) { return t.replace(/&#039;/g, "'").replace(/&#8217;/g, '\u2019').replace(/&#8216;/g, '\u2018').replace(/&quot;|&#034;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/<!\[CDATA\[|\]\]>/g, ''); }
 function plainText(t) { return String(t || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(); }
+/* Bing's photo of the day, as Android's Daily Photo: its list from the page where the TV allows it (Samsung), else from the TV's helper (LG) */
+function bingPics() {
+  var list = function (j) {
+    return (j.images || []).slice(0, 6).map(function (i) { return { u: 'https://www.bing.com' + i.url, c: i.copyright || i.title || '', x: 1 }; });
+  };
+  return fetch('https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8&mkt=en-US').then(function (r) { return r.json(); }).then(list)
+    .catch(function () { return svc('/bing').then(list); });
+}
 function earthPics() {
   var n = EARTH.length, out = [];
   for (var back = 0; back < 6; back++) {
@@ -395,7 +420,8 @@ function nasaPics() {
     var out = [], items = rss.split('<item>').slice(1);
     items.forEach(function (it) {
       var t = /<title>([\s\S]*?)<\/title>/.exec(it), title = t ? unent(t[1]).trim() : '';
-      if (!title || /\b(map|maps|chart|graph|diagram|slice)\b/i.test(title)) return;
+      var d = /<description>([\s\S]*?)<\/description>/.exec(it);
+      if (!title || /\b(map|maps|chart|graph|diagram|slice|labeled|labelled|annotated)\b/i.test(title + ' ' + (d ? d[1] : ''))) return;
       var m = /https:\/\/assets\.science\.nasa\.gov\/(?:content\/dam|dynamicimage\/assets)\/science\/esd\/eo\/[^"'<>\s]+?\.jpe?g/.exec(unent(it));
       if (m && out.length < 6) out.push({ u: encodeURI(m[0].replace('/content/dam/', '/dynamicimage/assets/')) + '?w=1920', c: title + ' (NASA Earth Observatory)', x: 1 });
     });
@@ -417,7 +443,7 @@ function wikiPics() {
       var title = desc.split('. ')[0]; if (!title || title.length > 70) title = name.slice(0, 70);
       var artist = plainText(i.artist && i.artist.text), lic = i.license && i.license.type || '';
       var credit = [artist ? '\u00a9 ' + artist : '', lic].filter(Boolean).join(', ');
-      out.push({ u: th.source.split('?')[0].replace(/\/\d+px-/, '/1920px-'), c: title + ' (' + (credit ? credit + ' / ' : '') + 'Wikimedia Commons)', x: 1 });
+      out.push({ u: th.source.split('?')[0].replace(/\/\d+px-/, '/1920px-'), c: title + ' (' + (credit ? credit + ' / ' : '') + 'Wikimedia)', x: 1 });
     });
     return out;
   });
@@ -426,7 +452,7 @@ function wikiPics() {
 function loadPics(src) {
   var key = 'home-pics-' + src, hit = read(key, null);
   if (hit && hit.day === today() && hit.list.length) return Promise.resolve(hit.list);
-  return (src === 'nasa' ? nasaPics() : src === 'wiki' ? wikiPics() : earthPics()).then(function (list) {
+  return (src === 'bing' ? bingPics() : src === 'nasa' ? nasaPics() : src === 'wiki' ? wikiPics() : earthPics()).then(function (list) {
     if (list.length) write(key, { day: today(), list: list });
     return list.length ? list : (hit ? hit.list : []);
   }).catch(function () { return hit ? hit.list : []; });
@@ -457,16 +483,24 @@ function spotOf(img) {
 function nextPic() {
   var src = collection();
   loadPics(src).then(function (list) {
-    if (!list.length || src !== collection()) return;
-    var idle = document.body.classList.contains('idle'), item = list[idle ? picAt++ % list.length : 0];
+    if (src !== collection()) return;
+    /* nothing from the source (offline, or its list unreachable from this TV): the built-in stills */
+    if (!list.length) { if (STILLS.length) stillsThenRetry(); return; }
+    var idle = document.body.classList.contains('idle'), first = idle ? picAt++ : 0, tries = 0;
     var el = $('photo');
-    el.crossOrigin = item.x ? 'anonymous' : null;
-    el.onload = function () {
-      el.className = 'on';
-      $('caption').textContent = item.c;
-      if (S.clockPos === 'auto') { autoPos = item.x ? spotOf(el) : 'left'; write('home-autopos', autoPos); theme(); }
+    var show = function (i) {
+      var item = list[i % list.length];
+      el.crossOrigin = item.x ? 'anonymous' : null;
+      el.onload = function () {
+        el.className = 'on';
+        $('caption').textContent = item.c;
+        placeClock(el, item.x);
+      };
+      /* a picture that does not load gives way to the next, and after them all to the built-in stills */
+      el.onerror = function () { if (++tries < list.length) show(i + 1); else if (STILLS.length) stillsThenRetry(); };
+      el.src = item.u;
     };
-    el.src = item.u;
+    show(first);
     clearTimeout(photoTimer);
     if (idle) photoTimer = setTimeout(nextPic, 30000);
   });
@@ -1018,7 +1052,7 @@ function pagePersonalize() {
 function pageWall() {
   var cats = [['landscapes', 'Landscapes'], ['cities', 'Cities'], ['space', 'Space'], ['underwater', 'Underwater']];
   return { title: 'Wallpaper', rows: function () {
-    var rows = [choice('Source', [['aerial', 'Aerial Videos'], ['nasa', 'NASA Earth'], ['wiki', 'Wikimedia Daily'], ['earth', 'Earth View'], ['mix', 'Every Source, Daily'], ['plexv', 'My Videos (Plex)'], ['plexp', 'My Photos (Plex)']], function () { return S.source; }, function (v) { S.source = v; restartWall(); })];
+    var rows = [choice('Source', [['aerial', 'Aerial Videos'], ['bing', 'Bing Daily'], ['nasa', 'NASA Earth'], ['wiki', 'Wikimedia Daily'], ['earth', 'Earth View'], ['mix', 'Every Source, Daily'], ['plexv', 'My Videos (Plex)'], ['plexp', 'My Photos (Plex)']], function () { return S.source; }, function (v) { S.source = v; restartWall(); })];
     rows.push(choice('Aerial Quality', [['hd', '1080p'], ['uhd', '4K']], function () { return S.quality; }, function (v) { S.quality = v; queue = []; restartWall(); }));
     cats.forEach(function (c) {
       rows.push({ label: c[1], value: function () { return S.cats.indexOf(c[0]) >= 0 ? 'On' : 'Off'; }, step: function () {

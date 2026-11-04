@@ -27,6 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.em
@@ -74,6 +76,18 @@ internal fun HeadlinesOverlay(now: LocalDateTime) {
         Canvas(Modifier.fillMaxSize()) {
             // A soft shade from the bottom-right corner, just enough for white text over snow or sky.
             drawRect(Brush.radialGradient(0f to Color.Black.copy(alpha = 0.48f), 1f to Color.Transparent, center = Offset(size.width, size.height), radius = size.width * 0.5f))
+            // Fork: and a soft pool right behind the story, as the clock has: the corner's shade alone
+            // left white type on white fur or snow unreadable (design review, a polar bear photo).
+            val cx = size.width - (SaverClockSide + 170.dp).toPx()
+            val cy = size.height - (SAVER_FOOT + 30.dp).toPx()
+            drawRect(
+                ShaderBrush(
+                    // Full strength across the story, then fading: at 0.5 in the middle only, a headline
+                    // over bright yellow vines read at about 3:1 (design review).
+                    android.graphics.RadialGradient(cx, cy, 130.dp.toPx(), intArrayOf(Color.Black.copy(alpha = 0.62f).toArgb(), Color.Black.copy(alpha = 0.55f).toArgb(), 0), floatArrayOf(0f, 0.55f, 1f), android.graphics.Shader.TileMode.CLAMP)
+                        .apply { setLocalMatrix(android.graphics.Matrix().apply { setScale(2.1f, 1f, cx, cy) }) },
+                ),
+            )
         }
         AnimatedContent(
             targetState = item,
@@ -89,7 +103,7 @@ internal fun HeadlinesOverlay(now: LocalDateTime) {
                     // The topic first, so a mixed list says what each story is about.
                     listOf(stringResource(h.topic.label).uppercase(), h.source, age(h.published)).filter { it.isNotBlank() }.joinToString(" · "),
                     maxLines = 1,
-                    style = Type.Caption.copy(color = Color.White.copy(alpha = 0.66f), fontSize = 12.sp, fontWeight = FontWeight.W600, letterSpacing = 0.04.em, shadow = TextShade),
+                    style = Type.Caption.copy(color = Color.White.copy(alpha = 0.78f), fontSize = 12.sp, fontWeight = FontWeight.W600, letterSpacing = 0.04.em, shadow = TextShade),
                 )
                 Spacer(Modifier.height(5.dp))
                 BasicText(

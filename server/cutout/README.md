@@ -30,6 +30,13 @@ Beside other Docker Compose services:
 and `cutout: {}` under `volumes:`. Copy this folder next to the compose file, then
 `docker compose up -d --build cutout`. Check it with `curl http://<server>:8890/health`.
 
+The service runs as its own user (uid 1000). A cache volume made by an earlier build, which ran as
+root, has to be handed over once before upgrading, or every new picture fails:
+
+```bash
+docker run --rm --user root --entrypoint chown -v <project>_cutout:/c local/home-cutout -R 1000 /c
+```
+
 ## Point a TV at it
 
 Android Home, over ADB:

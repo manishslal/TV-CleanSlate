@@ -295,6 +295,9 @@ private fun MainPage(vm: HomeViewModel, now: LocalDateTime, takeFocus: Boolean, 
         }
 
         Spacer(Modifier.height(6.dp))
+        // Fork: the rows on one card, as Personalize sets its groups: bare on light glass they did
+        // not read as a group beside the volume card (design review).
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Palette.Section).padding(4.dp)) {
         // How Home looks (wallpaper, screensaver, focus style, hidden apps, weather) lives in one place.
         MenuRow(
             Glyph.Photo,
@@ -323,6 +326,7 @@ private fun MainPage(vm: HomeViewModel, now: LocalDateTime, takeFocus: Boolean, 
         if (vm.homeStatus == HomeStatus.NotDefault) {
             MenuRow(Glyph.Shield, stringResource(R.string.cc_setup_title), onClick = { vm.overlay = Overlay.ControlCenter(CcPage.Setup) }, trailing = "›")
         }
+        }
 
         Spacer(Modifier.height(8.dp))
         val (dot, text) = if (FireKeeper.firmwareChanged(LocalContext.current)) {
@@ -332,9 +336,10 @@ private fun MainPage(vm: HomeViewModel, now: LocalDateTime, takeFocus: Boolean, 
             HomeStatus.Guarded -> Palette.Green to stringResource(R.string.cc_home_guarded)
             HomeStatus.NotDefault -> Palette.Orange to stringResource(R.string.cc_home_not_default)
         }
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 14.dp)) {
-            Box(Modifier.size(7.dp).clip(CircleShape).background(dot))
-            Spacer(Modifier.width(8.dp))
+        // The text on the rows' column: the dot in an icon's room, then the rows' gap.
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 18.dp)) {
+            Box(Modifier.size(18.dp), contentAlignment = Alignment.Center) { Box(Modifier.size(7.dp).clip(CircleShape).background(dot)) }
+            Spacer(Modifier.width(12.dp))
             BasicText(text, style = Type.Caption.copy(fontSize = 14.sp), modifier = Modifier.weight(1f))
             // Fork: the app's own name, not Aerial's.
             BasicText(stringResource(R.string.cc_update_title, BuildConfig.VERSION_NAME.substringBefore('-')), style = Type.Caption.copy(color = Palette.TertiaryLabel, fontSize = 14.sp), modifier = Modifier.padding(end = 14.dp))
@@ -502,12 +507,13 @@ private fun HomeModeRow() {
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             GlyphIcon(Glyph.Power, fg, 18.dp)
-            Spacer(Modifier.width(2.dp))
+            // With the row's 6 dp on each side, the name starts 12 dp after the icon, as in MenuRow.
+            Spacer(Modifier.width(0.dp))
             BasicText(stringResource(R.string.fk_home_mode), style = Type.Body.copy(color = fg), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             if (state.focused) GlyphIcon(Glyph.ChevronLeft, fg.copy(alpha = if (at > 0) 1f else 0.25f), 14.dp)
             BasicText(
                 stringResource(when (modes[at]) { HomeMode.Auto -> R.string.fk_mode_auto; HomeMode.Full -> R.string.fk_mode_full; HomeMode.Custom -> R.string.fk_mode_custom; HomeMode.Efficient -> R.string.fk_mode_efficient }),
-                style = Type.Callout.copy(color = fg.copy(alpha = 0.72f)),
+                style = Type.Callout.copy(color = fg.copy(alpha = 0.82f)),
             )
             if (state.focused) GlyphIcon(Glyph.ChevronRight, fg.copy(alpha = if (at < modes.lastIndex) 1f else 0.25f), 14.dp)
         }

@@ -36,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.geometry.Offset
@@ -256,7 +257,8 @@ private fun Labels(caption: String?, now: LocalDateTime, showTime: Boolean = tru
         val clockShown = time > 0f && AerialSettings.screensaverClock
         Canvas(Modifier.fillMaxSize()) {
             // Just enough shade under the credit to read it over bright sky or snow.
-            drawRect(Brush.verticalGradient(0.8f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.34f)))
+            // Fork: deep enough at the foot for the 12 sp credit over light fur or snow.
+            drawRect(Brush.verticalGradient(0.74f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.44f)))
             drawRect(Brush.verticalGradient(0f to Color.Black.copy(alpha = 0.22f), 0.2f to Color.Transparent))
             // Fork: a soft dark pool behind the time, so it stands off the picture rather than
             // sitting on it; an oval around where the time is, fading out well before the edges.
@@ -307,15 +309,21 @@ private fun Labels(caption: String?, now: LocalDateTime, showTime: Boolean = tru
         ) { text ->
             // Fork: the credit is a footnote, not a title: the picture is the subject. One quiet
             // line at the size of the smallest text (12), set wide enough to read from the couch.
-            BasicText(
-                text, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                style = Type.Caption.copy(
-                    color = Color.White.copy(alpha = 0.78f), fontSize = 12.sp, fontWeight = FontWeight.W500, letterSpacing = 0.01.em,
-                    shadow = Shadow(Color.Black.copy(alpha = 0.7f), Offset(0f, 1f), 6f),
-                ),
-                // Fork: the headline takes the right side (HeadlinesOverlay); the credit keeps clear of it.
-                modifier = Modifier.widthIn(max = if (AerialSettings.headlines) 440.dp else 620.dp),
+            // Fork: the title gives way when the line is too long, never the credit: "© Author, CC BY 4.0"
+            // is what a free licence asks to be shown (design review: it was cut at "Wikimedia C...").
+            val style = Type.Caption.copy(
+                color = Color.White.copy(alpha = 0.78f), fontSize = 12.sp, fontWeight = FontWeight.W500, letterSpacing = 0.01.em,
+                shadow = Shadow(Color.Black.copy(alpha = 0.7f), Offset(0f, 1f), 6f),
             )
+            val cut = text.lastIndexOf(" (").takeIf { it > 0 && text.endsWith(")") }
+            // The headline takes the right side (HeadlinesOverlay); the credit keeps clear of it.
+            Row(Modifier.widthIn(max = if (AerialSettings.headlines) 460.dp else 620.dp)) {
+                if (cut == null) BasicText(text, maxLines = 1, overflow = TextOverflow.Ellipsis, style = style)
+                else {
+                    BasicText(text.substring(0, cut), maxLines = 1, overflow = TextOverflow.Ellipsis, style = style, modifier = Modifier.weight(1f, fill = false))
+                    BasicText(text.substring(cut), maxLines = 1, style = style)
+                }
+            }
         }
     }
 }

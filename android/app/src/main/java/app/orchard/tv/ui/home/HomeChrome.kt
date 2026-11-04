@@ -55,6 +55,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.CompositingStrategy
@@ -265,13 +267,25 @@ fun HomeBackground(
     Box(Modifier.fillMaxSize()) {
         // Over a paused film, under the pictures: the shading its picture will have. The picture
         // fades in over it as the film gives way, so the screen keeps the same light throughout.
-        Canvas(Modifier.fillMaxSize()) {
-            val stopped = maxOf(filmStopped(), if (shadeMoving) cover() else 0f)
-            // Deep in the grid its glass covers everything.
-            if (stopped < 0.01f || cover() < 0.01f || scroll() > collapse * 0.7f) return@Canvas
-            drawRect(Brush.verticalGradient(*Images.SHADE_AT.indices.map { Images.SHADE_AT[it] to Color.Black.copy(alpha = Images.SHADE[it]) }.toTypedArray()), alpha = stopped)
-            drawRect(ShaderBrush(Images.clockShade(size.width, size.height)), alpha = stopped)
-        }
+        // The shaders made once for each size and place, not with every frame of the film.
+        val spot = app.orchard.tv.wallpaper.Wallpapers.clockSpot
+        val placed = AerialSettings.placedClock
+        val huge = AerialSettings.hugeClock
+        Canvas(Modifier.fillMaxSize().drawWithCache {
+            val vertical = Brush.verticalGradient(*Images.SHADE_AT.indices.map { Images.SHADE_AT[it] to Color.Black.copy(alpha = Images.SHADE[it]) }.toTypedArray())
+            val side = ShaderBrush(Images.clockShade(size.width, size.height, spot))
+            val pill = Images.pillShade(size.width, size.height, spot)?.let(::ShaderBrush)
+            // Read so the cache is made again when they change.
+            placed; huge
+            onDrawBehind {
+                val stopped = maxOf(filmStopped(), if (shadeMoving) cover() else 0f)
+                // Deep in the grid its glass covers everything.
+                if (stopped < 0.01f || cover() < 0.01f || scroll() > collapse * 0.7f) return@onDrawBehind
+                drawRect(vertical, alpha = stopped)
+                drawRect(side, alpha = stopped)
+                if (pill != null) drawRect(pill, alpha = stopped)
+            }
+        }) {}
         Pictures(backdrop, gridGlass ?: frosted, filmGlass.takeIf { glassAwaitsStop }, wallpaper, scroll, collapse, cover, filmStopped, toSaver)
         if (saverImage != null) Canvas(Modifier.fillMaxSize()) {
             val a = saverReveal()
@@ -773,6 +787,10 @@ fun ShelfClock(
             sound = !saving,
             // Fork: cards reach past the digits, so the date and weather stand further off.
             modifier = Modifier.padding(top = (if (cardsOn) 26.dp else 16.dp) * t)
+                // Fork: centred, the hours and minutes stand on the axis the date and weather share,
+                // and AM/PM hangs to the right of it, as a phone centres its time: centring the
+                // whole row put the date over the colon (design review).
+                .then(if (center && AerialSettings.clock12) Modifier.offset { IntOffset((timePx * CENTER_SHIFT).roundToInt(), 0) } else Modifier)
                 .then(if (onTime == null) Modifier else Modifier.onGloballyPositioned { c ->
                     // The cards reach past the digits' capitals, which are this line's box.
                     val b = c.boundsInParent()
@@ -815,6 +833,12 @@ private fun heldDrift(saving: Boolean, now: LocalDateTime): DpOffset {
     if (saving) held = saverDrift(now)
     return held
 }
+
+/** Fork: the picture behind the pill (0-255) above which its focused glass takes dark ink. */
+private const val PALE_PILL = 150
+
+/** Fork: how far a centred time moves right for its AM/PM: half the suffix cards' width, as a share of the time's size. */
+private const val CENTER_SHIFT = 0.36f
 
 /** Fork: the huge clock's time against the large one's, and its date and weather lines. */
 private const val HUGE_TIME = 1.5f
@@ -961,9 +985,21 @@ fun StatusPill(
         // White ink either way, as on the dock: dark ink on clear glass sank into a dark picture.
         val light = !AerialSettings.darkNow
         val glass by animateFloatAsState(if (state.focused) 1f else 0f, tween(Motion.Quick, easing = Motion.EaseOut), label = "pill-glass")
-        val fg = Color.White.copy(alpha = if (state.focused) 1f else 0.9f)
+        // Over a bright corner (a pale sky, sand) the lit glass is pale too, and white ink on it fell
+        // to about 2:1 (design review): there the focused pill takes dark ink, as tvOS does.
+        val paleBehind = app.orchard.tv.wallpaper.Wallpapers.clockSpot.pillLuma > PALE_PILL
+        val fg = if (state.focused && paleBehind) Palette.Light.Label else Color.White.copy(alpha = if (state.focused) 1f else 0.9f)
         CompositionLocalProvider(LocalLightPanel provides light) {
-            Box(Modifier.matchParentSize().graphicsLayer { alpha = glass }.liquidGlass(15.dp, band = 11.dp, clear = true))
+            // Lit at the rim, so it reads as focused from the couch over any wallpaper (design review:
+            // the bare clear glass did not). No elevation shadow: under see-through glass (Follow App,
+            // a film) Android draws it inside the pill as a smudge.
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .graphicsLayer { alpha = glass }
+                    .liquidGlass(15.dp, band = 11.dp, clear = true)
+                    .border(1.5.dp, Color.White.copy(alpha = 0.55f), RoundedCornerShape(15.dp)),
+            )
         }
         Row(
             Modifier

@@ -69,7 +69,7 @@ fun Modifier.liquidGlass(corner: Dp, bottomCorners: Boolean = true, band: Dp = 2
     // Fork: [clear] is the dock's glass (most of the picture, a little lift), for Home's own
     // controls that sit on the wallpaper beside it, such as the status pill's focus.
     val tint = if (clear) ClearTint else if (light) frost?.let(::lightPanelTint) ?: LightPanelTint else PanelTint
-    val plain = if (clear) Color.White.copy(alpha = 0.16f) else if (light) Palette.Light.Glass else Palette.Dark.Glass
+    val plain = if (clear) Color.White.copy(alpha = 0.2f) else if (light) Palette.Light.Glass else Palette.Dark.Glass
     var at by remember { mutableStateOf(Offset.Zero) }
     var root by remember { mutableStateOf(IntSize.Zero) }
     val shape = if (bottomCorners) RoundedCornerShape(corner) else RoundedCornerShape(topStart = corner, topEnd = corner)
@@ -303,9 +303,12 @@ object Glisse {
     const val LIGHT_TARGET = 204f
     const val LIGHT_ADD_MIN = 96f
     const val LIGHT_ADD_MAX = 150f
-    /** Fork: the dock's glass, which the pill's focus matches: 84% of the picture and 16 lift. */
+    /**
+     * Fork: the dock's glass (84% of the picture), which the pill's focus matches, with a little
+     * more white lift (44 against the dock's 16): the focus must read as lit, the dock as a surface.
+     */
     const val CLEAR_KEEP = 0.84f
-    const val CLEAR_ADD = 16f
+    const val CLEAR_ADD = 44f
     /**
      * Glisse's pointer press spring: stiffness and damping ratio (its 29.2 damping). Its release
      * bounce (230, 0.78) isn't used: an overshoot on focus made the focus ring shimmer.
@@ -380,8 +383,12 @@ private fun averageLuma(frost: ImageBitmap): Float {
 /** Fork: the dock's glass (HomeChrome's PlateTint): most of the picture, saturated, a little lifted. */
 private val ClearTint = glassTint(Glisse.CLEAR_KEEP, Glisse.CLEAR_ADD)
 
-/** Lite's clear glass for [frost]: its average color as [ClearTint] would leave it. */
-private fun liteClear(frost: ImageBitmap): Color {
+/** Lite's clear glass for [frost]: its average color as [ClearTint] would leave it. Made once per picture. */
+private fun liteClear(frost: ImageBitmap): Color = synchronized(liteClears) { liteClears.getOrPut(frost) { liteClearOf(frost) } }
+
+private val liteClears = java.util.WeakHashMap<ImageBitmap, Color>()
+
+private fun liteClearOf(frost: ImageBitmap): Color {
     val small = android.graphics.Bitmap.createScaledBitmap(frost.asAndroidBitmap(), 16, 9, true)
     var r = 0f; var g = 0f; var b = 0f
     for (y in 0 until 9) for (x in 0 until 16) {

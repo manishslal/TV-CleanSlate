@@ -516,7 +516,7 @@
     },
     {
       "id": "clock-middle",
-      "name": "Clock position Top Center, on Home and in the screensaver",
+      "name": "Clock position Top Center, hours and minutes on the axis with AM/PM to the side, on Home and in the screensaver",
       "android": "done",
       "webos": "done",
       "tizen": "done",
@@ -541,7 +541,7 @@
     },
     {
       "id": "saver-labels",
-      "name": "Screensaver: one small credit line bottom left, news headline on the same line with its source above",
+      "name": "Screensaver: one small credit line bottom left whose licence is never cut, news on the same line over its own shade",
       "android": "done",
       "webos": "done",
       "tizen": "done",
@@ -558,7 +558,7 @@
     },
     {
       "id": "light-sections",
-      "name": "Light menus: grey see-through glass with white section cards",
+      "name": "Light menus: grey see-through glass with white section cards, Control Center's rows on one card",
       "android": "done",
       "webos": "done",
       "tizen": "done",
@@ -567,20 +567,21 @@
     },
     {
       "id": "pill-dock-glass",
-      "name": "Status pill's focus is the dock's clear glass, white ink",
+      "name": "Status pill's focus is the dock's clear glass, lit at the rim, with dark ink over a pale corner",
       "android": "done",
-      "webos": "done",
-      "tizen": "done",
-      "lite": "frozen"
+      "webos": "partial",
+      "tizen": "partial",
+      "lite": "frozen",
+      "note": "Web keeps white ink on its focused pill."
     },
     {
       "id": "picture-collections",
-      "name": "NASA Earth Observatory, Wikimedia Picture of the Day and Google Earth View as daily wallpapers, and Every Source, Daily",
+      "name": "Bing, NASA Earth Observatory, Wikimedia Picture of the Day and Google Earth View as daily wallpapers, and Every Source, Daily in the same order",
       "android": "done",
       "webos": "done",
       "tizen": "done",
       "lite": "frozen",
-      "note": "Web has no Bing, so Every Source there takes NASA, Wikimedia and Earth View in turn."
+      "note": "Web gets Bing's list from the page on Samsung and from the TV's helper (home-svc /bing) on LG; a source that fails gives way to the built-in stills."
     },
     {
       "id": "clock-auto",
@@ -593,7 +594,7 @@
     },
     {
       "id": "clock-shade-bright",
-      "name": "The shade behind the clock deepens where the picture is bright",
+      "name": "The shade behind the clock as deep as white type needs on the picture, and a shade behind the pill where it is bright",
       "android": "done",
       "webos": "missing",
       "tizen": "missing",
@@ -601,7 +602,7 @@
     },
     {
       "id": "depth-effect",
-      "name": "The wallpaper's subject in front of the time, from a home cut-out service",
+      "name": "The wallpaper's subject in front of the time from a home cut-out service, only when it rises a fifth into the time and leaves it readable",
       "android": "done",
       "webos": "missing",
       "tizen": "missing",

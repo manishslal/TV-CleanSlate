@@ -45,6 +45,8 @@ opts.inter_op_num_threads = 1
 session = ort.InferenceSession(MODEL, opts, providers=['CPUExecutionProvider'])
 input_name = session.get_inputs()[0].name
 busy = threading.Lock()
+# At most two pictures decoded and worked on at once: a 20 MB PNG decodes to hundreds of MB.
+working = threading.BoundedSemaphore(2)
 
 
 def cover(img):
@@ -82,6 +84,14 @@ def mask_of(data):
     return buf.getvalue(), cover_share, solid, spent
 
 
+def write_atomic(path, data):
+    """Whole or not at all: a reader never sees half a file while a second request writes it."""
+    tmp = '%s.%d.tmp' % (path, threading.get_ident())
+    with open(tmp, 'wb') as f:
+        f.write(data)
+    os.replace(tmp, path)
+
+
 def cached(data):
     key = hashlib.sha256(data).hexdigest()[:32]
     png, meta = os.path.join(CACHE, key + '.png'), os.path.join(CACHE, key + '.json')
@@ -90,19 +100,34 @@ def cached(data):
             m = json.load(g)
             return f.read(), m['subject'], m.get('solid', 0.0), 0.0, True
     out, share, solid, spent = mask_of(data)
-    with open(png, 'wb') as f:
-        f.write(out)
-    with open(meta, 'w') as g:
-        json.dump({'subject': share, 'solid': solid, 'seconds': round(spent, 2), 'at': int(time.time())}, g)
+    # The picture first, then what it says: a meta file always has its picture.
+    write_atomic(png, out)
+    write_atomic(meta, json.dumps({'subject': share, 'solid': solid, 'seconds': round(spent, 2), 'at': int(time.time())}).encode())
     return out, share, solid, spent, False
 
 
-def fetch(url):
+def allowed(url):
     u = urllib.parse.urlparse(url)
-    if u.scheme != 'https' or u.hostname not in HOSTS:
+    return u.scheme == 'https' and u.hostname in HOSTS
+
+
+class Redirects(urllib.request.HTTPRedirectHandler):
+    """Follows a redirect only to another of Home's picture sources, never into the home network."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if not allowed(newurl):
+            raise PermissionError('a redirect away from Home\'s picture sources')
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+opener = urllib.request.build_opener(Redirects)
+
+
+def fetch(url):
+    if not allowed(url):
         raise PermissionError('not one of Home\'s picture sources')
     req = urllib.request.Request(url, headers={'User-Agent': AGENT})
-    with urllib.request.urlopen(req, timeout=30) as r:
+    with opener.open(req, timeout=30) as r:
         return r.read(MAX_BYTES + 1)
 
 
@@ -127,10 +152,15 @@ class Handler(BaseHTTPRequestHandler):
     def answer(self, data):
         if not data or len(data) > MAX_BYTES:
             return self.send(413, b'{"error":"picture missing or over 20 MB"}')
+        # Under the TVs' own 60 s wait, so a queued TV hears "busy" rather than timing out.
+        if not working.acquire(timeout=45):
+            return self.send(503, b'{"error":"busy"}')
         try:
             png, share, solid, spent, hit = cached(data)
         except Exception as e:  # not a picture Pillow can read
             return self.send(422, json.dumps({'error': type(e).__name__}).encode())
+        finally:
+            working.release()
         self.send(200, png, 'image/png', {'X-Subject': '%.4f' % share, 'X-Solid': '%.3f' % solid, 'X-Seconds': '%.2f' % spent, 'X-Cached': '1' if hit else '0', 'Cache-Control': 'max-age=31536000'})
 
     def do_OPTIONS(self):
@@ -154,7 +184,10 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if urllib.parse.urlparse(self.path).path != '/cutout':
             return self.send(404, b'{"error":"not found"}')
-        n = int(self.headers.get('Content-Length') or 0)
+        try:
+            n = int(self.headers.get('Content-Length') or 0)
+        except ValueError:
+            return self.send(400, b'{"error":"bad Content-Length"}')
         self.answer(self.rfile.read(n) if 0 < n <= MAX_BYTES else b'')
 
 
