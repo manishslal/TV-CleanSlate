@@ -6,6 +6,15 @@
 
 ---
 
+## Home mh34 — 2026-11-03
+
+- `1.67-mh34-guard` installed over mh23 through `tools/install.sh guard`, then compiled with `-m speed`. `fire-reapply.sh`: 0 drifted, 0 refused.
+- ADB showed the stick as "offline" until ADB Debugging was switched off and on in Developer Options. Its address had changed since mh23.
+- Home: Wi-Fi name in the pill, colored tiles, the dock and clock all show. Netflix opened, and the Home key brought Home back.
+- Control Center: Wi-Fi, Bluetooth, Settings and Auto buttons, volume, Personalize, Home Mode, "Home Guard is on". No VPN button, since no VPN has ever connected here. No Inputs or brightness rows.
+- 0 crash entries; 124 MB PSS on Home.
+- Not verified: real remote, video playback, a reboot on mh34, and the Bluetooth page.
+
 ## Home mh23 — 2026-11-01
 
 - `1.67-mh23-guard` installed through `tools/install.sh guard`.
