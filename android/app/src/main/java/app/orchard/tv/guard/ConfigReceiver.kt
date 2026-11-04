@@ -161,7 +161,7 @@ class ConfigReceiver : BroadcastReceiver() {
         if (intent.getBooleanExtra("show_look", false)) {
             AerialSettings.init(context)
             Wallpapers.init(context)
-            resultData = "mode=${AerialSettings.homeMode.key} wallpaper=${Wallpapers.selectedId} saver=${Wallpapers.screensaver.key} glass=${AerialSettings.liquidGlass} effects=${AerialSettings.effects.key} clock=${AerialSettings.clockStyle.key} lite=${AerialSettings.lite} lowEnd=${AerialSettings.lowEnd} headlines=${AerialSettings.headlines}"
+            resultData = "mode=${AerialSettings.homeMode.key} wallpaper=${Wallpapers.selectedId} saver=${Wallpapers.screensaver.key} glass=${AerialSettings.liquidGlass} effects=${AerialSettings.effects.key} clock=${AerialSettings.clockStyle.key} lite=${AerialSettings.lite} focusLite=${AerialSettings.focusLite} lowEnd=${AerialSettings.lowEnd} headlines=${AerialSettings.headlines}"
             return
         }
         // Opt-in for an input ("*" = any recognized Apple TV input). Empty input disables.

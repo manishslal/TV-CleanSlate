@@ -25,11 +25,22 @@ object DeviceClass {
             .also { known = it }
     }
 
+    /**
+     * Fork: low-end for more than memory: the low-RAM flag, Android 6 or older, or two cores or fewer.
+     * A TV short only of memory (Fire TV Stick 4K gen1: 1.3 GB, four cores, Fire OS 6) keeps the
+     * focused tile's glow, tilt and sheen while the wallpaper is still (AerialSettings.focusLite):
+     * measured there, Full and Lite both stayed under 3% janky frames on a still picture.
+     */
+    fun weak(context: Context): Boolean {
+        val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        return am.isLowRamDevice || Build.VERSION.SDK_INT < 24 || Runtime.getRuntime().availableProcessors() <= 2
+    }
+
     /** One line for diagnostics: what the check saw. */
     fun describe(context: Context): String {
         val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val info = ActivityManager.MemoryInfo().also(am::getMemoryInfo)
-        return "low-end=${lowEnd(context)} (low-RAM flag ${am.isLowRamDevice}, ${info.totalMem / (1 shl 20)} MB, " +
+        return "low-end=${lowEnd(context)}, weak=${weak(context)} (low-RAM flag ${am.isLowRamDevice}, ${info.totalMem / (1 shl 20)} MB, " +
             "${Runtime.getRuntime().availableProcessors()} cores, memory class ${am.memoryClass} MB)"
     }
 }

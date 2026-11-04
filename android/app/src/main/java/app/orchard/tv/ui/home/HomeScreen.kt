@@ -710,7 +710,7 @@ fun HomeScreen(
 
             // Fork: in Dark, a faint light in the focused app's own color rises behind the tiles,
             // as if the tile lit the room; it moves to the next app's color as focus moves.
-            val glowTint = apps.getOrNull(focusedIndex)?.art?.tint?.takeIf { AerialSettings.darkTiles && !AerialSettings.lite && !pillFocused && it.alpha > 0f } ?: Color.Transparent
+            val glowTint = apps.getOrNull(focusedIndex)?.art?.tint?.takeIf { AerialSettings.darkTiles && !AerialSettings.focusLite && !pillFocused && it.alpha > 0f } ?: Color.Transparent
             val glow by animateColorAsState(glowTint, tween(GLOW_MS, easing = Motion.EaseInOut), label = "app-glow")
             if (glow.alpha > 0.01f) Canvas(Modifier.fillMaxSize()) {
                 val a = 1f - toSaver.value

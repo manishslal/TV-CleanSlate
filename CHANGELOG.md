@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Android 1.67-mh36: a TV short only of memory (Fire TV Stick 4K: 1.3 GB, four cores) keeps the focused tile's glow, tilt and sheen on Auto while the wallpaper is still, and the Focus Glow row with them. Measured there: 1.5-2.5% janky frames moving across the apps on a still picture with these on, against 25-40% with a moving wallpaper whatever the effects. A moving wallpaper, Efficient, Lite, and weaker TVs (low-RAM flag, Android 6 or older, two cores) still drop them
 - Android 1.67-mh35: the status pill is smaller (14 pt name, 18 dp icon), below the time beside it, and says "Wi-Fi" when Android withholds the network's name
 - Android 1.67-mh35: Turn Off TV in Control Center wherever Home Guard runs (standby on Android 9+, else the TV's power menu)
 - Android 1.67-mh35: Aerial categories (Landscapes, Cities, Space, Underwater), as the web Home has them

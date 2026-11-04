@@ -278,7 +278,7 @@ fun AppTile(
                 if (appear.value < 1f) { scaleX *= 0.94f + 0.06f * appear.value; scaleY *= 0.94f + 0.06f * appear.value }
             },
     ) {
-        if (lift > 0.01f && !AerialSettings.lite && AerialSettings.focusGlow != FocusGlow.Small) {
+        if (lift > 0.01f && !AerialSettings.focusLite && AerialSettings.focusGlow != FocusGlow.Small) {
             // Fork: a lifted tile glows evenly around it. The system's
             // elevation shadow is too faint to read on a TV; this one is baked, so it costs one
             // image draw while a tile is lifted.
@@ -465,7 +465,7 @@ fun AppTile(
                     // Read here so the tile draws again when the faces it waits for are made.
                     TileFaces.version
                     // Lite: no sheen (a shader per frame) and no parallax on the focused tile.
-                    val lite = AerialSettings.lite
+                    val lite = AerialSettings.focusLite
                     val invert = lift > 0.01f && art.fore != null && AerialSettings.focusStyle == FocusStyle.Invert
                     val oneInk = TileArtFactory.clear || AerialSettings.darkTiles
                     // Light from above: a soft sheen across the top, brighter where the tile leans toward it.

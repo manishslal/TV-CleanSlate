@@ -46,7 +46,7 @@
       "webos": "done",
       "tizen": "partial",
       "lite": "frozen",
-      "note": "Samsung's focus glow has no app color. Android Lite draws no focus glow, by the owner's choice."
+      "note": "Samsung's focus glow has no app color. Android Lite draws no focus glow, by the owner's choice; on Auto a TV low only on memory (Fire TV Stick 4K) keeps it while the wallpaper is still."
     },
     {
       "id": "readable-text",
@@ -82,7 +82,7 @@
       "webos": "done",
       "tizen": "partial",
       "lite": "frozen",
-      "note": "Android Lite (Auto on low-end devices such as the Fire TV Stick 4K) draws no glow, so the row is hidden there. Built in from the web page, not yet looked at on a Samsung."
+      "note": "Android Lite draws no glow, so the row is hidden there; on Auto the Fire TV Stick 4K keeps the glow and the row while the wallpaper is still, and loses both while it moves. Built in from the web page, not yet looked at on a Samsung."
     },
     {
       "id": "wallpaper-tint",

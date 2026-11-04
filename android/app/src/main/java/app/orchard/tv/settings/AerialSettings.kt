@@ -125,7 +125,8 @@ enum class UiSounds(val key: String) {
  * sheen, parallax and shadow, and the panel's highest refresh rate. Lite draws the panels in plain
  * dark glass (no offscreen layer per frame), a focused tile without sheen, parallax or shadow, and
  * stays at 60 Hz: for TVs whose GPU cannot keep up (issues #232, #354). Auto is Lite on a low-end
- * TV (DeviceClass) and Full elsewhere.
+ * TV (DeviceClass) and Full elsewhere; a TV low only on memory keeps the focused tile's effects
+ * while the wallpaper is still (AerialSettings.focusLite).
  */
 enum class Effects(val key: String) {
     Auto("auto"), Full("full"), Lite("lite");
@@ -315,6 +316,16 @@ object AerialSettings {
 
     /** Draw the lighter interface (see [Effects]). */
     val lite: Boolean get() = effects == Effects.Lite || (effects == Effects.Auto && lowEnd)
+
+    /** Fork: [lowEnd] for more than memory alone; see DeviceClass.weak. */
+    var weakDevice = false; private set
+
+    /**
+     * Fork: the focused tile drawn without its glow, tilt and sheen. These cost one tile, so a TV
+     * short only of memory keeps them while the wallpaper is still; a moving one already drops
+     * most frames there (Fire TV Stick 4K gen1: about 30% janky with Lite, 40% with Full).
+     */
+    val focusLite: Boolean get() = effects == Effects.Lite || (effects == Effects.Auto && lowEnd && (weakDevice || Wallpapers.moves()))
     private const val DEFAULT_SCREENSAVER_MINUTES = 5
 
     val HOME_COLUMNS = 4..6
@@ -385,6 +396,7 @@ object AerialSettings {
         effects = Effects.of(prefs.getString("effects", null))
         applyTiles()
         lowEnd = DeviceClass.lowEnd(app)
+        weakDevice = DeviceClass.weak(app)
     }
 
     fun chooseBootSource(id: String?) {

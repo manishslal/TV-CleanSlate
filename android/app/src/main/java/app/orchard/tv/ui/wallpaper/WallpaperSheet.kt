@@ -370,8 +370,8 @@ private fun AppearancePage() {
             listOf(FocusStyle.HighContrast to R.string.st_focus_high, FocusStyle.Standard to R.string.st_focus_standard, FocusStyle.Invert to R.string.st_focus_invert),
             AerialSettings.focusStyle, AerialSettings::chooseFocusStyle,
         )
-        // Lite draws no focus glow (AppTile), so its size is not offered there.
-        if (!AerialSettings.lite) ValueRow(
+        // Lite draws no focus glow (AppTile, AerialSettings.focusLite), so its size is not offered there.
+        if (!AerialSettings.focusLite) ValueRow(
             R.string.fk_focus_glow, stringResource(R.string.fk_focus_glow_hint),
             listOf(FocusGlow.Small to R.string.fk_size_small, FocusGlow.Medium to R.string.fk_size_medium, FocusGlow.Large to R.string.fk_size_large),
             AerialSettings.focusGlow, AerialSettings::chooseFocusGlow,

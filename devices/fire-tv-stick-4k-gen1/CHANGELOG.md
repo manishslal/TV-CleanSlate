@@ -6,6 +6,24 @@
 
 ---
 
+## Home mh36 — 2026-11-04
+
+- `1.67-mh36-guard` installed over mh35 and compiled with `-m speed`.
+- Measured what each effect costs here, two runs each of 28 moves across two rows of apps (`dumpsys gfxinfo`):
+
+  | Wallpaper | Effects | Glass | Janky frames | 90th pct | Home memory |
+  |---|---|---|---|---|---|
+  | Still | Lite | Frosted | 0-1.2% | 12 ms | 150 MB |
+  | Still | Full | Frosted | 1.8-2.1% | 13-14 ms | 151-155 MB |
+  | Still | Full or Lite | Liquid | 0.8-3.2% | 13 ms | 150-152 MB |
+  | Moving | Lite | Frosted | 26-32% | 24-27 ms | 222 MB |
+  | Moving | Full | Frosted | 32-40% | 25-27 ms | 225-230 MB |
+  | Moving | Full or Lite | Liquid | 37-65% | 27-32 ms | 222-233 MB |
+
+- The moving wallpaper is what this stick cannot keep up with (about 80 MB more and a third or more of frames late). The focus effects cost almost nothing on a still picture.
+- So Auto here now keeps the glow, tilt and sheen while the wallpaper is still, and drops them while it moves. Checked: the focused tile glows in its color, `focusLite=false` on the daily picture and `true` on the moving one; 1.6-2.5% janky frames on mh36. The Focus Glow row in Appearance follows the same switch but was not opened on screen.
+- The look was put back as it was after measuring (daily picture, frosted glass, Auto effects, Photos screensaver).
+
 ## Home mh35 — 2026-11-04
 
 - `1.67-mh35-guard` installed over mh34 and compiled with `-m speed`.
