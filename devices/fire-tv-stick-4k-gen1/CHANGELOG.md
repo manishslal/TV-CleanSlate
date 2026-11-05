@@ -43,7 +43,7 @@
 
 ## Home mh34 — 2026-11-03
 
-- `1.67-mh34-guard` installed over mh23 through `tools/install.sh guard`, then compiled with `-m speed`. `fire-reapply.sh`: 0 drifted, 0 refused.
+- `1.67-mh34-guard` installed over mh23 through `android/tools/install.sh guard`, then compiled with `-m speed`. `fire-reapply.sh`: 0 drifted, 0 refused.
 - ADB showed the stick as "offline" until ADB Debugging was switched off and on in Developer Options. Its address had changed since mh23.
 - Home: Wi-Fi name in the pill, colored tiles, the dock and clock all show. Netflix opened, and the Home key brought Home back.
 - Control Center: Wi-Fi, Bluetooth, Settings and Auto buttons, volume, Personalize, Home Mode, "Home Guard is on". No VPN button, since no VPN has ever connected here. No Inputs or brightness rows.
@@ -52,12 +52,12 @@
 
 ## Home mh23 — 2026-11-01
 
-- `1.67-mh23-guard` installed through `tools/install.sh guard`.
+- `1.67-mh23-guard` installed through `android/tools/install.sh guard`.
 - The menu shows "Home Guard is on": `FireKeeper` now counts as guarded.
 - Screensaver: `AerialDream` is the system screensaver. Home's own started at 5 idle minutes on Home, and the dream started at 5 idle minutes in Settings. `FireKeeper` restores it if Fire OS changes it.
-- Update recovery: `tools/fire-reapply.sh` checks and restores permissions, listener, screensaver, privacy settings, animation scales, `debloat-disable.txt` and `debloat-background.txt`. Simulated drift was found and restored. Home's menu shows a reminder when the Fire OS build differs from the last run.
+- Update recovery: `android/tools/fire-reapply.sh` checks and restores permissions, listener, screensaver, privacy settings, animation scales, `debloat-disable.txt` and `debloat-background.txt`. Simulated drift was found and restored. Home's menu shows a reminder when the Fire OS build differs from the last run.
 - Update packages stay untouched, so updates are not blocked.
-- Logos: Downloader, Send Files and Appstore have new marks. VLC, Disney+, Paramount+ and the Windscribe mark use `size`. `tools/logo-audit.sh` reports every launchable app covered.
+- Logos: Downloader, Send Files and Appstore have new marks. VLC, Disney+, Paramount+ and the Windscribe mark use `size`. `android/tools/logo-audit.sh` reports every launchable app covered.
 - 18 launches across 16 apps returned to Home within 4 s by ADB key events, with 0 crash entries. One earlier run showed `com.amazon.stillwatching.activity` 6 s after Home from Netflix; 3 repeats did not.
 - After the final reboot: Home in focus, 20 packages disabled, screensaver set, 0 crash entries. On mh22, Amazon's launcher resumed about 0.5 s before Home.
 - Real remote and video playback are not verified on mh23.

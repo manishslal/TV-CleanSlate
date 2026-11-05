@@ -115,7 +115,7 @@ Each entry gives what changed and how to undo it.
 - Undo: as entry 5.
 
 ### 17. Logo pack for dark tiles (done)
-- New shared folder `logos/`: trimmed masters in `dark/` and `manifest.json` mapping each brand to its webOS and Android app IDs. Ten logos came from the user; Spotify is a Simple Icons vector.
+- New shared folder `logos/`: trimmed masters in `logos/dark/` and `manifest.json` mapping each brand to its webOS and Android app IDs. Ten logos came from the user; Spotify is a Simple Icons vector.
 - `build.py` exports `logo-<brand>.webp` (about 3 to 18 KB each) into `app/`. Dark Glass shows pack logos and only processes icons for apps without one. Logos are scaled to equal visual area.
 - Spotify is not installed on this TV now, so its logo is unused here.
 - Undo: as entry 5.

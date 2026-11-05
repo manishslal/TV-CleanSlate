@@ -68,7 +68,7 @@ OUT="aerial-selftest-$SLUG.md"
 RESULTS=()
 result() { # name, PASS|FAIL|SKIP, detail
   printf '%-18s %-4s %s\n' "$1" "$2" "$3"
-  RESULTS+=("$(printf '"%s":{"result":"%s","detail":"%s"}' "$1" "$(printf '%s' "$2" | tr 'A-Z' 'a-z')" "$(printf '%s' "$3" | sed 's/["\\]/ /g')")")
+  RESULTS+=("$(printf '"%s":{"result":"%s","detail":"%s"}' "$1" "$(printf '%s' "$2" | tr '[:upper:]' '[:lower:]')" "$(printf '%s' "$3" | sed 's/["\\]/ /g')")")
 }
 
 {
@@ -96,7 +96,7 @@ fi
 sh_ am start -W -n "$PKG/$NS.MainActivity" >/dev/null; sleep 2
 sh_ input keyevent KEYCODE_HOME
 read -r secs pkg <<<"$(wait_aerial 8)"
-[ "$secs" != "-" ] && result home_on_aerial PASS "Aerial in front" || result home_on_aerial FAIL "in front after 8 s: $pkg"
+if [ "$secs" != "-" ]; then result home_on_aerial PASS "Aerial in front"; else result home_on_aerial FAIL "in front after 8 s: $pkg"; fi
 # Home Guard's own answer to the key can come a second or two after Aerial is already in front,
 # and it would cover the next app (TCL MT5879).
 sleep 3
@@ -137,7 +137,7 @@ if [ "${STANDBY:-0}" = 1 ]; then
   if connect; then
     sleep 3
     read -r secs pkg <<<"$(wait_aerial 60)"
-    [ "$secs" != "-" ] && result standby PASS "asleep=$WAKE, Aerial in front ${secs} s after wake" || result standby FAIL "asleep=$WAKE, in front 60 s after wake: $pkg"
+    if [ "$secs" != "-" ]; then result standby PASS "asleep=$WAKE, Aerial in front ${secs} s after wake"; else result standby FAIL "asleep=$WAKE, in front 60 s after wake: $pkg"; fi
   else result standby FAIL "ADB did not come back after wake; on Xiaomi, install with KEEP_ADB=1"
   fi
 else result standby SKIP "STANDBY=1 to try"
@@ -156,7 +156,7 @@ if [ "${REBOOT:-0}" = 1 ]; then
       [ "$p" != "$LAST" ] && TIMELINE="$TIMELINE ${t}s:${p:-none}" && LAST="$p"
       sleep 1
     done
-    [ "$LAST" = "$PKG" ] && result reboot PASS "after boot:$TIMELINE" || result reboot FAIL "after boot:$TIMELINE"
+    if [ "$LAST" = "$PKG" ]; then result reboot PASS "after boot:$TIMELINE"; else result reboot FAIL "after boot:$TIMELINE"; fi
   else result reboot FAIL "ADB did not come back within 4 minutes"
   fi
 else result reboot SKIP "REBOOT=1 to try (ask the owner first)"

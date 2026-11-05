@@ -4,7 +4,7 @@ The Android part of [TV CleanSlate](../README.md), a fork of [pengchujin/aerial-
 
 ## Ground rules
 - `LICENSE` stays exactly as upstream wrote it. New files carry no claim over upstream code.
-- Customizations live in the UI layer (`ui/`, `wallpaper/`, theme config). `system/`, `guard/`, `dream/` and `update/` stay as close to upstream as possible, so upstream fixes merge cleanly.
+- Customizations live in the UI layer (`ui/`, `wallpaper/`, theme config). `system/`, `guard/` and `dream/` stay as close to upstream as possible, so upstream fixes merge cleanly.
 - The fork gets its own app name, icon and application ID. It must not be presented as Aerial.
 - Runtime calls to the upstream author's server (`aerial.qust.me`: update checks, APK downloads, the icon library and the phone setup page) are repointed or switched off in our builds. Our builds are signed with our own key, so upstream updates can't install over them, and we shouldn't load the author's server.
 

@@ -44,9 +44,11 @@ want secure usage_metrics_marketing_enabled 0
 for key in window_animation_scale transition_animation_scale animator_duration_scale; do want global "$key" 0.5; done
 
 disabled=$(sh pm list packages -d)
+# shellcheck disable=SC2013  # package names have no spaces
 for p in $(grep -v '^#' "$LISTS/debloat-disable.txt"); do
   grep -q "package:$p\$" <<<"$disabled" || fix "disable $p" pm disable-user --user 0 "$p"
 done
+# shellcheck disable=SC2013  # package names have no spaces
 for p in $(grep -v '^#' "$LISTS/debloat-background.txt"); do
   sh appops get "$p" RUN_IN_BACKGROUND | grep -q ignore || fix "background block $p" appops set "$p" RUN_IN_BACKGROUND ignore
 done
@@ -58,6 +60,7 @@ if [ "$MODE" = repair ]; then
   sh am start -n "$PKG/$NS.MainActivity" >/dev/null
   sleep 3
   disabled=$(sh pm list packages -d)
+  # shellcheck disable=SC2013  # package names have no spaces
   for p in $(grep -v '^#' "$LISTS/debloat-disable.txt"); do
     grep -q "package:$p\$" <<<"$disabled" || { echo "Fire OS refused: $p"; bad=$((bad + 1)); }
   done

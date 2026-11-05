@@ -41,7 +41,7 @@ Each entry gives what changed and how to undo it.
 - Undo: `adb shell settings put secure enabled_accessibility_services null`, `adb shell settings put secure screensaver_components com.google.android.backdrop/.Backdrop`, then `adb uninstall io.manish.home`. Stock Home takes over at once.
 
 ### 2. Cleanup (2026-10-30; user approved the list; reboot verified)
-All with `pm disable-user --user 0`. Undo one with `adb shell pm enable <package>`, or all with `nvidia-shield-tube/restore-shield-cleanup.sh`. The script has not been run.
+All with `pm disable-user --user 0`. Undo one with `adb shell pm enable <package>`, or all with `nvidia-shield-tube/restore-cleanup.sh`. The script has not been run.
 
 | Batch | Package | What | Checked after |
 |---|---|---|---|

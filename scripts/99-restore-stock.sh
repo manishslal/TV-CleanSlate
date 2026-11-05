@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 # Emergency: put Google TV's stock launcher back. Safe to run any time. Does not uninstall custom launchers.
+# shellcheck source=common.sh
 . "$(dirname "$0")/common.sh"; need_tv "$1"
-for p in $STOCK_PKG com.google.android.tungsten.setupwraith com.google.android.katniss; do A pm enable --user 0 $p; done; sleep 40  # Android saves this about 10 s later
+for p in $STOCK_PKG com.google.android.tungsten.setupwraith com.google.android.katniss; do A pm enable --user 0 "$p"; done; sleep 40  # Android saves this about 10 s later
+# shellcheck disable=SC2086  # HOME_INTENT is a list of arguments
 CMP=$(A cmd package query-activities --brief $HOME_INTENT | grep -oE "$STOCK_PKG/[^ ]+" | head -1)
 [ -n "$CMP" ] && A cmd package set-home-activity "$CMP"
 A input keyevent KEYCODE_HOME
+# shellcheck disable=SC2086  # HOME_INTENT is a list of arguments
 A cmd package resolve-activity --brief $HOME_INTENT | tail -1

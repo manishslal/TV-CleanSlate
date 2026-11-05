@@ -91,6 +91,7 @@ set +e
             "secure install_non_market_apps" "global adb_enabled" "global picture_backlight" \
             "system screen_brightness" "system screen_brightness_mode" "system sound_effects_enabled" \
             "system boot_app_mode" "system boot_app_componentname"; do
+    # shellcheck disable=SC2086  # $kv is a "namespace key" pair
     set -- $kv
     echo "$1 $2 = $(sh_ settings get "$1" "$2")"
   done

@@ -6,8 +6,9 @@ set -eu
 cd "$(dirname "$0")/.."
 python3 webos/build.py
 python3 tizen/build.py
+# shellcheck disable=SC2012  # newest by modification time
 (cd tizen && ~/tizen-studio/tools/ide/bin/tizen package -t wgt -s home -o "$PWD" -- build >/dev/null &&
-  mv -f "$(ls -t *.wgt | head -1)" home.wgt 2>/dev/null || true)
+  mv -f "$(ls -t ./*.wgt | head -1)" home.wgt 2>/dev/null || true)
 if [ "${ANDROID:-}" = 1 ]; then (cd android && ./gradlew assembleStandardRelease assembleGuardRelease -q); fi
 echo
 echo "Android $(grep -o 'versionName = "[^"]*"' android/app/build.gradle.kts)"
