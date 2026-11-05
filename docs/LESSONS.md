@@ -119,3 +119,8 @@ See [Logos we still need](../logos/README.md#logos-we-still-need).
 - A cut-out model also marks haze (a river, a sky). Judge a cut-out by how firmly it marks what it marks, not by its size: a fish scored 0.93, river haze 0.44.
 - Read a 16:9 picture's calmest spot from the part the screen shows: squashing the whole 3:2 picture into the sample picked a different side than the cropped picture did.
 
+## LG webOS
+
+- LG's own screensaver starts over any page, even a home page with its own. It asks the subscribers of `luna://com.webos.service.tvpower/power/registerScreenSaverRequest` first; answering `responseScreenSaverRequest` with `ack: false` and the request's `timestamp` holds it off. A root helper can do this; a web page cannot.
+- Compare glass by what it shows, not only by blur size. The web's frost was as soft as Android's, but Android 13+ mixes 30% of the sharp picture into the middle and lets it take over at the rim, so the same blur read as less blurred there.
+

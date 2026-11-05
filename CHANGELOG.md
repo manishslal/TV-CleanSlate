@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Web: the dock's glass is drawn as Android 13 and later draw it (the onn): 30% of the sharp picture shows through the middle of the frost, and the frost thins to a fifth over the last 26 points so the sharp picture takes over at the rim; over a moving film the frost lies at 55%, as on every Android. The dock's tint is Android's flat x0.8 + 30 instead of a white gradient. The frost itself was already as soft as Android's (measured on three pictures); the dock read blurrier because it was frost from edge to edge. Efficient (Samsung) keeps the plain frosted plate, with Android's x0.84 + 16
+- LG: the TV's own screensaver (a clock on black) no longer comes on over Home's. The helper answers the TV's screensaver request with no while Home is in front and Home's screensaver is on; over another app, or with Home's set to Never, the TV's starts as before
 - Web: the wallpaper's dim (and Warm or Cool) lies over its frost as well, so the dock is as dim as the picture around it, as on Android; the app's glow stays above it
 - Web: a still wallpaper (Bing, NASA, Wikimedia, Earth View, the built-in stills, Plex photos) is frosted under the dock and behind the app grid, as on Android; only the aerial films had frost, so the dock showed the sharp picture and the grid a near-solid grey sheet. Clear tiles keep the frost at half strength, as Android's dock
 - Web: the app grid behaves as Android's: the focused row rests second from the top with the row above in view, the clock leaves and the time joins the pill, and "More Apps" titles the first row under the shelf

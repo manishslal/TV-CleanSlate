@@ -39,7 +39,9 @@ body.down #fclip { clip-path: inset(0 round 0); }
 #sheet { opacity: 0; transition: opacity .2s; background: linear-gradient(180deg, var(--plain-a), var(--plain-b)); }
 body.frosted #sheet { background: linear-gradient(180deg, var(--sheet-a), var(--sheet-b)); }
 #dock { position: fixed; left: calc(52 * var(--u)); right: calc(52 * var(--u)); bottom: calc(40 * var(--u)); height: calc(240 * var(--u)); border-radius: calc(36 * var(--u)); transition: opacity .2s;
-  background: linear-gradient(180deg, var(--dock-a), var(--dock-b)); box-shadow: inset 0 0 0 1.22px var(--shine), inset 0 0 0 .5px var(--edge), 0 calc(18 * var(--u)) calc(48 * var(--u)) var(--dockshadow); }
+  background: rgba(150,150,150,.2); box-shadow: inset 0 0 0 1.22px var(--shine), inset 0 0 0 .5px var(--edge), 0 calc(18 * var(--u)) calc(48 * var(--u)) var(--dockshadow); }
+/* the dock's tint over its frost, as Android's in either appearance: x0.8 + 30 (LiquidLens, dock); Efficient as the plain plate, x0.84 + 16 (PlateTint) */
+body.lite #dock { background: rgba(100,100,100,.16); }
 #hint { position: fixed; left: 0; right: 0; bottom: calc(10 * var(--u)); text-align: center; font-size: calc(19 * var(--u)); color: var(--onwall); opacity: .82; text-shadow: 0 1px calc(8 * var(--u)) var(--onwall-shadow); transition: opacity .2s; }
 body.down #sheet { opacity: 1; }
 body.down #dock, body.down #hint, body.peek #hint { opacity: 0; }
@@ -222,8 +224,15 @@ body.tintcool #tint { background: #0a84ff; opacity: .14; }
 body.noplate:not(.down) #dock, body.noplate:not(.down) #fclip { opacity: 0; }
 /* Behind Clear tiles the dock is fainter, so glass on glass still reads as two layers */
 body.cleartiles:not(.noplate):not(.down):not(.idle) #dock { opacity: .5; }
+/* The dock's frost at rest, as Android 13+ draws its dock (LiquidLens): 30% of the sharp picture shows
+   through the middle and the picture takes over toward the rim (the mask in paint()). A film's frost lies
+   over the moving film at 55% (Android: FILM_FROST). Efficient keeps the plain frosted plate. */
+body.frosted:not(.lite):not(.noplate):not(.down):not(.idle) #fclip { opacity: .7; }
+body.frosted.filmfrost:not(.noplate):not(.down):not(.idle) #fclip { opacity: .55; }
 /* Clear tiles sit on the dock at half strength, its frost too (Android: CLEAR_PLATE) */
 body.cleartiles.frosted:not(.noplate):not(.down):not(.idle) #fclip { opacity: .5; }
+body.cleartiles.frosted:not(.lite):not(.noplate):not(.down):not(.idle) #fclip { opacity: .35; }
+body.cleartiles.frosted.filmfrost:not(.noplate):not(.down):not(.idle) #fclip { opacity: .28; }
 body.idle #tint, body.idle #gridwrap, body.idle #pill, body.idle #dock, body.idle #hint, body.idle #sheet, body.idle #glow, body.idle #fclip { opacity: 0; }
 body.idle #shade { opacity: 1; background-color: rgba(0,0,0,.16); }
 body.idle #caption, body.idle.news #news { opacity: 1; }
@@ -357,7 +366,7 @@ function pool() {
   return S.quality === 'uhd' ? p.map(function (v) { return v[4] ? [v[4], v[1], v[2], v[3]] : v; }) : p;
 }
 var FROST_STEP = 10, frostFrames = 0, frostAt = -1, frostTop = 0, frostTimer = 0, frostUrl = '';
-function frostOff() { clearInterval(frostTimer); frostAt = -1; document.body.classList.remove('frosted'); $('fphoto').className = ''; }
+function frostOff() { clearInterval(frostTimer); frostAt = -1; document.body.classList.remove('frosted', 'filmfrost'); $('fphoto').className = ''; }
 /* the shown still picture's frost (Android: Wallpapers.frosted): under the dock at rest, the whole screen in the grid */
 function photoFrost(el) {
   var f = $('fphoto');
@@ -384,7 +393,7 @@ function frost(i) {
   sheet.onload = function () {
     frostFrames = FROST[i]; frostUrl = sheet.src;
     frostTick();
-    document.body.classList.add('frosted');
+    document.body.classList.add('frosted', 'filmfrost');
     frostTimer = setInterval(frostTick, 1000);
   };
   sheet.src = 'sheet-' + i + '.jpg';
@@ -709,6 +718,8 @@ function drift() {
   r.setProperty('--drifty', Math.round(Math.random() * 520) * window.innerWidth / 1920 + 'px');
   driftTimer = setTimeout(drift, 60000);
 }
+/* The TV's own screensaver stays away while Home's is on: the helper answers it (LG; nothing on Samsung) */
+function tellSaver() { svc('/saver?min=' + S.saverMin).catch(function () {}); }
 function saver(on) {
   var c = document.body.classList;
   if (on === c.contains('idle')) return;
@@ -916,7 +927,13 @@ function paint() {
   tiles.forEach(function (t, i) { t.el.style.transform = PEEK && !down && i >= COLS ? 'translateY(' + PEEK_SHIFT + 'px)' : ''; });
   $('grid').style.transform = 'translateY(' + (down ? 170 - row * PITCH : HOME_Y) * window.innerWidth / 1920 + 'px) scale(' + SCALE + ')';
   var u = window.innerWidth / 1920;
-  $('fclip').style.clipPath = $('fclip').style.webkitClipPath = down ? '' : 'inset(' + DOCK_TOP * u + 'px ' + 52 * u + 'px ' + (1080 - DOCK_END) * u + 'px ' + 52 * u + 'px round ' + 36 * u + 'px)';
+  var fc = $('fclip').style;
+  fc.clipPath = fc.webkitClipPath = down ? '' : 'inset(' + DOCK_TOP * u + 'px ' + 52 * u + 'px ' + (1080 - DOCK_END) * u + 'px ' + 52 * u + 'px round ' + 36 * u + 'px)';
+  /* the lens's rim: over its last 26 points the frost thins to a fifth, so the sharp picture takes over at the edge */
+  var rim = 26 * u, thin = 'rgba(0,0,0,.2) ', l = 52 * u, r = 1868 * u, t = DOCK_TOP * u, b = DOCK_END * u;
+  fc.webkitMaskImage = down || S.effects === 'lite' ? '' : 'linear-gradient(90deg, ' + thin + l + 'px, #000 ' + (l + rim) + 'px, #000 ' + (r - rim) + 'px, ' + thin + r + 'px), ' +
+    'linear-gradient(180deg, ' + thin + t + 'px, #000 ' + (t + rim) + 'px, #000 ' + (b - rim) + 'px, ' + thin + b + 'px)';
+  fc.webkitMaskComposite = 'source-in';
   var t = tiles[focus];
   document.getElementById('glow').style.display = down ? 'none' : '';
   if (t && zone === 'grid' && !down) $('glow').style.background = 'radial-gradient(75% 75% at 50% 105%, ' + tint(t.id) + ', transparent 72%)';
@@ -1154,7 +1171,7 @@ function pageWeather() {
 }
 function pageSaver() {
   return { title: 'Screensaver', rows: function () { return [
-    choice('Start After', [[2, '2 Minutes'], [5, '5 Minutes'], [10, '10 Minutes'], [20, '20 Minutes'], [0, 'Never']], function () { return S.saverMin; }, function (v) { S.saverMin = v; }),
+    choice('Start After', [[2, '2 Minutes'], [5, '5 Minutes'], [10, '10 Minutes'], [20, '20 Minutes'], [0, 'Never']], function () { return S.saverMin; }, function (v) { S.saverMin = v; tellSaver(); }),
     toggle('Show Clock', 'saverClock'), toggle('Back Starts Screensaver', 'backSaver'), { label: 'Start Now', ok: function () { closeAll(); saver(true); } } ]; } };
 }
 function pageNews() {
@@ -1428,6 +1445,7 @@ document.addEventListener('visibilitychange', dropHeld);
 document.addEventListener('webOSRelaunch', function () { dropHeld(); saver(false); closeAll(); if (folderOpen) closeFolder(); lastKey = Date.now(); refresh(); if (!$('v0').src && !$('v1').src) next(); });
 
 /* ---- start ---- */
+tellSaver();
 $('glow').style.transform = 'scale(' + window.innerWidth / 96 + ')';
 $('f0').style.transform = $('f1').style.transform = 'scale(' + window.innerWidth / 192 + ')';
 theme();

@@ -634,6 +634,24 @@
       "tizen": "done",
       "lite": "frozen",
       "note": "Web blurs a quarter-size copy of the picture and scales it up; films keep their baked frost sheets."
+    },
+    {
+      "id": "dock-lens",
+      "name": "The dock's glass lets the picture through: 30% sharp in the middle, the sharp picture at the rim, a film's frost at 55%",
+      "android": "done",
+      "webos": "done",
+      "tizen": "partial",
+      "lite": "frozen",
+      "note": "Android 13+ draws it with the lens shader, which also bends the rim; the web fades its frost toward the edge without bending. Efficient (and Android 9 to 12) draw the plain frosted plate. Samsung starts on Efficient; the Full look has not been seen on a Samsung (Chromium 47 masks with -webkit-mask-composite)."
+    },
+    {
+      "id": "tv-saver-held",
+      "name": "The TV's own screensaver stays away while Home's is on",
+      "android": "not-applicable",
+      "webos": "done",
+      "tizen": "missing",
+      "lite": "frozen",
+      "note": "LG: the helper answers tvpower's screensaver request. Android TVs start their own screensaver as Home's (Home is the dream). Samsung's own has not been looked at."
     }
   ]
 }

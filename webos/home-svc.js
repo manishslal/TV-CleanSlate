@@ -4,6 +4,7 @@
 //   GET /news?u=<feed>          a Google News RSS feed, cached 30 minutes (the page itself gets 403)
 //   GET /target?id=<app>        what opens when the TV turns on ('' is Home)
 //   GET /bing                   Bing's last eight photos of the day (its list does not allow web pages), cached an hour
+//   GET /saver?min=<n>          Home's own screensaver delay in minutes (0 is Never); see guardSaver
 const http = require('http'), https = require('https'), cp = require('child_process'), fs = require('fs'), url = require('url');
 const TARGET = '/media/developer/cleanyourtv/boot-target';
 const cache = {};
@@ -64,6 +65,38 @@ function icon(id, res) {
     });
   });
 }
+// The TV's own screensaver (com.webos.app.screensaver, a clock on black) asks tvpower's clients before it
+// starts. Home has its own, so while Home is in front and its screensaver is on, the answer is no; over any
+// other app, or with Home's set to Never, the TV's starts as before.
+const SAVER_CLIENT = 'cleanyourtv-home', P = 'luna://com.webos.service.tvpower/power/';
+let saverMin = 5;
+function answerSaver(msg) {
+  // the last request and its answer, for checking on the TV
+  const note = a => { try { fs.writeFileSync('/tmp/home-saver.log', new Date().toISOString() + ' ' + JSON.stringify(msg) + ' ' + a + '\n'); } catch (e) {} };
+  if (msg.timestamp === undefined) return note('');
+  luna('luna://com.webos.applicationManager/getForegroundAppInfo').then(fg => {
+    const ack = !(fg.appId === 'com.webos.app.home' && saverMin > 0);
+    luna(P + 'responseScreenSaverRequest', { clientName: SAVER_CLIENT, ack, timestamp: msg.timestamp });
+    note('fg=' + fg.appId + ' ack=' + ack);
+  });
+}
+function guardSaver() {
+  const c = cp.spawn('luna-send', ['-i', P + 'registerScreenSaverRequest', JSON.stringify({ subscribe: true, clientName: SAVER_CLIENT })], { stdio: ['ignore', 'pipe', 'ignore'] });
+  let buf = '';
+  // one JSON object per answer, however the tool lays it out (an object cut across reads waits for the rest)
+  c.stdout.on('data', d => {
+    buf += d;
+    let depth = 0, start = -1;
+    for (let i = 0; i < buf.length; i++) {
+      if (buf[i] === '{') { if (depth++ === 0) start = i; } else if (buf[i] === '}' && depth > 0 && --depth === 0) {
+        try { answerSaver(JSON.parse(buf.slice(start, i + 1))); } catch (e) {}
+      }
+    }
+    buf = depth > 0 ? buf.slice(start) : '';
+  });
+  c.on('close', () => setTimeout(guardSaver, 30000));
+}
+guardSaver();
 http.createServer((req, res) => {
   const q = url.parse(req.url, true);
   const send = o => { res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' }); res.end(JSON.stringify(o)); };
@@ -72,6 +105,7 @@ http.createServer((req, res) => {
   if (q.pathname === '/news') return news(String(q.query.u || '')).then(xml => send({ xml }));
   if (q.pathname === '/icon') return icon(String(q.query.id || ''), res);
   if (q.pathname === '/bing') return bing().then(send);
+  if (q.pathname === '/saver') { const n = parseInt(q.query.min, 10); if (n >= 0) saverMin = n; return send({ returnValue: true, min: saverMin }); }
   if (q.pathname === '/target') { fs.writeFileSync(TARGET, String(q.query.id || '').replace(/[^\w.-]/g, '')); return send({ returnValue: true }); }
   res.writeHead(404);
   res.end();
