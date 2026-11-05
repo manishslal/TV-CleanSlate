@@ -1,11 +1,15 @@
 # TV CleanSlate
 
 [![Android build](https://github.com/manishslal/TV-CleanSlate/actions/workflows/android.yml/badge.svg)](https://github.com/manishslal/TV-CleanSlate/actions/workflows/android.yml)
+[![Parity](https://github.com/manishslal/TV-CleanSlate/actions/workflows/parity.yml/badge.svg)](https://github.com/manishslal/TV-CleanSlate/actions/workflows/parity.yml)
+[![Checks](https://github.com/manishslal/TV-CleanSlate/actions/workflows/checks.yml/badge.svg)](https://github.com/manishslal/TV-CleanSlate/actions/workflows/checks.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 **A calm, ad-free Home for the TVs you already own, plus a safe way to clear out what came with them.**
 
 TV CleanSlate replaces the ad-filled home screen on Android TV, Google TV and Fire TV devices, brings the same look to a rooted LG webOS TV and to older Samsung Tizen TVs without root, and documents how to debloat each device one reversible step at a time. Everything here was built and tried on real TVs, and each [device log](devices/README.md) says what was and wasn't checked.
+
+**Status (2026-11-05):** tested by hand on the ten TVs and boxes listed under [Supported devices](#supported-devices), not on any others. The workflow badges above only show that the Android app builds and the parity and repository checks pass; they don't test a TV. No release is published yet.
 
 It stands on the work of other open source projects. The Android app is a fork of [**Aerial**](https://github.com/pengchujin/aerial-tv) by pengchujin and its contributors. See [Credits](#credits).
 
@@ -81,7 +85,7 @@ Android Home runs on Android 5.0 and newer. Most testing here was on Android 9 t
 
 ### Stock launcher off
 
-On the onn 4K Streaming Box, `scripts/04-disable-stock-launcher.sh` makes Home Android's real default and removes the stock launcher and setup wizard processes. They used 79 MB two minutes after boot, and the launcher reached 141 MB with its services after long uptime.
+On the onn 4K Streaming Box, `scripts/04-disable-stock-launcher.sh` makes Home Android's real default and removes the stock launcher and setup wizard processes. They used 79 MB two minutes after boot, and the launcher reached 141 MB with its services after long uptime ([device log](devices/onn-4k-streaming-box/CHANGELOG.md)).
 
 ### Home Mode, measured
 
@@ -133,14 +137,18 @@ There are no ads, accounts or analytics. Android Home only contacts these servic
 
 | Service | Used for |
 |---|---|
-| Apple | Aerial films |
-| Open-Meteo | Weather and sunset times |
+| Apple (`sylvan.apple.com`) | Aerial films |
+| Open-Meteo | Weather, sunset times and city search |
 | ipinfo.io | Approximate location for weather |
 | Microsoft Bing | Photo of the day |
+| NASA (`science.nasa.gov`) | Earth Observatory Image of the Day |
+| Wikimedia (`api.wikimedia.org`, `upload.wikimedia.org`) | Commons Picture of the Day, shown with its author and license |
+| Google (`gstatic.com`) | Google Earth View pictures |
 | Google News | Headlines |
 | plex.tv and your Plex server | Your videos and photos |
+| Your own cut-out server (optional) | The wallpaper's subject. Off unless you give it an address |
 
-It doesn't contact Aerial's servers or check for app updates.
+The web Homes (LG and Samsung) contact the same services except ipinfo.io: there you pick the city. Neither Home contacts Aerial's servers or checks for app updates.
 
 ## Safety rules
 
@@ -153,6 +161,22 @@ It doesn't contact Aerial's servers or check for app updates.
 Read the full [safety guide](guides/safety.md) first.
 
 Rooting an LG TV can void support and is at your own risk. This project comes with no warranty.
+
+## FAQ
+
+**Will this void my warranty?** Possibly. Disabling packages or installing a Home doesn't remove anything, but a maker can still decline support for a changed TV, and rooting an LG can void it. Read [Before you start](#before-you-start) first.
+
+**Can I undo everything?** Almost. `tools/restore.sh --uninstall` and `scripts/99-restore-stock.sh` put an Android TV back to stock, and each [device log](devices/README.md) lists its undo steps. The LG root itself can't be taken back.
+
+**Does it collect data?** No. There are no ads, accounts or analytics, and the [Privacy](#privacy) table lists every service Home contacts.
+
+**Do I need root?** No for Android, Google TV, Fire TV and Samsung. Yes for LG webOS, which is the high-risk path.
+
+**Will my TV still get updates?** Yes, unless you block them. The guides say to leave update packages alone; blocking updates on the LG was one owner's choice, and it means no security fixes.
+
+**Why is there no APK download yet?** Releases are planned. For now you build it yourself, as in [Quick start](#quick-start).
+
+**Is this affiliated with Google, Amazon, LG or Samsung?** No. It is an independent hobby project, and all trademarks belong to their owners (see [License](#license)).
 
 ## Terms used here
 

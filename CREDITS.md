@@ -17,6 +17,7 @@ Copyright notice, as MIT requires: `Copyright (c) 2026 pengchujin`. Full text in
 | Project | Author | License | How it was used |
 |---|---|---|---|
 | [dumbtv](https://github.com/humblemuzzu/dumbtv) | dumbtv contributors | MIT | `FireKeeper` follows its Keeper method for Fire OS 6. Its tested AFTMM package lists were a reference for the Fire TV guide. |
+| tv-preview branch of Aerial | @chikwok | Contributed to Aerial, which is MIT | `SourceWallpaper.kt` (a TV input's picture behind Home) is adapted from it. It reached this repository through Aerial's history. |
 
 ## Used directly on devices
 
@@ -39,6 +40,7 @@ No code from these projects is included.
 | [XMB TV Home](https://github.com/sanangoyal/XBM-TV-Home) | Sanan Goyal | MIT | The idea of a kit with backup, debloat, restore and agent prompts. |
 | [CleanYourTV](https://github.com/Gathin23/cleanyourtv) | Gathin | MIT | Disable-only debloating, and recording state before any change. |
 | [xmb-home](https://github.com/amachador/xmb-home) | amachador | MIT | Reviewed as a launcher option. |
+| [glisse](https://github.com/0kzh/glisse) | Kelvin Zhang | MIT | The measured numbers behind the glass tint, rim and press springs (the `Glisse` object in `LiquidGlass.kt`). Only numbers were taken, no code. See [docs/research/liquid-glass.md](docs/research/liquid-glass.md). |
 | [tv-home](https://github.com/linuxliam/tv-home) | linuxliam | None stated | Reviewed only. It has no license, so nothing from it may be reused. |
 
 ## Design tools
@@ -55,12 +57,16 @@ Used while redesigning the interface. Their files are not included.
 
 | Material | Source | License |
 |---|---|---|
-| Inter font | [The Inter Project Authors](https://github.com/rsms/inter) | [SIL OFL 1.1](android/FONT-LICENSE-OFL.txt) |
-| Barlow Condensed SemiBold | [The Barlow Project Authors](https://github.com/jpt/barlow) | [SIL OFL 1.1](android/FONT-LICENSE-OFL-Barlow.txt) |
-| Icon path data | [Google Material Design Icons](https://github.com/google/material-design-icons) | Apache-2.0 |
+| Inter font, variable and four static weights cut from it (`android/app/src/main/res/font/`) | [The Inter Project Authors](https://github.com/rsms/inter) | [SIL OFL 1.1](android/FONT-LICENSE-OFL.txt) |
+| Barlow Condensed SemiBold (`android/app/src/main/res/font/` and `webos/`) | [The Barlow Project Authors](https://github.com/jpt/barlow) | SIL OFL 1.1: [Android copy](android/FONT-LICENSE-OFL-Barlow.txt), [webOS copy](webos/FONT-LICENSE-OFL-Barlow.txt) |
+| Icon path data (`GlyphPaths.kt`) | [Google Material Symbols](https://github.com/google/material-design-icons) | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) |
+| Aerial film list (`android/app/src/main/assets/aerials.json`) | Carried over from Aerial. Links to and names of Apple's films only | The films are Apple's and are streamed from Apple, never stored here |
+| Apple Root CA certificate (`android/app/src/main/res/raw/apple_root_ca.pem`) | Apple's public root certificate, trusted for `sylvan.apple.com` only (see `network_security_config.xml`) | Apple's public certificate |
 | City list | [GeoNames](https://www.geonames.org) | CC BY 4.0 |
-| Google Earth View picture numbers and places (`android/app/src/main/assets/earthview.json`) | Collected by [limhenry/earthview](https://github.com/limhenry/earthview) | No license stated; only the numbers and place names are kept, as facts. The pictures are Google's and are fetched at runtime |
-| Interface sounds | Made here by `tools/make-sounds.py` | This project's license |
+| Google Earth View picture numbers and places (`android/app/src/main/assets/earthview.json`) | Collected by [limhenry/earthview](https://github.com/limhenry/earthview) | No license stated; only the numbers and place names are kept, as facts. No picture is included: they are Google's, fetched at runtime and credited "Google Earth View" on screen |
+| Interface sounds `ui_move`, `ui_select`, `ui_back`, `ui_limit` | Generated here by `tools/make-sounds.py` from sine tones, no samples | This project's license |
+| Clock flap sound `ui_flap.wav` | Made for the fork, as [FORK.md](android/FORK.md) records. Not made by `make-sounds.py` | This project's license |
+| Screenshots in `docs/images` and the icon and banner in `android/docs/brand` | Made for this project. The screenshots show Apple's aerial films, Bing, NASA and similar pictures from the sources below | This project's license for the interface; the pictures and logos in them stay with their owners |
 
 ## Libraries and services
 
@@ -77,7 +83,7 @@ Used while redesigning the interface. Their files are not included.
 | Bing photo of the day | Fetched at runtime | Microsoft's terms |
 | [NASA Earth Observatory](https://science.nasa.gov/earth/earth-observatory/) Image of the Day | Wallpaper fetched at runtime, credited on screen | NASA imagery is generally public domain |
 | [Wikimedia Commons](https://commons.wikimedia.org) Picture of the Day | Wallpaper fetched at runtime; its author and license are shown with it | Each file's own license (CC BY, CC BY-SA and others) |
-| [Google Earth View](https://earthview.withgoogle.com) | Wallpaper fetched at runtime | Google's terms |
+| [Google Earth View](https://earthview.withgoogle.com) | Wallpaper fetched at runtime from Google's picture host; only links are kept here | Google's terms |
 | Google News RSS | Headlines at runtime | Google's terms |
 
 ## Cut-out service
