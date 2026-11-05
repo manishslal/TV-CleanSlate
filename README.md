@@ -9,7 +9,7 @@
 
 TV CleanSlate replaces the ad-filled home screen on Android TV, Google TV and Fire TV devices, brings the same look to a rooted LG webOS TV and to older Samsung Tizen TVs without root, and documents how to debloat each device one reversible step at a time. Everything here was built and tried on real TVs, and each [device log](devices/README.md) says what was and wasn't checked.
 
-**Status (2026-11-05):** tested by hand on the ten TVs and boxes listed under [Supported devices](#supported-devices), not on any others. The workflow badges above only show that the Android app builds and the parity and repository checks pass; they don't test a TV. No release is published yet.
+**Status (2026-11-05):** tested by hand on the ten TVs and boxes listed under [Supported devices](#supported-devices), not on any others. The workflow badges above only show that the Android app builds and the parity and repository checks pass; they don't test a TV. The latest release is [1.67-mh37](https://github.com/manishslal/TV-CleanSlate/releases/latest).
 
 It stands on the work of other open source projects. The Android app is a fork of [**Aerial**](https://github.com/pengchujin/aerial-tv) by pengchujin and its contributors. See [Credits](#credits).
 
@@ -121,13 +121,17 @@ Details, limits and a machine-readable list: [docs/SUPPORTED_DEVICES.md](docs/SU
 
 ## Quick start
 
-Read the [safety guide](guides/safety.md) and [Before you start](#before-you-start) first. You need ADB, JDK 17, the Android SDK, and network debugging turned on for the TV. No prebuilt APK is published yet, so you build your own.
+Read the [safety guide](guides/safety.md) and [Before you start](#before-you-start) first. You need ADB and network debugging turned on for the TV.
+
+Download the APK for your device from the [latest release](https://github.com/manishslal/TV-CleanSlate/releases/latest) (Fire TV has its own), check it against `SHA256SUMS`, then let the installer set it up:
 
 ```bash
 git clone https://github.com/manishslal/TV-CleanSlate.git
 cd TV-CleanSlate/android
-BUILD=1 TV=<tv-ip>:5555 tools/install.sh
+APK_FILE=/path/to/TV-CleanSlate-Home-1.67-mh37.apk TV=<tv-ip>:5555 tools/install.sh
 ```
+
+To build it yourself instead (JDK 17 and the Android SDK), use `BUILD=1` in place of `APK_FILE=...`. Release builds carry no brand logos: tiles are drawn from each app's own icon.
 
 The full walkthrough is in [Getting started](guides/getting-started.md). Stuck? See [Troubleshooting](guides/troubleshooting.md).
 
@@ -174,7 +178,7 @@ Rooting an LG TV can void support and is at your own risk. This project comes wi
 
 **Will my TV still get updates?** Yes, unless you block them. The guides say to leave update packages alone; blocking updates on the LG was one owner's choice, and it means no security fixes.
 
-**Why is there no APK download yet?** Releases are planned. For now you build it yourself, as in [Quick start](#quick-start).
+**Where do I get the app?** From [Releases](https://github.com/manishslal/TV-CleanSlate/releases/latest), with a checksum for each file, or build it yourself as in [Quick start](#quick-start). The LG and Samsung web Homes are built from source; see their READMEs.
 
 **Is this affiliated with Google, Amazon, LG or Samsung?** No. It is an independent hobby project, and all trademarks belong to their owners (see [License](#license)).
 

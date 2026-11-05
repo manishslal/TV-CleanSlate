@@ -8,7 +8,7 @@ Read [safety.md](safety.md) before you start. You can stop after any step, and [
 
 - A TV or box on Android 5.0 or newer, on the same network as your computer
 - [ADB](https://developer.android.com/tools/adb)
-- JDK 17 and the Android SDK
+- JDK 17 and the Android SDK, only to build Home yourself
 
 ## 1. Turn on network debugging
 
@@ -33,9 +33,11 @@ Then reboot once and confirm the TV comes back. Read [safety.md](safety.md).
 
 ## 3. Build and install
 
+Download the APK for your device from the [latest release](https://github.com/manishslal/TV-CleanSlate/releases/latest) and check it with `shasum -a 256 -c SHA256SUMS`. To build it yourself instead (JDK 17 and the Android SDK), use `BUILD=1` in place of `APK_FILE=...`.
+
 ```bash
 cd android
-BUILD=1 TV=<tv-ip>:5555 tools/install.sh
+APK_FILE=/path/to/TV-CleanSlate-Home-1.67-mh37.apk TV=<tv-ip>:5555 tools/install.sh
 adb -s <tv-ip>:5555 shell cmd package compile -m speed -f io.manish.home
 ```
 
