@@ -25,4 +25,4 @@ In Photoshop or any editor, export the mark white on transparent, cropped tight,
 
 These are trademarks, for personal use on the owner's TVs. Don't publish them with a public fork.
 
-Sources: the ten PNG and WebP logos were supplied by the owner on 2026-10-30. `spotify.svg` is from Simple Icons (CC0).
+Sources: the ten PNG and WebP logos were supplied by the owner on 2026-10-30. `dark/spotify.svg` is from Simple Icons (CC0).

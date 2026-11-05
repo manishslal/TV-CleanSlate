@@ -1,0 +1,20 @@
+# Link checks for every Markdown file. CI runs two passes (see .github/workflows/checks.yml):
+#   offline  - relative links and anchors only; fails the build
+#   external - http(s) links; weekly, never fails a pull request
+include_fragments = "anchor-only"
+max_retries = 2
+timeout = 20
+accept = ["200..=299", "429"]
+exclude_path = ["android/docs/upstream"]
+exclude = [
+  # Placeholders in the docs, not real hosts
+  '^https?://<',
+  '^https?://(localhost|127\.0\.0\.1|0\.0\.0\.0)',
+  '^https?://[^/]*\.local(/|:|$)',
+  '^https?://example\.',
+  # Sites that refuse bots or need a login
+  '^https://(www\.)?(linkedin|twitter|x)\.com',
+  '^https://xdaforums\.com',
+  # Release pages of a repository with no release yet
+  '^https://github\.com/manishslal/TV-CleanSlate/(releases|issues/new)',
+]

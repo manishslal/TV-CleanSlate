@@ -17,6 +17,20 @@ Include the model, OS version, RAM, what worked, what failed and how to undo it.
 
 A bug that also appears in unmodified Aerial belongs [upstream](https://github.com/pengchujin/aerial-tv).
 
+## Checks
+
+Pull requests run [`checks.yml`](.github/workflows/checks.yml). Each one runs on your computer too, from the repository root:
+
+| Check | Run it | Needs |
+|---|---|---|
+| Relative links in Markdown | `lychee --offline --config lychee.toml './**/*.md'` | [lychee](https://github.com/lycheeverse/lychee) |
+| Shell scripts | `scripts/check-shell.sh` | [ShellCheck](https://www.shellcheck.net) |
+| Python | `ruff check` and `python3 -m py_compile <file>` | [ruff](https://docs.astral.sh/ruff/) |
+| Web Home (webOS, Tizen) | `python3 webos/build.py && python3 tizen/build.py && scripts/check-web.py` | Python with Pillow, Node |
+| Paths named in docs | `scripts/check-doc-refs.py` | Python |
+
+The web builds work without the private logos (`logos/dark/`) and the baked frost: they warn and go on. `scripts/check-web.py` fails if the page script does not parse or uses ES6 (`=>`, `let`, `const`, template literals, `class`), because the TVs run Chromium 47 and up. `scripts/check-doc-refs.py` fails when a Markdown file names a repo file in backticks that does not exist; a name that is not meant to be one (a file on a TV, in another project) goes in `scripts/doc-refs.ignore`. The weekly external-link pass reports dead web links but never fails a pull request.
+
 ## Adding a device
 
 Add `devices/<device>/CHANGELOG.md`, then update `devices/devices.json` and `docs/SUPPORTED_DEVICES.md`.

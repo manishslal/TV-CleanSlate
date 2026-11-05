@@ -21,7 +21,7 @@ If you want Aerial itself, use and support the upstream project. Bug reports for
 | Chinese city list (`cities-cn.tsv`) | GeoNames, https://www.geonames.org | CC BY 4.0 |
 | Inter, four static weights (`app/src/main/res/font/inter_static_*.ttf`), cut from the variable font for Android 7 | The Inter Project Authors, https://github.com/rsms/inter | SIL Open Font License 1.1, see [FONT-LICENSE-OFL.txt](FONT-LICENSE-OFL.txt) |
 | Google Earth View picture numbers and places (`app/src/main/assets/earthview.json`) | Collected by https://github.com/limhenry/earthview | No license stated; only numbers and place names, as facts. The pictures are Google's, fetched at runtime |
-| Interface sounds (`app/src/main/res/raw/ui_move/select/back/limit.wav`) | Generated for the fork by `tools/make-sounds.py` | This project's license |
+| Interface sounds (`ui_move.wav`, `ui_select.wav`, `ui_back.wav`, `ui_limit.wav` in `app/src/main/res/raw/`) | Generated for the fork by `tools/make-sounds.py` | This project's license |
 | Clock flap sound (`app/src/main/res/raw/ui_flap.wav`) | Made for the fork (see [FORK.md](FORK.md)) | This project's license |
 | Aerial film list (`app/src/main/assets/aerials.json`) | Carried over from upstream; links to Apple's films only | Apple's terms for the films |
 | Apple Root CA (`app/src/main/res/raw/apple_root_ca.pem`) | Apple's public root certificate, trusted for `sylvan.apple.com` only | Apple's public certificate |

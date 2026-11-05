@@ -2,7 +2,7 @@
 # Free memory: stop LG's app preloading and services for features this TV does not use.
 # Everything here lasts until the next boot. Undo: rm /var/lib/webosbrew/init.d/17-lg-slim and restart the TV.
 (
-  export PATH=/usr/bin:/usr/sbin:/bin:/sbin:$PATH
+  export PATH="/usr/bin:/usr/sbin:/bin:/sbin:$PATH"
   sleep 80
   [ -e /media/developer/cleanyourtv/DISABLE-SLIM ] && exit 0
   systemctl --no-block stop preload-manager.service broadcast-conf-downloader.service rec-info-adapter.service rec-listmgr.service tv-reservation-agent.service lgchannelurl.service
@@ -16,7 +16,7 @@
       [ -e "$p" ] || continue
       grep -q " $p " /proc/mounts || mount --bind /media/developer/cleanyourtv/stub-noop "$p"
     done
-    pkill -9 -x $b
+    pkill -9 -x "$b"
   done
   # LG's voice app ("Search", the remote's mic button), taken out at the owner's request: about 14 MB
   # held and 10 MB more in swap. Its name is longer than pkill -x reads, so it is matched by path.

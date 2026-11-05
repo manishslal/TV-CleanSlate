@@ -24,8 +24,8 @@ def main():
     while True:
         try:
             reply = json.loads(ws.recv())
-        except websocket.WebSocketProtocolException:
-            raise SystemExit('The TV closed the connection. Press Allow within 30 seconds of connecting.')
+        except websocket.WebSocketProtocolException as err:
+            raise SystemExit('The TV closed the connection. Press Allow within 30 seconds of connecting.') from err
         if reply.get('event') == 'ms.channel.connect':
             break
     if reply['data'].get('token'):

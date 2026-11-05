@@ -39,7 +39,7 @@ BUILD=1 TV=<tv-ip>:5555 tools/install.sh
 adb -s <tv-ip>:5555 shell cmd package compile -m speed -f io.manish.home
 ```
 
-Firmware that refuses a launcher needs `tools/install.sh guard` instead.
+Firmware that refuses a launcher needs `android/tools/install.sh guard` instead.
 
 The installer asks nothing once it starts. It grants Home these permissions over ADB, which the app can't ask for on screen:
 
@@ -52,7 +52,7 @@ The installer asks nothing once it starts. It grants Home these permissions over
 | Usage stats | Knows which app is in front, where a TV hides it |
 | Notification listener | Brings Home back if the TV stops it |
 
-It also tries to make Home the default. Where the firmware keeps sending Home to its own launcher, it turns on **Home Guard**, an accessibility service that answers the Home key with Home. On some TVs it makes Home the system screensaver. `KEEP_ADB=1` would also switch network debugging back on whenever the TV turns it off; leave it out unless you need it. No other app is disabled or uninstalled by this step, and `tools/restore.sh` (below) takes all of it back.
+It also tries to make Home the default. Where the firmware keeps sending Home to its own launcher, it turns on **Home Guard**, an accessibility service that answers the Home key with Home. On some TVs it makes Home the system screensaver. `KEEP_ADB=1` would also switch network debugging back on whenever the TV turns it off; leave it out unless you need it. No other app is disabled or uninstalled by this step, and `android/tools/restore.sh` (below) takes all of it back.
 
 ## 4. Check it
 
@@ -88,7 +88,7 @@ Do this in Developer options when you finish.
 
 ## Fire TV notes
 
-Fire OS keeps the Home button for Amazon, and the HOME role has no effect. `tools/install.sh` detects Fire OS 6 and installs the guard build with `FireKeeper`. It needs `BUILD=1`.
+Fire OS keeps the Home button for Amazon, and the HOME role has no effect. `android/tools/install.sh` detects Fire OS 6 and installs the guard build with `FireKeeper`. It needs `BUILD=1`.
 
 - Fire OS 6 never binds a third-party accessibility service, so Home Guard can't run there. `FireKeeper` reads usage stats and moves Home's task to the front.
 - Amazon's launcher stays enabled. Disabling it can leave a stick with no home screen.

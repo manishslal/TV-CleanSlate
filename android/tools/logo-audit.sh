@@ -8,6 +8,7 @@ cd "$(dirname "$0")/.."
 : "${TV:?set TV to the TV IP address}"
 case "$TV" in *:*) SERIAL="$TV" ;; *) SERIAL="$TV:5555" ;; esac
 adb connect "$SERIAL" >/dev/null
+# shellcheck disable=SC2016  # $p is expanded by the shell on the TV
 adb -s "$SERIAL" shell 'for p in $(pm list packages | sed s/package://); do for c in LEANBACK_LAUNCHER LAUNCHER; do
   r=$(cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.$c $p 2>/dev/null | tail -1)
   case "$r" in */*) echo "${r%%/*}"; break ;; esac; done; done' | tr -d '\r' | sort -u | python3 -c '

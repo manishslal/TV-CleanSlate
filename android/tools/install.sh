@@ -177,7 +177,8 @@ build() {
   if [ -n "${APK_FILE:-}" ] && [ "$flavor" = "$FLAVOR" ]; then
     echo "$APK_FILE"
   elif [ "${BUILD:-0}" = 1 ]; then
-    local task="assemble$(tr '[:lower:]' '[:upper:]' <<< "${flavor:0:1}")${flavor:1}Release"
+    local task
+    task="assemble$(tr '[:lower:]' '[:upper:]' <<< "${flavor:0:1}")${flavor:1}Release"
     ./gradlew -q --console=plain "$task"
     echo "app/build/outputs/apk/$flavor/release/app-$flavor-release.apk"
   else
@@ -189,6 +190,7 @@ build() {
 version_code() {   # versionCode of the APK on disk; empty without the Android SDK
   # Several build-tools versions may be installed; a bare glob would pass the others as arguments.
   local aapt2
+  # shellcheck disable=SC2012  # sort -V picks the newest build-tools version
   aapt2=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 2>/dev/null | sort -V | tail -1)
   [ -n "$aapt2" ] || return 0
   "$aapt2" dump badging "$1" 2>/dev/null | sed -n "s/.*versionCode='\([0-9]*\)'.*/\1/p" | head -1

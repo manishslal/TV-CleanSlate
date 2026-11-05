@@ -1,0 +1,88 @@
+name: Checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '23 5 * * 1'   # Mondays: the external-link pass
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  links:
+    name: Links (relative)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Offline: relative links and #anchors in every Markdown file. Fails the build.
+      - uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          args: --offline --config lychee.toml --no-progress './**/*.md'
+          fail: true
+
+  external-links:
+    name: Links (external, weekly)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # http(s) links. Does not run on pull requests and never fails the run; read the job summary.
+      # android/docs is mostly Chinese upstream notes and the download site, which are flaky to check.
+      - uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          args: --config lychee.toml --no-progress --exclude-path android/docs './**/*.md'
+          fail: false
+
+  shell:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # shellcheck is preinstalled on ubuntu-latest. The file list lives in the script so it runs the same locally.
+      - run: bash scripts/check-shell.sh
+
+  python:
+    name: Python (ruff)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+      - run: pip install ruff==0.17.4
+      - run: ruff check
+      - run: git ls-files -z '*.py' | xargs -0 python -m py_compile
+
+  web:
+    name: Web Home (webOS, Tizen)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+      - run: pip install pillow
+      # The private logos (logos/dark/) and the baked frost are absent here: the builds warn and go on.
+      - run: python3 webos/build.py
+      - run: python3 tizen/build.py
+      # Both pages' scripts parse, use no ES6 (the TVs run Chromium 47 and up), and home-svc.js parses.
+      - run: python3 scripts/check-web.py
+
+  docs-refs:
+    name: Doc references
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: python3 scripts/check-doc-refs.py

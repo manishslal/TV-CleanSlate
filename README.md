@@ -32,7 +32,7 @@ This is one person's project, tested on the TVs in one home. It is shared so oth
 | What you'd do | Risk | How to undo it |
 |---|---|---|
 | Install Android Home | Low to medium. Your stock Home stays installed, but the installer grants Home system permissions and may turn on an accessibility service (Home Guard) without asking again | `android/tools/restore.sh --uninstall` takes it all back ([details](guides/getting-started.md#3-build-and-install)) |
-| Make it the default Home on Google TV (`04-disable-stock-launcher.sh`) | Medium. Disables (never uninstalls) the stock launcher and setup wizard | `scripts/99-restore-stock.sh` |
+| Make it the default Home on Google TV (`scripts/04-disable-stock-launcher.sh`) | Medium. Disables (never uninstalls) the stock launcher and setup wizard | `scripts/99-restore-stock.sh` |
 | Debloat over ADB | Medium. A wrong package can break inputs, the remote or Wi-Fi | Re-enable the package; each device log lists the undo |
 | Samsung web Home | Low to medium. Needs Developer Mode, no root | Uninstall the app and turn off Developer Mode |
 | LG web Home | **High.** Needs a root exploit (SlopBro) and replaces LG's Home | Home and its start-up hooks come out ([webos/README](webos/README.md#risks-and-undo)); the root itself can't be taken back |

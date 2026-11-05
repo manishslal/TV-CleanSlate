@@ -53,7 +53,7 @@
 
 ### Phase 2c: Aerial (preview only)
 - Installed `app.orchard.tv` v1.67 (targetSdk 34, hash verified). **No grants** and not Home. It opens and shows aerial footage, a clock, weather and an app shelf, plus its own "Make Aerial Your Home Screen" panel.
-- Its full installer (`tools/install.sh`) would grant WRITE_SECURE_SETTINGS, usage stats, overlay, install-packages and location; enable an accessibility "Home Guard"; add a notification listener; keep ADB on; and take the HOME role. `tools/restore.sh` undoes it. Not run.
+- Its full installer (`android/tools/install.sh`) would grant WRITE_SECURE_SETTINGS, usage stats, overlay, install-packages and location; enable an accessibility "Home Guard"; add a notification listener; keep ADB on; and take the HOME role. `android/tools/restore.sh` undoes it. Not run.
 - Conflict: Free My TV's boot check keeps Free My TV as Home, so running Aerial as Home means setting Free My TV to Original first.
 
 ### Phase 3c: Aerial as Home (2026-10-28 ~17:00)
@@ -84,7 +84,7 @@
 - First link showed "No Plex server answered": the app blocks cleartext, so `http://<tv-ip>:32400` was refused. Now uses the server's HTTPS `*.plex.direct` address, which resolves to <tv-ip> on the Onn. Relinked: libraries listed, a photo library chosen.
 - "Set up from a phone or computer" showed the offline icon: upstream Aerial (uid 10039) already listens on 8790. The fork now uses **8791** (verified listening, uid 10064; answers 404 without its token, same as upstream).
 - The video-library row overflowed (7 libraries) and hid its label and the chosen library: those rows now scroll.
-- **Blocker for testing the fork:** upstream's Home Guard treats `io.manish.home` as a stock home and pulls Aerial back each time it opens (`AerialGuard: stock home io.manish.home came to the front; bringing Aerial back`). Fix = move Home to the fork (upstream `tools/restore.sh`, then the fork's installer). Not done yet; waiting for the owner.
+- **Blocker for testing the fork:** upstream's Home Guard treats `io.manish.home` as a stock home and pulls Aerial back each time it opens (`AerialGuard: stock home io.manish.home came to the front; bringing Aerial back`). Fix = move Home to the fork (upstream `android/tools/restore.sh`, then the fork's installer). Not done yet; waiting for the owner.
 - Not yet verified: drone videos/photos playing in the fork's screensaver.
 
 ### Home switched to the fork (2026-10-28 ~21:12, owner approved)
@@ -141,7 +141,7 @@ adb -s <tv-ip>:5555 uninstall io.manish.home
 Then use `scripts/99-restore-stock.sh` if anything still points away from the stock launcher.
 
 ## 1.67-mh10 (2026-10-31)
-- Installed from `android` with `tools/install.sh`. Settings carried over: mode Custom, Home Guard bound, Home in front.
+- Installed from `android` with `android/tools/install.sh`. Settings carried over: mode Custom, Home Guard bound, Home in front.
 - Exported Dark and Full Color tile sheets: logos match in size and position on all 20 tiles.
 - Home idle in Custom: 126, 130 and 134 MB across three runs.
 - Not checked yet: Clock page on screen with a real remote.

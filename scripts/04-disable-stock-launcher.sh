@@ -4,8 +4,10 @@
 #   e.g. 04-disable-stock-launcher.sh <tv-ip> io.manish.home/app.orchard.tv.MainActivity
 # Stops if the wizard owns a saved Wi-Fi network, because disabling it could erase that network.
 # Undo: 99-restore-stock.sh <tv>
+# shellcheck source=common.sh
 . "$(dirname "$0")/common.sh"; need_tv "$1"; NEW=${2:?home component}
 WIZARD=com.google.android.tungsten.setupwraith
+# shellcheck disable=SC2086  # HOME_INTENT is a list of arguments
 H="$HOME_INTENT -c android.intent.category.DEFAULT"
 UID_W=$(A pm list packages -U "$WIZARD" | sed -n 's/.*uid://p' | head -1)
 if [ -n "$UID_W" ] && A dumpsys wifi | grep -q "cuid=$UID_W"; then
@@ -16,6 +18,7 @@ confirm "disable $STOCK_PKG and $WIZARD (not uninstall) and make $NEW the Home a
 A pm disable-user --user 0 "$WIZARD" | tail -1
 A pm disable-user --user 0 "$STOCK_PKG" | tail -1
 sleep 2; A cmd package set-home-activity "$NEW" | tail -1; sleep 1
+# shellcheck disable=SC2086  # H is a list of arguments
 R=$(A cmd package resolve-activity --brief $H | tail -1)
 case "$R" in
   "${NEW%%/*}"/*) ;;

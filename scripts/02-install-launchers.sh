@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Installs launcher APKs ALONGSIDE the stock launcher. Does not change Home, does not disable anything.
 # Usage: 02-install-launchers.sh <tv> [name ...]   (default: home)
+# shellcheck source=common.sh
 . "$(dirname "$0")/common.sh"; need_tv "$1"; shift; K="$(dirname "$0")/.."
 if [ -f "$K/apks/SHA256SUMS" ]; then ( cd "$K/apks" && shasum -a 256 -c SHA256SUMS ) || { echo "APK hash mismatch, aborting"; exit 1; }; fi
 confirm "install ${*:-home} beside the stock launcher (Home stays as it is; uninstall to undo)"
-for n in ${@:-home}; do
+for n in "${@:-home}"; do
   l=$(grep "^$n|" "$(dirname "$0")/launchers.conf") || { echo "unknown launcher $n"; continue; }
   apk=$(echo "$l" | cut -d'|' -f3)
   [ -f "$K/$apk" ] || { echo "$n: no APK ($apk)"; continue; }

@@ -257,4 +257,3 @@ Ad blocking at the router is deferred. Update packages stay untouched in every o
 - [appium-tizen-tv-driver issue 584](https://github.com/headspinio/appium-tizen-tv-driver/issues/584)
 - [Samsung debug gist](https://gist.github.com/laat/2b7107298593dca650062b7678279386)
 - [TV debug MCP screenshot notes](https://glama.ai/mcp/servers/Ediand11/tv-debug-mcp/tools/tv_screenshot)
-- [AVPlay connection failure thread](https://forum.developer.samsung.com/t/avplay-player-cant-play-mp4-player-error-connection-failed/30108)

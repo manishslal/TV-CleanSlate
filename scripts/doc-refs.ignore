@@ -1,0 +1,29 @@
+# Names in backticks that check-doc-refs.py should not expect in this repo. One rule per line:
+#   <document glob>: <path or glob>      (an empty path means every path in those documents)
+# Keep the reason next to each group.
+
+# Files saved to the owner's local backups/ folder (gitignored) or kept on a TV, named in the per-device logs.
+devices/*/CHANGELOG.md: packages-*.txt
+devices/*/CHANGELOG.md: stock-launcher.txt
+devices/lg-50up8000pua/CHANGELOG.md: backup/*
+devices/lg-50up8000pua/CHANGELOG.md: app/barlow_condensed_semibold.ttf
+devices/lg-50up8000pua/CHANGELOG.md: stage-home.sh
+devices/lg-50up8000pua/CHANGELOG.md: reload-home.sh
+devices/lg-50up8000pua/CHANGELOG.md: debloat-stop.sh
+devices/lg-50up8000pua/CHANGELOG.md: scripts/debloat-stop.sh
+
+# Files of other projects (XMB TV Home, CleanYourTV, FireTV-Debloat) that the research notes and logs discuss.
+devices/onn-4k-streaming-box/CHANGELOG.md: android/build.sh
+devices/onn-4k-streaming-box/CHANGELOG.md: restore-launcher.sh
+docs/research/*.md: restore-launcher.sh
+docs/research/*.md: disable.sh
+docs/research/*.md: check.py
+docs/research/*.md: debloat.txt
+docs/research/*.md: PROMPT.md
+docs/research/*.md: skill/SKILL.md
+docs/research/*.md: repos/
+docs/research/*.md: FireTV-Debloat/
+docs/research/*.md: props.txt
+
+# android/docs describes the app's files on the device, the download site and the upstream project, none of which are in this repo.
+android/docs/*:
