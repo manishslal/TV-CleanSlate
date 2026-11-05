@@ -8,3 +8,28 @@ updates:
     directory: /android
     schedule: {interval: weekly}
     open-pull-requests-limit: 5
+    # Minor and patch updates arrive as one pull request, so one green build merges them all.
+    groups:
+      android-minor-and-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
+    # Held back on purpose. The app runs on Android 5.0 (minSdk 21) and the build must stay green
+    # on Gradle 8.14 with compileSdk 36. Dependabot's own pull requests for these failed CI:
+    # each release below raises minSdk to 23, needs compileSdk 37 or needs AGP 9.1+.
+    ignore:
+      # Compose 1.10+ (BOM 2026.x) needs minSdk 23 and AGP 9.1.
+      - dependency-name: "androidx.compose:compose-bom"
+      # Needs Gradle 9.6, which also changes the Kotlin plugin setup; a migration, not a bump.
+      - dependency-name: "com.android.application"
+        update-types: ["version-update:semver-major"]
+      # core-ktx 1.18+ needs minSdk 23; 1.19 also compileSdk 37 and AGP 9.1.
+      - dependency-name: "androidx.core:core-ktx"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      # activity-compose 1.13 pulls in navigationevent (minSdk 23); lifecycle 2.11 needs AGP 9.1.
+      - dependency-name: "androidx.activity:activity-compose"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "androidx.lifecycle:lifecycle-viewmodel-compose"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      # Media3 1.9+ needs minSdk 23 (1.8 is the last that runs on Android 5.0).
+      - dependency-name: "androidx.media3:*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
