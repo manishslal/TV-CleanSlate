@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lite still offers the Effects choice, whose strings the app no longer has. -->
+<resources>
+    <string name="st_effects">Effects</string>
+    <string name="st_effects_auto">Auto</string>
+    <string name="st_effects_full">Full</string>
+    <string name="st_effects_lite">Lite</string>
+    <string name="st_effects_hint">Lite draws plain panels and the selected app without its sheen, and keeps the screen at 60 Hz: for TVs that stutter.</string>
+    <string name="st_effects_auto_lite_hint">This TV has little memory or an older Android, so Auto uses Lite.</string>
+</resources>

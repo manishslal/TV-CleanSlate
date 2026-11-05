@@ -94,7 +94,7 @@ class SaverView(context: Context, mode: ScreensaverMode, private val proxy: Film
         when (mode) {
             ScreensaverMode.Aerial -> films = Aerials.load(context).shuffled()
             // The owner's own films carry no caption, as in the full app.
-            ScreensaverMode.Videos -> films = ScreensaverVideos.all(context).shuffled().map { Film(it.file.toURI().toString(), null) }
+            ScreensaverMode.Videos -> films = ScreensaverVideos.all(context).shuffled().mapNotNull { v -> v.file?.let { Film(it.toURI().toString(), null) } }
             else -> Unit
         }
         if (!clockOnly && !photos && films.isEmpty()) clockOnly = true
