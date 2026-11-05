@@ -158,3 +158,14 @@ Each entry gives what changed and how to undo it.
 - Ran `stage-home.sh` and `reload-home.sh`. Checked with a `DISPLAY` capture: Home in front on the Aerial film, the pill now clear glass. Settings not changed.
 - `luna-send` from an SSH shell answered nothing this time, while the same calls from Node (`child_process`) worked; the capture was taken that way.
 - Undo: copy the backup over `app/` and the helper back, restart the helper, then run `stage-home.sh` and `reload-home.sh`.
+
+### Glow and network row (2026-11-05)
+- Deployed the page with two fixes: Netflix on a black plate glowed white in Color tiles, now red from its icon (Netflix and Plex also have glow colors in the logo manifest); Control Center's Network row showed the TV's address, now the Wi-Fi name, as the pill does.
+- The first deploy of this broke Home for about three minutes: a new function named `sat` was shadowed by `halo()`'s own `var sat`, which JavaScript hoists, so building the tiles threw. Renamed and redeployed; Home back, Netflix focused with a red glow. Previous page kept at `backup/index.before-glow-2026-11-05.html`.
+
+### Bloat check (2026-11-05)
+- Stopped and confirmed: CleanYourTV's four debloat groups (ads: `adoverlay-service` stubbed and its hosts; tracking: `acr2`, LivePlus viewing tracking, stubbed; logs: `remotelogger`, `service-logger`; suggestions: `contentminer`, `nudge`, `sportsalarm`) and `17-lg-slim` (preload manager, broadcast config downloader, recording and channel-list services, HomeKit and the cloud link stubbed).
+- Ad hosts resolve to 127.0.0.1 through the system resolver: `us.ad`, `us.info` and `nl.ad`/`nl.info.lgsmartad.com`, `us.rdx2.lgtvsdp.com`, `eic.ads.lgtvcommon.com`.
+- LG's own Home is replaced: the overlay is bind-mounted over `com.webos.app.home`, and it is the foreground app.
+- Still running, not stopped by anything here: the Amazon Alexa adapter, the ThinQ AI adapter, LG's voice app and `voiceconductor`/`voiceinput`, `sdx`, `eim` and the `update` daemon (updates are blocked in Homebrew Channel). AirPlay's web app runs by the owner's choice; Plex was left open.
+- Memory at the time: 257 MB available of 1.3 GB, 348 MB of swap in use. The browser engine (WebAppMgr) is the largest: 299 MB, plus renderers for Home (92 MB), AirPlay (66 MB) and Plex (28 MB).

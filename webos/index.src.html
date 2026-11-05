@@ -827,8 +827,17 @@ function tile(t) {
 function hue(id) { var h = 0; for (var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 360; return 'hsl(' + h + ',55%,38%)'; }
 /* The focus glow, as on Android: a black-and-white or grey app (Apple TV) glows white, and a dark
    brand color (HBO Max's purple, Windscribe's navy) is lifted to a bright one of its hue */
+function satOf(c) {
+  var m = c && (c.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i) || c.match(/\d+/g));
+  if (!m) return 0;
+  var v = m.length === 4 ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [+m[0], +m[1], +m[2]];
+  var max = Math.max(v[0], v[1], v[2]);
+  return max ? (max - Math.min(v[0], v[1], v[2])) / max : 0;
+}
+/* the logo's own glow, else its plate where that has a hue, else the icon's colour: a black plate
+   (Netflix, Peacock) is the tile, not the brand, and glowed white (Android: TileArt's glow) */
 function halo(id) {
-  var look = PLATES[id] || [], c = look[3] || look[0] || colors[id] || '', r, g, b;
+  var look = PLATES[id] || [], c = look[3] || (satOf(look[0]) >= 0.18 ? look[0] : '') || colors[id] || look[0] || '', r, g, b;
   var m = c.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i);
   if (m) { r = parseInt(m[1], 16); g = parseInt(m[2], 16); b = parseInt(m[3], 16); }
   else { m = c.match(/\d+/g); if (!m) return '#f2f2f7'; r = +m[0]; g = +m[1]; b = +m[2]; }
@@ -1163,7 +1172,8 @@ function pageControl() {
       { label: 'Volume', icon: volume.muted ? 'VOLUME_OFF' : 'VOLUME_UP', bar: function () { return volume.muted ? 0 : volume.v; }, value: function () { return volume.muted ? 'Muted' : String(volume.v); }, step: function (d) { setVol(d); }, ok: function () { setVol('mute'); } },
       { label: 'Brightness', icon: 'LIGHT_MODE', value: 'Picture Settings', ok: function () { closeAll(); open({ id: 'com.palm.app.settings' }); } },
       { label: 'Inputs', icon: 'INPUT', to: pageInputs },
-      { label: 'Network', icon: net && net.wired && net.wired.state === 'connected' ? 'LAN' : 'WIFI', value: (w && w.ipAddress) || 'Offline', ok: function () { closeAll(); open({ id: 'com.palm.app.settings' }); } },
+      /* the network's name, as the pill and Android show it, not the TV's address */
+      { label: 'Network', icon: net && net.wired && net.wired.state === 'connected' ? 'LAN' : 'WIFI', value: net && net.wired && net.wired.state === 'connected' ? 'Ethernet' : w && w.state === 'connected' ? (w.ssid || 'Wi-Fi') : 'Not Connected', ok: function () { closeAll(); open({ id: 'com.palm.app.settings' }); } },
       { label: 'Settings', icon: 'SETTINGS', ok: function () { closeAll(); open({ id: 'com.palm.app.settings' }); } },
       choice('Appearance', [['auto', 'Auto'], ['dark', 'Dark'], ['light', 'Light']], function () { return S.appearance; }, function (v) { S.appearance = v; }, 'CONTRAST'),
       { label: 'Personalize', icon: 'IMAGE', ok: function () { lock(function () { push(pagePersonalize()); }); } },
