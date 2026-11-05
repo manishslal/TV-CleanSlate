@@ -47,7 +47,6 @@ val LocalLightPanel = compositionLocalOf { false }
  * Fork: read in a light panel ([LocalLightPanel]), each gives Apple's light counterpart.
  */
 object Palette {
-    val Background = Color(0xFF000000)
     val Label: Color @Composable @ReadOnlyComposable get() = if (LocalLightPanel.current) Light.Label else Dark.Label
     val SecondaryLabel: Color @Composable @ReadOnlyComposable get() = if (LocalLightPanel.current) Light.SecondaryLabel else Dark.SecondaryLabel
     val TertiaryLabel: Color @Composable @ReadOnlyComposable get() = if (LocalLightPanel.current) Light.TertiaryLabel else Dark.TertiaryLabel

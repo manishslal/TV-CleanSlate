@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Lint settings for the Android Home app. Every ignore below is deliberate and says why; real
+  problems are fixed in the code instead. `./gradlew lintStandardRelease` must pass.
+-->
+<lint>
+    <!-- Strings the app does not read but lite/ does (it copies this strings.xml at build time). -->
+    <issue id="UnusedResources">
+        <ignore regexp="R\.string\.(cc_network|hidden_title|wp_title|wp_weather_guessed|wp_weather_chosen|wx_(clear|partly_cloudy|cloudy|fog|rain|snow|thunder)|st_clock_size|st_plate(_glass|_none)?|st_hidden_(apps_hint|none|count)|st_peek(_show|_hide)?)\b"/>
+    </issue>
+
+    <!-- Style suggestions to use androidx.core.*ktx helpers; the code is correct as written. -->
+    <issue id="UseKtx" severity="ignore"/>
+
+    <!-- minSdk is 21 on purpose (Android 5.0 TVs). Newer-API attributes and constants are guarded or
+         harmless on older systems, which skip them. -->
+    <issue id="UnusedAttribute" severity="ignore"/>
+    <issue id="InlinedApi" severity="ignore"/>
+
+    <!-- Dependencies are pinned on purpose: Compose 1.9, Media3 1.8, core-ktx 1.17, activity and
+         lifecycle stay at the last releases that run on Android 5.0 (see app/build.gradle.kts and
+         .github/dependabot.yml). targetSdk 34 is a TV-firmware compatibility choice (FORK.md). -->
+    <issue id="GradleDependency" severity="ignore"/>
+    <issue id="NewerVersionAvailable" severity="ignore"/>
+    <issue id="AndroidGradlePluginVersion" severity="ignore"/>
+    <issue id="OldTargetApi" severity="ignore"/>
+
+    <!-- Reflection into vendor and framework internals, each behind a try/catch and a comment naming
+         the TV it was verified on. -->
+    <issue id="PrivateApi" severity="ignore"/>
+
+    <!-- Context fields in singletons all hold applicationContext, which lives as long as the process. -->
+    <issue id="StaticFieldLeak" severity="ignore"/>
+
+    <!-- commit() on purpose in the guard: the process can be killed right after, and the write must land. -->
+    <issue id="ApplySharedPref">
+        <ignore path="**/guard/*.kt"/>
+    </issue>
+
+    <!-- The sync adapter and account authenticator services are bound by the system, which is the
+         only caller their intent actions reach. -->
+    <issue id="ExportedService">
+        <ignore path="**/AndroidManifest.xml"/>
+    </issue>
+
+    <!-- A TV launcher is landscape-only; allowBackup is off, so there is nothing to extract. -->
+    <issue id="DiscouragedApi">
+        <ignore path="**/AndroidManifest.xml"/>
+    </issue>
+    <issue id="DataExtractionRules" severity="ignore"/>
+
+    <!-- The diagnostics log is made world-readable so `adb pull` can read it (Xiaomi MiTV, Android 14). -->
+    <issue id="SetWorldReadable">
+        <ignore path="**/system/DiagLog.kt"/>
+    </issue>
+
+    <!-- Alarm used only to bring Home back to the front after a Fire OS update; a missed or
+         inexact start would be worse than the permission note. -->
+    <issue id="ScheduleExactAlarm" severity="ignore"/>
+    <issue id="MissingPermission">
+        <ignore path="**/guard/FireKeeper.kt"/>
+    </issue>
+
+    <!-- The Fire TV and Android TV launchers need only xhdpi and up; the banner is xhdpi. -->
+    <issue id="IconMissingDensityFolder" severity="ignore"/>
+
+    <!-- Android's EXIF reader is enough for the orientation tag, and avoids a new dependency. -->
+    <issue id="ExifInterface" severity="ignore"/>
+
+    <!-- A Compose-internal view, never inflated from XML. -->
+    <issue id="ViewConstructor">
+        <ignore path="**/ui/components/UhdCanvas.kt"/>
+    </issue>
+</lint>

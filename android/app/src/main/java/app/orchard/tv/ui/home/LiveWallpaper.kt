@@ -133,6 +133,7 @@ class LiveFilm {
  * and the frame budget is the same as on a still Home. Kept to SDR even where the screensaver plays
  * Dolby Vision: a TV in Dolby Vision mode shows the tiles over it with Dolby's picture settings.
  */
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class) // decoder counters, for the log
 @Composable
 fun LiveWallpaper(
     moving: Boolean,
@@ -233,6 +234,7 @@ fun LiveWallpaper(
      * again the frame the film starts from. Not once the film shows over it: where the film stops
      * gives a frame of its own.
      */
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class) // decoder counters, for the log
     suspend fun catchUp(left: Pair<String, Long>) {
         val frame = withTimeoutOrNull(CATCH_UP_MS) {
             reader.frame(left.first, left.second, Wallpapers.screenW, Wallpapers.screenH, exact = false, nearest = true)
@@ -536,6 +538,7 @@ internal suspend fun sampleGlass(
     Wallpapers.useStillFilmFrost()
 }
 
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class) // decoder counters, for the log
 private fun droppedFrames(p: ExoPlayer): Int = p.videoDecoderCounters?.let { it.ensureUpdated(); it.droppedBufferCount } ?: 0
 
 private const val GLASS_SETTLE_MS = 600L

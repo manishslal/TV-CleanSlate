@@ -74,6 +74,7 @@ fun VideoWallpaper(
         Wallpapers.dropFilmFrost()
     }
 
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class) // videoScalingMode
     suspend fun open(): ExoPlayer? {
         val films = withContext(Dispatchers.IO) { Wallpapers.videoFilms() }
         if (films.isEmpty()) return null
