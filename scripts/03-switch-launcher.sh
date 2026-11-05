@@ -6,5 +6,6 @@
 [ -n "$PKG" ] || { echo "unknown launcher $W"; exit 1; }
 CMP=$(A cmd package query-activities --brief $HOME_INTENT | grep -oE "$PKG/[^ ]+" | head -1)
 [ -n "$CMP" ] || { echo "$PKG has no HOME activity (installed? enabled?)"; A cmd package query-activities --brief $HOME_INTENT; exit 1; }
+confirm "make $CMP the Home app (the stock launcher stays installed and enabled; run with stock to undo)"
 A cmd package set-home-activity "$CMP"; A input keyevent KEYCODE_HOME
 echo "home -> $CMP"; A cmd package resolve-activity --brief $HOME_INTENT | tail -1

@@ -1,6 +1,6 @@
 # Contributing
 
-Device reports and fixes are welcome.
+Device reports and fixes are welcome. Please follow the [code of conduct](CODE_OF_CONDUCT.md).
 
 ## Device reports
 

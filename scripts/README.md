@@ -1,6 +1,6 @@
 # Device kit
 
-ADB scripts for Android TV and Google TV. All take the TV's address.
+ADB scripts for Android TV and Google TV. All take the TV's address. Each script that changes the TV says what it will do and waits for a yes; `YES=1` before the command skips the question. `99-restore-stock.sh` never asks, so it works in a hurry.
 
 | Script | What it does | Changes the TV? |
 |---|---|---|

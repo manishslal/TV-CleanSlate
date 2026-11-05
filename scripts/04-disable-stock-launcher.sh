@@ -12,6 +12,7 @@ if [ -n "$UID_W" ] && A dumpsys wifi | grep -q "cuid=$UID_W"; then
   echo "The setup wizard owns a saved Wi-Fi network. In Settings, forget and rejoin it, then run this again."; exit 1
 fi
 A pm list packages "${NEW%%/*}" | grep -q . || { echo "${NEW%%/*} is not installed"; exit 1; }
+confirm "disable $STOCK_PKG and $WIZARD (not uninstall) and make $NEW the Home app (99-restore-stock.sh undoes it)"
 A pm disable-user --user 0 "$WIZARD" | tail -1
 A pm disable-user --user 0 "$STOCK_PKG" | tail -1
 sleep 2; A cmd package set-home-activity "$NEW" | tail -1; sleep 1

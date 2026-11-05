@@ -1,4 +1,4 @@
-> **This is a personal fork** of [Aerial by pengchujin](https://github.com/pengchujin/aerial-tv) (MIT). All credit for the original app goes to its author and contributors. See [NOTICE.md](NOTICE.md) for credits and licenses, and [FORK.md](FORK.md) for what this fork changes.
+> **This is a personal fork** of [Aerial by pengchujin](https://github.com/pengchujin/aerial-tv) (MIT). All credit for the original app goes to its author and contributors. See [NOTICE.md](../../NOTICE.md) for credits and licenses, and [FORK.md](../../FORK.md) for what this fork changes.
 
 <div align="center">
 
@@ -11,7 +11,7 @@
 A home screen modeled on Apple TV, with no ads and no recommendation feeds: just your apps, your wallpaper and aerial screensavers.<br>
 Made for Xiaomi, TCL, Skyworth, Sony and other TVs sold in China, and runs on boxes and projectors too. It starts at boot and survives standby.
 
-[中文](README.md) · **English**
+[中文](../../README.md) · **English**
 
 <a href="https://aerial.qust.me/en/"><img alt="Website" src="https://img.shields.io/badge/Website-1f6feb?style=for-the-badge&logo=safari&logoColor=white"></a>
 <a href="https://github.com/pengchujin/aerial-tv/releases/latest"><img alt="Download APK" src="https://img.shields.io/badge/Download%20APK-34a853?style=for-the-badge&logo=android&logoColor=white"></a>
@@ -22,7 +22,7 @@ Made for Xiaomi, TCL, Skyworth, Sony and other TVs sold in China, and runs on bo
 <img alt="Android TV 5.0+" src="https://img.shields.io/badge/Android%20TV-5.0%2B-3ddc84?style=flat-square&logo=android&logoColor=white">
 <a href="#lite"><img alt="Lite 4.0–4.4 beta" src="https://img.shields.io/badge/Lite-4.0%E2%80%934.4%20beta-f5a623?style=flat-square&logo=android&logoColor=white"></a>
 
-![Aerial's home screen](site/img/home.jpg)
+![Aerial's home screen](https://github.com/pengchujin/aerial-tv/blob/main/site/img/home.jpg)
 
 | The TV's stock home screen | With Aerial |
 |:---:|:---:|
@@ -41,7 +41,7 @@ Made for Xiaomi, TCL, Skyworth, Sony and other TVs sold in China, and runs on bo
 - **Organize**: hold OK (or press Menu) to move an app, put it in a folder, hide it, uninstall it, or have the TV open it at power on and wake. An HDMI input pinned to Home can say what is plugged in (Apple TV, PlayStation, Switch, Xbox, a computer...) and take its icon, or a name you type on your phone.
 - **Arrange from your phone**: scan the code on the TV and your phone shows Home as the TV lays it out. Drag tiles into place; tap one to rename it, change its icon, put it in a folder or hide it; add HDMI and other inputs to Home.
 - **Control Center**: press Up from the top row to the top right. Inputs, network, settings, volume, brightness and Personalize.
-- **Screensaver**: Apple TV's 114 aerial films, in 4K or 4K Dolby Vision where the TV supports it, your photos, a clock, or local videos sent from your phone ([guide, Chinese](docs/SCREENSAVER_VIDEOS.md)).
+- **Screensaver**: Apple TV's 114 aerial films, in 4K or 4K Dolby Vision where the TV supports it, your photos, a clock, or local videos sent from your phone ([guide, Chinese](../../docs/SCREENSAVER_VIDEOS.md)).
 - **Wallpaper**: Bing's photo of the day, fourteen built-ins, photos and videos you upload by scanning a code with your phone, or aerial films that play behind the apps after ten still seconds on Home and stop on the frame showing at any key.
 - **Personalize**: four, five or six apps a row, one or two rows, clock size and corner, app names, focus style and key sounds.
 
@@ -81,9 +81,9 @@ adb pair 192.168.1.20:37115   # the port on the TV's pairing screen (example; us
 adb connect 192.168.1.20:39201   # the other IP:port, on the main Wireless debugging screen (example)
 ```
 
-Then install as usual. To use plain `<TV-IP>:5555` from now on, run `adb tcpip 5555` once connected; a computer that has paired does not pair again. `install.sh` and the agent in the [install guide](site/en/agent.md) walk through this step. Some TCL firmwares (Q10M, Q10L, Crane 6 Ultra and similar) have no pairing-code entry at all; there, authorize once over a USB cable as in the by-brand guide below.
+Then install as usual. To use plain `<TV-IP>:5555` from now on, run `adb tcpip 5555` once connected; a computer that has paired does not pair again. `install.sh` and the agent in the [install guide](https://github.com/pengchujin/aerial-tv/blob/main/site/en/agent.md) walk through this step. Some TCL firmwares (Q10M, Q10L, Crane 6 Ultra and similar) have no pairing-code entry at all; there, authorize once over a USB cable as in the by-brand guide below.
 
-A more detailed guide by brand, including TVs that cannot open ADB, is in [docs/devices/adb-by-brand.md](docs/devices/adb-by-brand.md) (Chinese).
+A more detailed guide by brand, including TVs that cannot open ADB, is in [docs/devices/adb-by-brand.md](../../docs/devices/adb-by-brand.md) (Chinese).
 
 ### 2. Install
 
@@ -116,7 +116,7 @@ Phone apps and web chats, including Doubao on a phone, only tell you the steps; 
 
 Then press Home: if Android asks which app to use, choose Aerial, then Always, and you're done (stock Android TV usually works this way). If Home goes straight back to the old launcher without asking (most Chinese-brand TVs), open Aerial from the app list; it shows "Make Aerial Your Home Screen", whose entries open the TV's settings for the home guard (Accessibility) and notification access. If the TV's settings don't have them, Aerial works only as an ordinary app; to take over Home, run the command below or hand it to an agent once (it installs over, settings stay).
 
-**Without a computer**: users have installed Aerial with the phone apps Beetle ADB (甲壳虫 ADB 助手) and Super Xiaoai (超级小爱); we haven't tested each one. The steps are the same as the Windows ones above; once it's installed, run the check from a computer if you can (see [Check](site/en/agent.md#check-required)).
+**Without a computer**: users have installed Aerial with the phone apps Beetle ADB (甲壳虫 ADB 助手) and Super Xiaoai (超级小爱); we haven't tested each one. The steps are the same as the Windows ones above; once it's installed, run the check from a computer if you can (see [Check](https://github.com/pengchujin/aerial-tv/blob/main/site/en/agent.md#check-required)).
 
 **One command (macOS / Linux)**:
 
@@ -124,12 +124,12 @@ Then press Home: if Android asks which app to use, choose Aerial, then Always, a
 curl -fsSL https://aerial.qust.me/install.sh | KEEP_ADB=1 TV=192.168.1.20 bash
 ```
 
-On a TV that only offers Wireless debugging (step 1), `export ADB_PAIR=<pairing-screen IP:port> ADB_CODE=<6-digit code> ADB_CONNECT=<main-screen IP:port>` before running that command; one with no pairing-code entry (TCL Q10M, Q10L, Crane 6 Ultra and similar) first follows the [by-brand guide](docs/devices/adb-by-brand.md), authorizing once over a USB cable and running `adb tcpip 5555`, then runs the command as usual.
+On a TV that only offers Wireless debugging (step 1), `export ADB_PAIR=<pairing-screen IP:port> ADB_CODE=<6-digit code> ADB_CONNECT=<main-screen IP:port>` before running that command; one with no pairing-code entry (TCL Q10M, Q10L, Crane 6 Ultra and similar) first follows the [by-brand guide](../../docs/devices/adb-by-brand.md), authorizing once over a USB cable and running `adb tcpip 5555`, then runs the command as usual.
 
 **By hand**: download [aerial-standard.apk](https://aerial.qust.me/download/aerial-standard.apk). On a TV that only offers Wireless debugging (step 1), do one of these first, then run the commands:
 
 - **With a pairing-code entry** (Sony BRAVIA on Android 14 and similar): pair as in step 1 and run `adb tcpip 5555` once connected, so the first line of the commands is 5555; without that, use the IP:port from the main Wireless debugging screen on the first line; the rest is the same.
-- **Without a pairing-code entry** (TCL Q10M, Q10L, Crane 6 Ultra and similar): follow the [by-brand guide](docs/devices/adb-by-brand.md) to connect the TV to a computer with a USB cable, then run `adb tcpip 5555` once authorized; until then, the first line's `adb connect <TV-IP>:5555` does not work.
+- **Without a pairing-code entry** (TCL Q10M, Q10L, Crane 6 Ultra and similar): follow the [by-brand guide](../../docs/devices/adb-by-brand.md) to connect the TV to a computer with a USB cable, then run `adb tcpip 5555` once authorized; until then, the first line's `adb connect <TV-IP>:5555` does not work.
 
 ```bash
 adb connect 192.168.1.20:5555
@@ -140,7 +140,7 @@ adb shell appops set app.orchard.tv SYSTEM_ALERT_WINDOW allow
 adb shell am start -n app.orchard.tv/.MainActivity
 ```
 
-On Windows, use an agent, or follow the Windows steps in the [install guide](site/en/agent.md).
+On Windows, use an agent, or follow the Windows steps in the [install guide](https://github.com/pengchujin/aerial-tv/blob/main/site/en/agent.md).
 
 **Updating**: from 1.32, Control Center shows New Version when there is one; choose Download and Install there and confirm in the TV's own installer (checked on Xiaomi and TCL). Aerial comes back afterwards with every setting kept. On TVs that do not let apps install apps, updating means running the install command again: the update page has a QR code that opens this TV's command on a phone, ready to copy or to hand to an agent. 1.31 and earlier have no such button, so this once, run the install command again.
 
@@ -171,7 +171,7 @@ adb shell am start -n app.orchard.tv.lite/.HomeActivity
 
 **Afterwards**: press **Home** on the remote; when Android asks which app to use, choose **Aerial Lite**, then **Always**. If no question comes and the old launcher opens, the firmware keeps Home for its own launcher: open Lite from the app list.
 
-**Differences from the full app**: no Home Guard (accessibility takeover), so Home and boot depend on Android's default home; no aerial wallpaper, My Videos wallpaper, input tiles (4.x has no TV input framework; the Inputs button opens the TV's own input panel) or in-app updates (update by installing again; settings are kept). The aerial screensaver, photos and the daily picture, clocks, folders, the press-and-hold menu, Control Center, Personalize and the phone page are all there. More in [docs/LITE.md](docs/LITE.md) (Chinese).
+**Differences from the full app**: no Home Guard (accessibility takeover), so Home and boot depend on Android's default home; no aerial wallpaper, My Videos wallpaper, input tiles (4.x has no TV input framework; the Inputs button opens the TV's own input panel) or in-app updates (update by installing again; settings are kept). The aerial screensaver, photos and the daily picture, clocks, folders, the press-and-hold menu, Control Center, Personalize and the phone page are all there. More in [docs/LITE.md](../../docs/LITE.md) (Chinese).
 
 **Undo**: on the TV, Settings → Apps → Aerial Lite → Clear defaults, then press Home and pick the old launcher; or uninstall it: `adb uninstall app.orchard.tv.lite` (the one command's `bash -s restore --uninstall` removes it too).
 
@@ -181,7 +181,7 @@ adb shell am start -n app.orchard.tv.lite/.HomeActivity
 curl -fsSL https://aerial.qust.me/install.sh | TV=192.168.1.20 bash -s restore
 ```
 
-Add `--uninstall` (`bash -s restore --uninstall`) to remove Aerial as well. Without bash (Windows), the adb commands one by one are under [Undo in the install guide](site/en/agent.md#undo).
+Add `--uninstall` (`bash -s restore --uninstall`) to remove Aerial as well. Without bash (Windows), the adb commands one by one are under [Undo in the install guide](https://github.com/pengchujin/aerial-tv/blob/main/site/en/agent.md#undo).
 
 To have an AI do it (it needs to run commands on a computer), paste this:
 
@@ -196,7 +196,7 @@ Run the commands yourself on my computer, and at the end paste the raw output of
 
 - **Installed only the APK from a USB stick**: from 1.32 Aerial has an icon in the TV's app list and, when opened, shows how to make it the Home screen. With the APK alone, Home, power-on and wake still go to the old launcher; run the command above or hand it to an agent once more (it installs over, settings stay).
 - **TCL shows a 多屏互动 prompt**: press Right, then OK, to choose 同意 (Agree).
-- **Skyworth: `adb install` fails with `INSTALL_FAILED_USER_RESTRICTED`**: run `adb shell settings put global verifier_verify_adb_installs 0`, then install again (from a user's report; see the [agent guide](site/en/agent.md#common-cases)).
+- **Skyworth: `adb install` fails with `INSTALL_FAILED_USER_RESTRICTED`**: run `adb shell settings put global verifier_verify_adb_installs 0`, then install again (from a user's report; see the [agent guide](https://github.com/pengchujin/aerial-tv/blob/main/site/en/agent.md#common-cases)).
 - **The firmware won't install home-screen apps**: add `-s guard` to the end of the command, or use [aerial-guard.apk](https://aerial.qust.me/download/aerial-guard.apk).
 - **What `KEEP_ADB=1` does**: Xiaomi turns ADB off after standby; with it, Aerial turns it back on so you can update later.
 - **Do my apps, subscriptions, Xiaoai, account and cable TV stay?** Yes. Aerial only replaces the home screen. The old home screen is in the app list (Xiaomi Video and PatchWall open from the 桌面 tile), and Xiaoai, the Xiaomi account and cable TV work as before. A boot ad comes from the firmware and stays.
@@ -211,42 +211,42 @@ Most TVs sold in China only accept their own home screen and clear third-party a
 
 | Brand | Models | System | Status |
 |---|---|---|---|
-| Xiaomi / Redmi | MiTV-MFTR0 (Redmi X65 2026), MFFU0, MTSU0 (S65 Mini LED 2026) | Android 14 | ✅ In daily use ([MFTR0](docs/devices/xiaomi-mitv-mftr0.md), [MFFU0](docs/devices/xiaomi-mitv-mffu0.md), [MTSU0](docs/devices/xiaomi-mitv-mtsu0.md)) |
-| Xiaomi | MiTV-ASTP0, NSOP0, MFTP0 | Android 9 | ✅ MFTP0 takes 30–60 s to come back after the system clears it ([notes](docs/devices/xiaomi-mitv-mftp0.md)) |
-| Xiaomi | Mi TV 4 / 4A / 4X / 3S, Mi Box 4 | Android 6 | ✅ From 1.43; Home takes a few seconds to return to Aerial ([notes](docs/devices/xiaomi-android6.md)) |
+| Xiaomi / Redmi | MiTV-MFTR0 (Redmi X65 2026), MFFU0, MTSU0 (S65 Mini LED 2026) | Android 14 | ✅ In daily use ([MFTR0](../../docs/devices/xiaomi-mitv-mftr0.md), [MFFU0](../../docs/devices/xiaomi-mitv-mffu0.md), [MTSU0](../../docs/devices/xiaomi-mitv-mtsu0.md)) |
+| Xiaomi | MiTV-ASTP0, NSOP0, MFTP0 | Android 9 | ✅ MFTP0 takes 30–60 s to come back after the system clears it ([notes](../../docs/devices/xiaomi-mitv-mftp0.md)) |
+| Xiaomi | Mi TV 4 / 4A / 4X / 3S, Mi Box 4 | Android 6 | ✅ From 1.43; Home takes a few seconds to return to Aerial ([notes](../../docs/devices/xiaomi-android6.md)) |
 | Xiaomi | Mi TV 2 (MiTV2-49) | Android 4.3 | ❌ Aerial Lite installs and runs, but the system opens Xiaomi's launcher by component on Home, so it cannot be the home screen ([#770](https://github.com/pengchujin/aerial-tv/issues/770)) |
-| Xiaomi (Fengmi) | Ultraman series projector | Android 9 | ✅ ([notes](docs/devices/xiaomi-ultraman-projector.md)) |
-| TCL | MT5879 (China), 98T8H | Android 11 | ✅ In daily use ([notes](docs/devices/tcl-mt5879-cn.md); 98T8H: [#803](https://github.com/pengchujin/aerial-tv/issues/803)) |
+| Xiaomi (Fengmi) | Ultraman series projector | Android 9 | ✅ ([notes](../../docs/devices/xiaomi-ultraman-projector.md)) |
+| TCL | MT5879 (China), 98T8H | Android 11 | ✅ In daily use ([notes](../../docs/devices/tcl-mt5879-cn.md); 98T8H: [#803](https://github.com/pengchujin/aerial-tv/issues/803)) |
 | TCL | Q9L Pro | Android 14 | ⚠️ ADB over a USB cable only; allow Aerial to auto-start in the TV manager; inputs switch to no picture ([#792](https://github.com/pengchujin/aerial-tv/issues/792)) |
-| Thunderbird | 75S78A Plus (FFALCON T966D5) | Android 14 | ❌ The firmware clears accessibility about once a minute, so Home cannot be taken over; `boot_app_componentname` boots into Aerial ([notes](docs/devices/ffalcon-t966d5.md)) |
-| TCL | 75V2 (m7221) | Android 8 | ✅ Starts straight into Aerial, no root ([notes](docs/devices/tcl-m7221-cn.md)) |
+| Thunderbird | 75S78A Plus (FFALCON T966D5) | Android 14 | ❌ The firmware clears accessibility about once a minute, so Home cannot be taken over; `boot_app_componentname` boots into Aerial ([notes](../../docs/devices/ffalcon-t966d5.md)) |
+| TCL | 75V2 (m7221) | Android 8 | ✅ Starts straight into Aerial, no root ([notes](../../docs/devices/tcl-m7221-cn.md)) |
 | TCL / FFALCON | 60A730U, 55V2 Pro (x32a0), 65Q10E and Crane 6 (m7642), 75S365C, 75Q10L | Android 5.1–14 | ✅ 60A730U only takes the guard build; 55V2 Pro needs `setprop persist.tcl.debug.installapk 1` before adb installs ([#620](https://github.com/pengchujin/aerial-tv/issues/620)) |
-| FFALCON | 55S595C Ultra, Crane 6 2025 Ultra | Android 11+ | ❌ Installs, can't take over Home ([notes](docs/devices/tcl-mt9655-cn.md)) |
+| FFALCON | 55S595C Ultra, Crane 6 2025 Ultra | Android 11+ | ❌ Installs, can't take over Home ([notes](../../docs/devices/tcl-mt9655-cn.md)) |
 | Sony | A80J (China), BRAVIA VH1 | Android 10 / 12 | ✅ |
 | Sony | KD55X7000D (China) | Android 8 | ✅ Brightness only in the TV's own settings ([#757](https://github.com/pengchujin/aerial-tv/issues/757)) |
 | Skyworth / Coocaa | K3 Pro, 75A7D | Android 11 | ✅ 75A7D inputs work from 1.45 |
-| Skyworth / Coocaa | 65G60, 8R134 / 8R145, aigc models (C10 projector, P60, 7T863) | Android 8–11 | ⚠️ Boots into Coocaa's home first, or takes 20–30 s to come back after the system clears it ([notes](docs/devices/skyworth-coocaa.md)) |
+| Skyworth / Coocaa | 65G60, 8R134 / 8R145, aigc models (C10 projector, P60, 7T863) | Android 8–11 | ⚠️ Boots into Coocaa's home first, or takes 20–30 s to come back after the system clears it ([notes](../../docs/devices/skyworth-coocaa.md)) |
 | Skyworth / Coocaa | 5S21 (50K2, 7626K2), 5S05 (60U2), 8H66 H7 | Android 5.x | ⚠️ Aerial after boot and standby, but Home does not return to it; no inputs listed |
 | Skyworth / Coocaa | 8H57_H5 | Android 5.1 | ⚠️ Spins for a dozen seconds at boot before Aerial ([#785](https://github.com/pengchujin/aerial-tv/issues/785)) |
 | Skyworth | 1AA46_D4 (T963) | Android 9 | ✅ ([#796](https://github.com/pengchujin/aerial-tv/issues/796)) |
 | Skyworth | 7T641, 75A6E, 55A5F Pro (8R702) | Android 13 | ❌ Black screen or freeze |
-| Skyworth | Xiaopai P3 (Q5001 / cupid-p2) box | Android 10 | ⚠️ Needs a renamed package to take over Home; boot broadcasts are all blocked ([notes](docs/devices/skyworth-p3-box.md)) |
+| Skyworth | Xiaopai P3 (Q5001 / cupid-p2) box | Android 10 | ⚠️ Needs a renamed package to take over Home; boot broadcasts are all blocked ([notes](../../docs/devices/skyworth-p3-box.md)) |
 | Panasonic | TH-55HX560C (built by Skyworth) | Android 8 | ⚠️ No inputs listed |
-| Konka | KKTV U86V9, 2861 | Android 9 | ✅ U86V9 brightness does not work ([notes](docs/devices/konka-kktv-u86v9.md)) |
+| Konka | KKTV U86V9, 2861 | Android 9 | ✅ U86V9 brightness does not work ([notes](../../docs/devices/konka-kktv-u86v9.md)) |
 | LeTV | Super4 X55 (f608) | Android 6 | ✅ Installs, starts at boot, takes over Home ([#510](https://github.com/pengchujin/aerial-tv/issues/510)) |
-| LeTV | Super3 X65 (X65-168CQ) | Android 5.0.1 | ⚠️ Installs and draws; the firmware kills third-party launchers on Home, so takeover is unreliable ([notes](docs/devices/letv-x3-65.md)) |
-| Hisense / Vidda | VIDAA models | Android 5–14 | ⚠️ Home works, most boot into Hisense's home first; VIDAA C1 projector can't be taken over ([notes](docs/devices/hisense-vidaa.md)) |
+| LeTV | Super3 X65 (X65-168CQ) | Android 5.0.1 | ⚠️ Installs and draws; the firmware kills third-party launchers on Home, so takeover is unreliable ([notes](../../docs/devices/letv-x3-65.md)) |
+| Hisense / Vidda | VIDAA models | Android 5–14 | ⚠️ Home works, most boot into Hisense's home first; VIDAA C1 projector can't be taken over ([notes](../../docs/devices/hisense-vidaa.md)) |
 | Hisense | 65E52D | Android 8 | ✅ Boots straight into Aerial ([#672](https://github.com/pengchujin/aerial-tv/issues/672)) |
 | Hisense | E5Q Pro | Android 11 | ✅ ([#790](https://github.com/pengchujin/aerial-tv/issues/790)) |
 | Hisense | VIDAA_TV (MSD6A348) | Android 4.4 | ✅ Aerial Lite from a USB drive; pick it with "Always" at the Home prompt; no brightness ([#769](https://github.com/pengchujin/aerial-tv/issues/769)) |
 | Sharp | LCD-50SU671A | Android 6 | ✅ Needs QuickShortcutMaker to open ADB |
-| OPPO | K9 | Android 9 | ⚠️ Needs a renamed package ([notes](docs/devices/oppo-coloros-tv.md)) |
-| XGIMI | Z7X, m7642 | Android 9 | ✅ Z7X needs a third-party tool to open ADB ([notes](docs/devices/xgimi-z7x.md)) |
-| XGIMI | Lamp L1 (m7642, pig_chivalrous) | Android 9 | ✅ The default Home is lost at boot; the reporter's two-rule fix is in the [notes](docs/devices/xgimi-z7x.md) ([#767](https://github.com/pengchujin/aerial-tv/issues/767)) |
-| XGIMI | Z6X Gen 4 (XK03U / ironman / m7221) | Android 8 | ⚠️ HDMI 1 listing and switching verified; video output not tested ([notes](docs/devices/xgimi-xk03u-android8.md)) |
-| XGIMI | H3, m7221 | Android 8 | ✅ Needs a third-party tool to open ADB; boot handover and screensaver match Z7X ([notes](docs/devices/xgimi-h3.md)) |
-| OBE | X7, X7D projectors | Android 9 / 5.1 | ✅ Home inside HDMI can go to the Apple TV's home screen ([notes](docs/devices/obe-x7.md)) |
-| Tencent Aurora box | 6 / 6SE / 7S | Android 10 / 14 | ✅ 6 works; ⚠️ 7S stays on the stock home at boot ([notes](docs/devices/tencent-aurora-box.md)) |
+| OPPO | K9 | Android 9 | ⚠️ Needs a renamed package ([notes](../../docs/devices/oppo-coloros-tv.md)) |
+| XGIMI | Z7X, m7642 | Android 9 | ✅ Z7X needs a third-party tool to open ADB ([notes](../../docs/devices/xgimi-z7x.md)) |
+| XGIMI | Lamp L1 (m7642, pig_chivalrous) | Android 9 | ✅ The default Home is lost at boot; the reporter's two-rule fix is in the [notes](../../docs/devices/xgimi-z7x.md) ([#767](https://github.com/pengchujin/aerial-tv/issues/767)) |
+| XGIMI | Z6X Gen 4 (XK03U / ironman / m7221) | Android 8 | ⚠️ HDMI 1 listing and switching verified; video output not tested ([notes](../../docs/devices/xgimi-xk03u-android8.md)) |
+| XGIMI | H3, m7221 | Android 8 | ✅ Needs a third-party tool to open ADB; boot handover and screensaver match Z7X ([notes](../../docs/devices/xgimi-h3.md)) |
+| OBE | X7, X7D projectors | Android 9 / 5.1 | ✅ Home inside HDMI can go to the Apple TV's home screen ([notes](../../docs/devices/obe-x7.md)) |
+| Tencent Aurora box | 6 / 6SE / 7S | Android 10 / 14 | ✅ 6 works; ⚠️ 7S stays on the stock home at boot ([notes](../../docs/devices/tencent-aurora-box.md)) |
 | Dangbei | Box Max1, H5, HAQU K2 (Dangbei OS) | Android 9 | ✅ |
 | Dangbei | F3 projector | Android 6 | ❌ The firmware refuses third-party launchers and has no accessibility service ([#789](https://github.com/pengchujin/aerial-tv/issues/789)) |
 | JMGO | S621 | Android 13 | ❌ The firmware refuses writes to the accessibility setting; Home cannot be taken over ([#793](https://github.com/pengchujin/aerial-tv/issues/793)) |
@@ -289,10 +289,10 @@ Needs JDK 17 and Android SDK 36.
 BUILD=1 KEEP_ADB=1 TV=<TV-IP> tools/install.sh
 ```
 
-See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for the code, [HANDOFF.md](docs/HANDOFF.md) for the current state and rules, and [docs/devices/](docs/devices/) for notes on each TV.
+See [ARCHITECTURE.md](../../docs/ARCHITECTURE.md) for the code, [HANDOFF.md](../../docs/HANDOFF.md) for the current state and rules, and [docs/devices/](../../docs/devices/) for notes on each TV.
 
 ## License
 
-[MIT](LICENSE). The Inter font is under the [SIL Open Font License](FONT-LICENSE-OFL.txt). The list of Chinese cities for the weather is from [GeoNames](https://www.geonames.org) (CC BY 4.0), the weather from [Open-Meteo](https://open-meteo.com).
+[MIT](../../LICENSE). The Inter font is under the [SIL Open Font License](../../FONT-LICENSE-OFL.txt). The list of Chinese cities for the weather is from [GeoNames](https://www.geonames.org) (CC BY 4.0), the weather from [Open-Meteo](https://open-meteo.com).
 
 Aerial is an independent open-source project, not affiliated with Apple, Xiaomi, TCL or any other company. The aerial films belong to Apple and play from Apple's servers; the photo of the day comes from Bing.

@@ -1,0 +1,14 @@
+name: Idea
+description: Something Home could do
+labels: [idea]
+body:
+  - type: textarea
+    id: idea
+    attributes: {label: What you'd like, description: "What you're trying to do on the TV, and what gets in the way now."}
+    validations: {required: true}
+  - type: dropdown
+    id: part
+    attributes:
+      label: Where
+      multiple: true
+      options: [Android Home, LG web Home, Samsung web Home, Scripts or guides]

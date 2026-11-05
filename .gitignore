@@ -39,3 +39,7 @@ webos/ui_*.wav
 tizen/build/
 tizen/homekey/build/
 *.tpk
+
+# Python
+__pycache__/
+*.pyc

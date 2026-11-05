@@ -5,7 +5,7 @@
 
 **A calm, ad-free Home for the TVs you already own, plus a safe way to clear out what came with them.**
 
-TV CleanSlate replaces the ad-filled home screen on Android TV, Google TV and Fire TV devices, brings the same look to a rooted LG webOS TV, and documents how to debloat each device one reversible step at a time. Everything here was tested on real hardware.
+TV CleanSlate replaces the ad-filled home screen on Android TV, Google TV and Fire TV devices, brings the same look to a rooted LG webOS TV and to older Samsung Tizen TVs without root, and documents how to debloat each device one reversible step at a time. Everything here was tested on real hardware.
 
 It stands on the work of other open source projects. The Android app is a fork of [**Aerial**](https://github.com/pengchujin/aerial-tv) by pengchujin and its contributors. See [Credits](#credits).
 
@@ -20,6 +20,23 @@ It stands on the work of other open source projects. The Android app is a fork o
 | ![Layout and Tiles settings](docs/images/layout.jpg) | ![Clock and Weather settings](docs/images/clock-weather.jpg) |
 
 *The city shown on screen is blurred. Brand logos in these screenshots come from a private logo pack that is not included in this repository. A normal build draws each tile from the app's own icon.*
+
+## Before you start
+
+This is one person's project, tested on the TVs in one home. It is shared so others can learn from it and pick what suits them. Nothing here is needed to use your TV, and you can stop at any step.
+
+| What you'd do | Risk | How to undo it |
+|---|---|---|
+| Install Android Home | Low. Your stock Home stays installed | Choose the stock Home again, or uninstall the app |
+| Make it the default Home on Google TV (`04-disable-stock-launcher.sh`) | Medium. Disables (never uninstalls) the stock launcher and setup wizard | `scripts/99-restore-stock.sh` |
+| Debloat over ADB | Medium. A wrong package can break inputs, the remote or Wi-Fi | Re-enable the package; each device log lists the undo |
+| Samsung web Home | Low to medium. Needs Developer Mode, no root | Uninstall the app and turn off Developer Mode |
+| LG web Home | **High.** Needs a root exploit (SlopBro) and replaces LG's Home | Undo steps in [webos/README](webos/README.md); a root cannot always be taken back |
+
+- **Who it's for:** people comfortable with ADB or a command line, who want to see and undo every change.
+- **Who it's not for:** anyone who needs the TV under warranty support, relies on the TV maker's own features (voice, ads-funded channels, account services), or can't take a TV out of use for an evening if something goes wrong.
+- **Device logs are records, not instructions.** [devices/](devices/README.md) says what one owner chose for one TV, such as blocking an LG's updates. Those were personal choices with trade-offs (no security fixes), not recommendations.
+- **Scripts ask before they change anything**, and say how to undo it. The restore script never asks, so it works in a hurry.
 
 ## What's here
 

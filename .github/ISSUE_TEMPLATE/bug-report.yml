@@ -1,0 +1,26 @@
+name: Bug report
+description: Something in Home or a script doesn't work as described
+labels: [bug]
+body:
+  - type: dropdown
+    id: part
+    attributes:
+      label: Which part
+      options: [Android Home, LG web Home, Samsung web Home, A script in scripts/, A guide, The cut-out service]
+    validations: {required: true}
+  - type: input
+    id: device
+    attributes: {label: TV or box, and its OS version, placeholder: "onn 4K Streaming Box, Google TV 14"}
+    validations: {required: true}
+  - type: input
+    id: build
+    attributes: {label: Build, description: "Android Home's version is at the bottom of Control Center (1.67-mh37). For the web Home, the date you installed it."}
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+      description: Steps to see it again help most. Remove IP addresses, MAC addresses, Wi-Fi names and serial numbers.
+    validations: {required: true}
+  - type: textarea
+    id: undo
+    attributes: {label: Anything you changed on the TV before this, description: "Debloated packages, launchers, root. This helps tell a bug from a side effect."}
