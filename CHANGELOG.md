@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Web: the wallpaper's dim (and Warm or Cool) lies over its frost as well, so the dock is as dim as the picture around it, as on Android; the app's glow stays above it
 - Web: a still wallpaper (Bing, NASA, Wikimedia, Earth View, the built-in stills, Plex photos) is frosted under the dock and behind the app grid, as on Android; only the aerial films had frost, so the dock showed the sharp picture and the grid a near-solid grey sheet. Clear tiles keep the frost at half strength, as Android's dock
 - Web: the app grid behaves as Android's: the focused row rests second from the top with the row above in view, the clock leaves and the time joins the pill, and "More Apps" titles the first row under the shelf
 - Samsung: starts on Efficient (still pictures, no focus glow), and a TV that had Home before switches once; Full can still be chosen
