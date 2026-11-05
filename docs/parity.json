@@ -636,13 +636,13 @@
       "note": "Web blurs a quarter-size copy of the picture and scales it up; films keep their baked frost sheets."
     },
     {
-      "id": "dock-lens",
-      "name": "The dock's glass lets the picture through: 30% sharp in the middle, the sharp picture at the rim, a film's frost at 55%",
+      "id": "dock-plate",
+      "name": "The dock is Android's frosted plate: x0.84 + 16, 32 dp corners, glisse's rim, no shadow; a film's frost at 55%",
       "android": "done",
       "webos": "done",
-      "tizen": "partial",
+      "tizen": "done",
       "lite": "frozen",
-      "note": "Android 13+ draws it with the lens shader, which also bends the rim; the web fades its frost toward the edge without bending. Efficient (and Android 9 to 12) draw the plain frosted plate. Samsung starts on Efficient; the Full look has not been seen on a Samsung (Chromium 47 masks with -webkit-mask-composite)."
+      "note": "Matched to the SHIELD (Android 11) side by side on one picture. Android 13+ draws its dock with the lens shader instead (some of the sharp picture through it, bent at the rim); the web does not. The web's rim is even all round, where Android's fades at the top-right and bottom-left corners."
     },
     {
       "id": "tv-saver-held",

@@ -122,5 +122,7 @@ See [Logos we still need](../logos/README.md#logos-we-still-need).
 ## LG webOS
 
 - LG's own screensaver starts over any page, even a home page with its own. It asks the subscribers of `luna://com.webos.service.tvpower/power/registerScreenSaverRequest` first; answering `responseScreenSaverRequest` with `ack: false` and the request's `timestamp` holds it off. A root helper can do this; a web page cannot.
-- Compare glass by what it shows, not only by blur size. The web's frost was as soft as Android's, but Android 13+ mixes 30% of the sharp picture into the middle and lets it take over at the rim, so the same blur read as less blurred there.
+- Ask which device is the reference before matching a look: the onn (Android 14) draws its dock with a lens that lets the sharp picture through, the SHIELD (Android 11) a plain frosted plate. Matching the onn made the LG less like the SHIELD the owner had in mind.
+- To compare docks, put the same picture on both TVs and measure the same rows; a Python model of Android's plate came within 2 levels of the SHIELD, which then predicts the web's numbers before deploying.
+- The LG's DISPLAY capture includes an HDMI input: a capture showing another device's apps means the owner is watching that input. Check `getForegroundAppInfo` before reloading Home.
 

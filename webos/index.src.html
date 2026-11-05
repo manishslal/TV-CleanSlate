@@ -5,11 +5,11 @@
 <title>Home</title>
 <style>
 @font-face { font-family: Board; src: url(barlow_condensed_semibold.ttf); }
-:root { --u: calc(100vw / 1920); --ink: #efe7d2; --label: #fff; --dim: rgba(235,235,245,.6); --glass: rgba(40,40,40,.62); --hair: rgba(255,255,255,.1); --shine: rgba(255,255,255,.13); --edge: rgba(255,255,255,.08);
+:root { --u: calc(100vw / 1920); --ink: #efe7d2; --label: #fff; --dim: rgba(235,235,245,.6); --glass: rgba(40,40,40,.62); --hair: rgba(255,255,255,.1); --shine: rgba(255,255,255,.13); --plateshine: rgba(255,255,255,.078); --edge: rgba(255,255,255,.08);
   --panel: rgba(32,32,34,.99); --row: rgba(120,120,128,.18); --focus: #f5f5f7; --onfocus: #1d1d1f; --sheet-a: rgba(30,33,40,.44); --sheet-b: rgba(20,22,28,.56); --plain-a: rgba(46,50,58,.9); --plain-b: rgba(24,26,32,.94);
   --dock-a: rgba(255,255,255,.14); --dock-b: rgba(255,255,255,.05); --rim: rgba(255,255,255,.4); --ring: #f5f5f7; --ringgap: rgba(0,0,0,.75);
   --onwall: #fff; --onwall-shadow: rgba(0,0,0,.75); --onsheet: #fff; --onsheet-shadow: rgba(0,0,0,.75); --lift: rgba(0,0,0,.6); --dockshadow: rgba(0,0,0,.42); --cleartile: var(--glass); --glowalpha: .32; }
-body.light { --label: #1d1d1f; --dim: rgba(60,60,67,.62); --glass: rgba(226,226,230,.52); --hair: rgba(0,0,0,.12); --shine: rgba(255,255,255,.3); --edge: rgba(0,0,0,.08); --panel: rgba(204,206,212,.86); --row: rgba(255,255,255,.72);
+body.light { --label: #1d1d1f; --dim: rgba(60,60,67,.62); --glass: rgba(226,226,230,.52); --hair: rgba(0,0,0,.12); --shine: rgba(255,255,255,.3); --plateshine: rgba(255,255,255,.18); --edge: rgba(0,0,0,.08); --panel: rgba(204,206,212,.86); --row: rgba(255,255,255,.72);
   --focus: #1d1d1f; --onfocus: #fff; --sheet-a: rgba(226,229,234,.42); --sheet-b: rgba(212,216,222,.5); --plain-a: rgba(228,230,235,.9); --plain-b: rgba(206,210,218,.92); --dock-a: rgba(255,255,255,.22); --dock-b: rgba(255,255,255,.1); --rim: rgba(255,255,255,.9); --ringgap: rgba(0,0,0,.4);
   --onsheet: #1d1d1f; --onsheet-shadow: rgba(255,255,255,.7); --lift: rgba(0,0,0,.3); --dockshadow: rgba(0,0,0,.22); --cleartile: rgba(44,44,48,.88); --glowalpha: .32; }
 * { box-sizing: border-box; margin: 0; }
@@ -27,7 +27,7 @@ body.huge.middle #shade { background-image: radial-gradient(68% 62% at 50% 24%, 
 #glow { position: fixed; left: 0; top: 0; width: 96px; height: 54px; transform-origin: 0 0; opacity: var(--glowalpha); transition: opacity .2s; }
 /* This TV's video plane can't be blurred, so softly blurred frames baked from the clip play over it in step: inside the dock at rest, over the whole screen further down */
 #fclip { position: fixed; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; opacity: 0; transition: clip-path .22s ease-out, opacity .3s;
-  clip-path: inset(calc(800 * var(--u)) calc(52 * var(--u)) calc(40 * var(--u)) calc(52 * var(--u)) round calc(36 * var(--u))); }
+  clip-path: inset(calc(800 * var(--u)) calc(52 * var(--u)) calc(40 * var(--u)) calc(52 * var(--u)) round calc(64 * var(--u))); }
 body.frosted #fclip { opacity: 1; }
 body.down #fclip { clip-path: inset(0 round 0); }
 /* a still picture's frost, as Android's frosted wallpaper under the dock and the grid: the picture blurred
@@ -38,10 +38,14 @@ body.down #fclip { clip-path: inset(0 round 0); }
 .fl.on { opacity: 1; }
 #sheet { opacity: 0; transition: opacity .2s; background: linear-gradient(180deg, var(--plain-a), var(--plain-b)); }
 body.frosted #sheet { background: linear-gradient(180deg, var(--sheet-a), var(--sheet-b)); }
-#dock { position: fixed; left: calc(52 * var(--u)); right: calc(52 * var(--u)); bottom: calc(40 * var(--u)); height: calc(240 * var(--u)); border-radius: calc(36 * var(--u)); transition: opacity .2s;
-  background: rgba(150,150,150,.2); box-shadow: inset 0 0 0 1.22px var(--shine), inset 0 0 0 .5px var(--edge), 0 calc(18 * var(--u)) calc(48 * var(--u)) var(--dockshadow); }
-/* the dock's tint over its frost, as Android's in either appearance: x0.8 + 30 (LiquidLens, dock); Efficient as the plain plate, x0.84 + 16 (PlateTint) */
-body.lite #dock { background: rgba(100,100,100,.16); }
+#dock { position: fixed; left: calc(52 * var(--u)); right: calc(52 * var(--u)); bottom: calc(40 * var(--u)); height: calc(240 * var(--u)); border-radius: calc(64 * var(--u)); transition: opacity .2s;
+  background: rgba(100,100,100,.16); box-shadow: inset 0 0 0 calc(2.44 * var(--u)) var(--plateshine), inset 0 0 0 calc(1 * var(--u)) var(--edge); }
+/* Android's plate in its numbers at 1080p (2 px a dp): the frost x0.84 + 16 (PlateTint), corners of 32 dp,
+   glisse's 1.22 dp rim at 60% of its shine and its 0.5 dp edge, and no shadow under it */
+/* Android dims the plate's +16 with the picture; here the dock lies over the dim, so its lift is dimmed to match */
+body.tintdim #dock { background: rgba(70,70,70,.16); }
+body.light.tintdim #dock { background: rgba(88,88,88,.16); }
+body.tintwarm #dock, body.tintcool #dock { background: rgba(86,86,86,.16); }
 #hint { position: fixed; left: 0; right: 0; bottom: calc(10 * var(--u)); text-align: center; font-size: calc(19 * var(--u)); color: var(--onwall); opacity: .82; text-shadow: 0 1px calc(8 * var(--u)) var(--onwall-shadow); transition: opacity .2s; }
 body.down #sheet { opacity: 1; }
 body.down #dock, body.down #hint, body.peek #hint { opacity: 0; }
@@ -224,14 +228,11 @@ body.tintcool #tint { background: #0a84ff; opacity: .14; }
 body.noplate:not(.down) #dock, body.noplate:not(.down) #fclip { opacity: 0; }
 /* Behind Clear tiles the dock is fainter, so glass on glass still reads as two layers */
 body.cleartiles:not(.noplate):not(.down):not(.idle) #dock { opacity: .5; }
-/* The dock's frost at rest, as Android 13+ draws its dock (LiquidLens): 30% of the sharp picture shows
-   through the middle and the picture takes over toward the rim (the mask in paint()). A film's frost lies
-   over the moving film at 55% (Android: FILM_FROST). Efficient keeps the plain frosted plate. */
-body.frosted:not(.lite):not(.noplate):not(.down):not(.idle) #fclip { opacity: .7; }
+/* The dock is Android's frosted plate as the SHIELD draws it: a still picture fully frosted, a film's frost
+   over the moving film at 55% (FILM_FROST) */
 body.frosted.filmfrost:not(.noplate):not(.down):not(.idle) #fclip { opacity: .55; }
 /* Clear tiles sit on the dock at half strength, its frost too (Android: CLEAR_PLATE) */
 body.cleartiles.frosted:not(.noplate):not(.down):not(.idle) #fclip { opacity: .5; }
-body.cleartiles.frosted:not(.lite):not(.noplate):not(.down):not(.idle) #fclip { opacity: .35; }
 body.cleartiles.frosted.filmfrost:not(.noplate):not(.down):not(.idle) #fclip { opacity: .28; }
 body.idle #tint, body.idle #gridwrap, body.idle #pill, body.idle #dock, body.idle #hint, body.idle #sheet, body.idle #glow, body.idle #fclip { opacity: 0; }
 body.idle #shade { opacity: 1; background-color: rgba(0,0,0,.16); }
@@ -928,12 +929,7 @@ function paint() {
   $('grid').style.transform = 'translateY(' + (down ? 170 - row * PITCH : HOME_Y) * window.innerWidth / 1920 + 'px) scale(' + SCALE + ')';
   var u = window.innerWidth / 1920;
   var fc = $('fclip').style;
-  fc.clipPath = fc.webkitClipPath = down ? '' : 'inset(' + DOCK_TOP * u + 'px ' + 52 * u + 'px ' + (1080 - DOCK_END) * u + 'px ' + 52 * u + 'px round ' + 36 * u + 'px)';
-  /* the lens's rim: over its last 26 points the frost thins to a fifth, so the sharp picture takes over at the edge */
-  var rim = 26 * u, thin = 'rgba(0,0,0,.2) ', l = 52 * u, r = 1868 * u, t = DOCK_TOP * u, b = DOCK_END * u;
-  fc.webkitMaskImage = down || S.effects === 'lite' ? '' : 'linear-gradient(90deg, ' + thin + l + 'px, #000 ' + (l + rim) + 'px, #000 ' + (r - rim) + 'px, ' + thin + r + 'px), ' +
-    'linear-gradient(180deg, ' + thin + t + 'px, #000 ' + (t + rim) + 'px, #000 ' + (b - rim) + 'px, ' + thin + b + 'px)';
-  fc.webkitMaskComposite = 'source-in';
+  fc.clipPath = fc.webkitClipPath = down ? '' : 'inset(' + DOCK_TOP * u + 'px ' + 52 * u + 'px ' + (1080 - DOCK_END) * u + 'px ' + 52 * u + 'px round ' + 64 * u + 'px)';
   var t = tiles[focus];
   document.getElementById('glow').style.display = down ? 'none' : '';
   if (t && zone === 'grid' && !down) $('glow').style.background = 'radial-gradient(75% 75% at 50% 105%, ' + tint(t.id) + ', transparent 72%)';
