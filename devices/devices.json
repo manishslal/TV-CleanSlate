@@ -68,7 +68,8 @@
       "debloat": true,
       "requires_root": true,
       "liquid_glass": false,
-      "verified_on_hardware": true
+      "verified_on_hardware": true,
+      "latest_build_tested": "web 2026-11-05"
     },
     {
       "id": "hisense-smarttv-4k",
@@ -117,7 +118,8 @@
       "debloat": true,
       "requires_root": false,
       "liquid_glass": false,
-      "verified_on_hardware": true
+      "verified_on_hardware": true,
+      "latest_build_tested": "web 2026-11-01"
     },
     {
       "id": "samsung-un55nu6900",
@@ -130,7 +132,8 @@
       "debloat": true,
       "requires_root": false,
       "liquid_glass": false,
-      "verified_on_hardware": true
+      "verified_on_hardware": true,
+      "latest_build_tested": "web 2026-11-01"
     }
   ]
 }

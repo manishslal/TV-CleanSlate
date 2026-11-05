@@ -55,7 +55,8 @@ It stands on the work of other open source projects. The Android app is a fork o
 | Parental PIN | Yes | Not checked on a real remote |
 | HDMI inputs in Control Center | Yes | Yes |
 | Phone setup page on your network | Yes | No |
-| Home Mode | Yes | Lite effects only |
+| Home Mode | Yes | Auto, Full and Efficient; Samsung starts on Efficient |
+| Frosted dock and app grid over any wallpaper, under the wallpaper's dim | Yes | Yes |
 | Screen reader labels | Yes | No |
 | Five languages (English, Chinese, Russian, Ukrainian, Kazakh) | Yes | English |
 
@@ -80,16 +81,20 @@ Measured on an onn 4K Streaming Box with 2 GB of RAM. Full method: [PERFORMANCE.
 
 ## Supported devices
 
-| Device | OS | Home | Debloat | Log |
-|---|---|---|---|---|
-| onn 4K Streaming Box | Google TV 14 | Android Home | Yes | [Log](devices/onn-4k-streaming-box/CHANGELOG.md) |
-| onn 4K Plus | Google TV 14 | Android Home | Yes | [Log](devices/onn-4k-plus/CHANGELOG.md) |
-| NVIDIA SHIELD TV (2019 tube) | Android TV 11 | Android Home | Yes | [Log](devices/nvidia-shield-tube/CHANGELOG.md) |
-| TCL C02_4K_US | Android TV 9 | Android Home | Yes | [Log](devices/tcl-c02-4k-us/CHANGELOG.md) |
-| LG 50UP8000PUA | webOS 6.5, rooted | webOS Home | Yes | [Log](devices/lg-50up8000pua/CHANGELOG.md) |
-| Hisense SmartTV 4K | Android TV 12 | No | **No**, changes don't last | [Log](devices/hisense-smarttv-4k/CHANGELOG.md) |
-| Fire TV Stick 4K (1st gen) | Fire OS 6.7 | Android Home with FireKeeper | Yes | [Log](devices/fire-tv-stick-4k-gen1/CHANGELOG.md) |
-| Fire TV Stick 4K (2nd gen) | Fire OS 8 | No | Yes | [Log](devices/fire-tv-stick-4k-gen2/CHANGELOG.md) |
+| Device | OS | Home | Latest build on it | Debloat | Log |
+|---|---|---|---|---|---|
+| onn 4K Streaming Box | Google TV 14 | Android Home | 1.67-mh37 | Yes | [Log](devices/onn-4k-streaming-box/CHANGELOG.md) |
+| onn 4K Plus | Google TV 14 | Android Home | 1.67-mh1 | Yes | [Log](devices/onn-4k-plus/CHANGELOG.md) |
+| NVIDIA SHIELD TV (2019 tube) | Android TV 11 | Android Home | 1.67-mh37 | Yes | [Log](devices/nvidia-shield-tube/CHANGELOG.md) |
+| TCL C02_4K_US | Android TV 9 | Android Home | 1.67-mh2 | Yes | [Log](devices/tcl-c02-4k-us/CHANGELOG.md) |
+| LG 50UP8000PUA | webOS 6.5, rooted | Web Home | 2026-11-05 | Yes | [Log](devices/lg-50up8000pua/CHANGELOG.md) |
+| Samsung UN50MU6070 | Tizen 3.0 | Web Home, on Smart Hub | 2026-11-01 | Partly, no root | [Log](devices/samsung-un50mu6070/CHANGELOG.md) |
+| Samsung UN55NU6900 | Tizen 4.0 | Web Home, on Smart Hub | 2026-11-01 | Partly, no root | [Log](devices/samsung-un55nu6900/CHANGELOG.md) |
+| Hisense SmartTV 4K | Android TV 12 | No | | **No**, changes don't last | [Log](devices/hisense-smarttv-4k/CHANGELOG.md) |
+| Fire TV Stick 4K (1st gen) | Fire OS 6.7 | Android Home with FireKeeper | 1.67-mh37 | Yes | [Log](devices/fire-tv-stick-4k-gen1/CHANGELOG.md) |
+| Fire TV Stick 4K (2nd gen) | Fire OS 8 | No | | Yes | [Log](devices/fire-tv-stick-4k-gen2/CHANGELOG.md) |
+
+Android Home's latest build is 1.67-mh37. The web Home has no version number; its date is the day it was last installed. The Samsungs have not had the web Home since 2026-11-01, so they lack this month's changes until it is installed again.
 
 Details, limits and a machine-readable list: [docs/SUPPORTED_DEVICES.md](docs/SUPPORTED_DEVICES.md) and [devices/devices.json](devices/devices.json). The Android app also carries Aerial's notes for many other TVs in [android/docs/devices/](android/docs/devices/).
 
