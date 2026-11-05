@@ -844,6 +844,8 @@ object SystemProbe {
      * its TV activity switches when started with the source's name and index in a "source" bundle
      * (SkyTVMainActivity.p hands it to SkyTVManager.J2).
      */
+    // The cursor is closed by use {} below; lint cannot see through the nullable ?.use.
+    @android.annotation.SuppressLint("Recycle")
     private fun skyworthSources(context: Context): List<TvSource> {
         val player = ComponentName(SKYWORTH_PLAYER, "$SKYWORTH_PLAYER.activity.SkyTVMainActivity")
         val activity = runCatching { context.packageManager.getActivityInfo(player, 0) }.getOrNull()

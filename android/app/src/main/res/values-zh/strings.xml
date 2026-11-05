@@ -3,9 +3,6 @@
     <string name="guard_name">Home 桌面守护</string>
     <string name="guard_description">在不允许更换桌面的电视上，让 Home 保持为主屏幕。不会读取任何屏幕内容。</string>
 
-    <string name="greeting_morning">早上好</string>
-    <string name="greeting_afternoon">下午好</string>
-    <string name="greeting_evening">晚上好</string>
 
     <string name="cc_title">控制中心</string>
     <string name="cc_inputs">信号源</string>
@@ -15,7 +12,6 @@
     <string name="cc_appearance_auto">自动</string>
     <string name="cc_appearance_dark">深色</string>
     <string name="cc_appearance_light">浅色</string>
-    <string name="cc_volume">音量</string>
     <string name="cc_muted">已静音</string>
     <string name="cc_home_default">已设为默认桌面</string>
     <string name="cc_home_guarded">桌面守护已开启</string>
@@ -27,7 +23,6 @@
     <string name="cc_setup_home">选择默认桌面</string>
     <string name="cc_setup_revival">待机后自动回来</string>
     <string name="cc_setup_revival_where">通知使用权</string>
-    <string name="cc_back">返回</string>
     <string name="cc_no_inputs">这台电视没有可用的信号源</string>
 
     <string name="net_ethernet">有线网络</string>
@@ -47,7 +42,6 @@
     <string name="menu_out_of_folder">移出文件夹</string>
     <string name="menu_rename_folder">重命名</string>
     <string name="menu_ungroup">解散文件夹</string>
-    <string name="menu_back">返回</string>
     <string name="folder_default">文件夹</string>
     <string-array name="folder_names">
         <item>系统应用</item>
@@ -243,15 +237,11 @@
     <string name="fk_tiles_dark">深色</string>
     <string name="fk_tiles_auto">自动</string>
     <string name="fk_tiles_color">浅色</string>
-    <string name="fk_app_tiles">App 磁贴</string>
-    <string name="fk_app_tiles_hint">深色：每个 App 的标志放在深色上。彩色：保持每个 App 自己的颜色。任何外观下都可用。</string>
     <string name="fk_tiles_glass">深色</string>
     <string name="fk_tiles_full">彩色</string>
-    <string name="fk_flip">时钟</string>
     <string name="fk_flip_cards">翻牌</string>
     <string name="fk_flip_off">普通</string>
     <string name="fk_flip_hint">翻牌：每位数字都在一张会翻动的卡片上，像机场的翻牌显示屏。普通：只显示时间。</string>
-    <string name="fk_loc_change">更改</string>
     <string name="fk_loc_hint">城市名称</string>
     <string name="fk_loc_auto">自动</string>
     <string name="fk_loc_searching">正在搜索…</string>
@@ -330,8 +320,10 @@
     <string name="fk_size_small">小</string>
     <string name="fk_size_medium">中</string>
     <string name="fk_size_large">大</string>
+    <string name="cc_fire_updated">Fire OS 已更新。请运行 tools/fire-reapply.sh</string>
     <string name="fk_wallpaper_tint">壁纸色调</string>
-    <string name="fk_wallpaper_tint_hint">主屏壁纸上的一层色调，适合明亮的图片。</string>
+    <string name="fk_wallpaper_tint_hint_dark">Home 为深色时覆盖在壁纸上的一层色调。“变暗”会让深色画面更深；关闭后可看到原图。</string>
+    <string name="fk_wallpaper_tint_hint_light">Home 为浅色时覆盖在壁纸上的一层色调。这里“变暗”更轻，避免玻璃后明亮的天空刺眼。</string>
     <string name="fk_tint_dim">变暗</string>
     <string name="fk_tint_warm">暖色</string>
     <string name="fk_tint_cool">冷色</string>

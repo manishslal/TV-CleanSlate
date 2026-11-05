@@ -46,7 +46,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -292,7 +291,7 @@ fun AppMenu(
                         }
                     }
                     MenuPage.Rename -> {
-                        val names = LocalContext.current.resources.getStringArray(R.array.folder_names).toList()
+                        val names = androidx.compose.ui.res.stringArrayResource(R.array.folder_names).toList()
                         val current = folder?.name
                         // The folder's own name first, ticked, so OK on it changes nothing.
                         (listOfNotNull(current) + names.filter { it != current }).forEachIndexed { i, name ->

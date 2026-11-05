@@ -2,7 +2,6 @@ package app.orchard.tv.ui.home
 
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.widthIn
-import android.os.Build
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.drawscope.withTransform
@@ -532,7 +531,7 @@ private fun Plate(glass: ImageBitmap?, sharp: ImageBitmap?, film: ImageBitmap?, 
         val r = plate.translate(0f, -scroll() - lift()).inflate(grow)
         val t = swap.value
         val picture = shown
-        if (lens && picture != null && Build.VERSION.SDK_INT >= 33) {
+        if (lens && picture != null) {
             val w = plate.width.roundToInt().coerceAtLeast(1)
             val h = plate.height.roundToInt().coerceAtLeast(1)
             fun record(layer: androidx.compose.ui.graphics.layer.GraphicsLayer, of: ImageBitmap) {

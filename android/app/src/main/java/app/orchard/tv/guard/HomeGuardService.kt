@@ -851,6 +851,8 @@ class HomeGuardService : AccessibilityService() {
      * #471). Apps may send it up to Android 11 only; from 12 keys are filtered only in Aerial.
      * The guard's own homeKey receiver ignores it: Aerial was brought back just before.
      */
+    // A system broadcast, sent on purpose to other apps' receivers: an implicit Intent is the point.
+    @android.annotation.SuppressLint("UnsafeImplicitIntentLaunch")
     private fun closeSystemDialogs() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) return
         @Suppress("DEPRECATION")

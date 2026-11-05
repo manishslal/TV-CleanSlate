@@ -631,6 +631,8 @@ class MainActivity : ComponentActivity() {
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
+    // Lint flags super.dispatchKeyEvent as an androidx-internal API; it is the public Activity method.
+    @android.annotation.SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (locked) return super.dispatchKeyEvent(event)
         if (event.keyCode == dreamWokeKey) {

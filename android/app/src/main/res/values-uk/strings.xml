@@ -2,9 +2,6 @@
 <resources>
     <string name="guard_name">Home Home Guard</string>
     <string name="guard_description">Залишає Home головним екраном на телевізорах, де його не можна змінити. Не читає вміст екрана.</string>
-    <string name="greeting_morning">Доброго ранку</string>
-    <string name="greeting_afternoon">Добрий день</string>
-    <string name="greeting_evening">Добрий вечір</string>
     <string name="cc_title">Центр керування</string>
     <string name="cc_inputs">Джерела</string>
     <string name="cc_network">Мережа</string>
@@ -13,7 +10,6 @@
     <string name="cc_appearance_auto">Авто</string>
     <string name="cc_appearance_dark">Темна</string>
     <string name="cc_appearance_light">Світла</string>
-    <string name="cc_volume">Гучність</string>
     <string name="cc_muted">Звук вимкнено</string>
     <string name="cc_home_default">Встановлено як головний екран</string>
     <string name="cc_home_guarded">Home Guard увімкнено</string>
@@ -25,7 +21,6 @@
     <string name="cc_setup_home">Вибрати застосунок головного екрана за замовчуванням</string>
     <string name="cc_setup_revival">Повернення після очікування</string>
     <string name="cc_setup_revival_where">Доступ до сповіщень</string>
-    <string name="cc_back">Назад</string>
     <string name="cc_no_inputs">На цьому телевізорі немає джерел сигналу</string>
     <string name="net_ethernet">Ethernet</string>
     <string name="net_wifi">Wi-Fi</string>
@@ -42,7 +37,6 @@
     <string name="menu_out_of_folder">Прибрати з папки</string>
     <string name="menu_rename_folder">Перейменувати</string>
     <string name="menu_ungroup">Видалити папку</string>
-    <string name="menu_back">Назад</string>
     <string name="folder_default">Папка</string>
     <string-array name="folder_names">
         <item>Система</item>
@@ -236,15 +230,11 @@
     <string name="fk_tiles_dark">Темний</string>
     <string name="fk_tiles_auto">Авто</string>
     <string name="fk_tiles_color">Світлий</string>
-    <string name="fk_app_tiles">Плитки застосунків</string>
-    <string name="fk_app_tiles_hint">Темні: логотип застосунку на темному склі. Кольорові: кожен застосунок у своїх кольорах. Працює за будь-якого вигляду.</string>
     <string name="fk_tiles_glass">Темні</string>
     <string name="fk_tiles_full">Кольорові</string>
-    <string name="fk_flip">Годинник</string>
     <string name="fk_flip_cards">Картки</string>
     <string name="fk_flip_off">Звичайний</string>
     <string name="fk_flip_hint">Картки: кожна цифра на відкидній картці, як на табло вильотів. Звичайний: лише час.</string>
-    <string name="fk_loc_change">Змінити</string>
     <string name="fk_loc_hint">Назва міста</string>
     <string name="fk_loc_auto">Автоматично</string>
     <string name="fk_loc_searching">Пошук…</string>
@@ -323,8 +313,10 @@
     <string name="fk_size_small">Мале</string>
     <string name="fk_size_medium">Середнє</string>
     <string name="fk_size_large">Велике</string>
+    <string name="cc_fire_updated">Fire OS оновлено. Запустіть tools/fire-reapply.sh</string>
     <string name="fk_wallpaper_tint">Відтінок шпалер</string>
-    <string name="fk_wallpaper_tint_hint">Відтінок поверх шпалер на головному екрані, для яскравих картинок.</string>
+    <string name="fk_wallpaper_tint_hint_dark">Відтінок поверх шпалер, поки Home темний. «Темніше» робить картинку глибшою; вимкніть, щоб бачити її як є.</string>
+    <string name="fk_wallpaper_tint_hint_light">Відтінок поверх шпалер, поки Home світлий. Тут «Темніше» м’якше, щоб яскраве небо за склом не сліпило.</string>
     <string name="fk_tint_dim">Темніше</string>
     <string name="fk_tint_warm">Теплий</string>
     <string name="fk_tint_cool">Холодний</string>
