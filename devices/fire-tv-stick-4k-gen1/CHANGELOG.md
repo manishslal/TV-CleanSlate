@@ -1,5 +1,7 @@
 # Changelog — Fire TV Stick 4K (1st Gen)
 
+*A record of one TV's changes, not a guide. Read [safety.md](../../guides/safety.md) and [Before you start](../../README.md#before-you-start) before changing your own.*
+
 **Device:** Fire TV Stick 4K (1st Gen), model `AFTMM` (codename "mantis")
 **Fire OS:** 6.7.1.1 (NS6711/5908), Android 7.1.2, SDK 25, 32-bit (`armeabi-v7a`)
 **RAM:** 1.3 GB | **Rooted:** No | **Debloat:** Yes (20 disabled, 10 background-blocked)

@@ -1,8 +1,10 @@
 # NVIDIA SHIELD changelog
 
+*A record of one TV's changes, not a guide. Read [safety.md](../../guides/safety.md) and [Before you start](../../README.md#before-you-start) before changing your own.*
+
 **Device:** NVIDIA SHIELD Android TV (`sif`, the 2019 tube), Tegra, 32-bit userland (armeabi-v7a), 2 GB RAM (MemTotal 1,987,624 kB), /data 5 GB (2.2 GB free), 4K output with a 1920x1080 UI at 320 dpi
 **OS:** Android TV 11 (SDK 30), SHIELD Experience 9.2.4 (33.2.0.400), build `RQ1A.210105.003.7825199_4387.0822`, patch 2026-01-05, verified boot green
-**Network:** Wi-Fi at <tv-ip>, MAC <mac>, on the LG's HDMI 2
+**Network:** Wi-Fi at <tv-ip>, MAC <mac>
 **ADB:** 5555, turned on by the user in Developer options. The user accepted the prompt on the TV.
 **Rooted:** No
 
@@ -18,7 +20,7 @@
 - `1.67-mh35` installed and compiled with `-m speed` while the TV slept. Not looked at on screen: smaller pill, Turn Off TV row (Home Guard is bound here), Aerial categories.
 
 ## Baseline (2026-10-30, read-only)
-- `scripts/01-preflight-backup.sh <tv-ip>` saved `backups//`. Its `stock-launcher.txt` is empty because the script looks for `launcherx`, and this device's stock launcher is `tvlauncher`.
+- `scripts/01-preflight-backup.sh <tv-ip>` saved `backups/<device>/` (on the computer, not in the repository). Its `stock-launcher.txt` is empty because the script looks for `launcherx`, and this device's stock launcher is `tvlauncher`.
 - Stock Home: `com.google.android.tvlauncher/.MainActivity` (priority 2), the same launcher as the TCL, not the Onn's `launcherx`. The other candidate is `com.android.tv.settings/.system.FallbackHome` (-1000).
 - `com.google.android.tungsten.setupwraith` is present, but unlike the Onn it is not a Home candidate.
 - Already disabled: `com.android.gallery3d`, `com.google.android.tv`, `com.nvidia.benchmarkblocker`, `com.nvidia.tegrazone3`.

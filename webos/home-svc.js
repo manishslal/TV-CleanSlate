@@ -12,6 +12,8 @@ const cache = {};
 function luna(uri, payload) {
   return new Promise(resolve => {
     const c = cp.spawn('luna-send', ['-n', '1', '-w', '4000', uri, JSON.stringify(payload || {})], { stdio: ['ignore', 'pipe', 'ignore'] });
+    // a luna-send that cannot start answers "no" rather than taking the helper down
+    c.on('error', () => resolve({ returnValue: false }));
     let out = '';
     c.stdout.on('data', d => { out += d; });
     c.on('close', () => { try { resolve(JSON.parse(out)); } catch (e) { resolve({ returnValue: false }); } });
@@ -69,10 +71,15 @@ function icon(id, res) {
 // starts. Home has its own, so while Home is in front and its screensaver is on, the answer is no; over any
 // other app, or with Home's set to Never, the TV's starts as before.
 const SAVER_CLIENT = 'cleanyourtv-home', P = 'luna://com.webos.service.tvpower/power/';
+// kept on the TV, so a helper restarted while Home stays open still knows Home's choice (Never included)
+const SAVER_FILE = '/media/developer/cleanyourtv/home-saver-min';
 let saverMin = 5;
+try { const n = parseInt(fs.readFileSync(SAVER_FILE, 'utf8'), 10); if (n >= 0) saverMin = n; } catch (e) {}
 function answerSaver(msg) {
   // the last request and its answer, for checking on the TV
   const note = a => { try { fs.writeFileSync('/tmp/home-saver.log', new Date().toISOString() + ' ' + JSON.stringify(msg) + ' ' + a + '\n'); } catch (e) {} };
+  // tvpower restarted or dropped us: start again (the close handler waits 30 s)
+  if (msg.returnValue === false || msg.subscribed === false) { note('resubscribing'); if (saverProc) saverProc.kill(); return; }
   if (msg.timestamp === undefined) return note('');
   luna('luna://com.webos.applicationManager/getForegroundAppInfo').then(fg => {
     const ack = !(fg.appId === 'com.webos.app.home' && saverMin > 0);
@@ -80,8 +87,9 @@ function answerSaver(msg) {
     note('fg=' + fg.appId + ' ack=' + ack);
   });
 }
+let saverProc = null;
 function guardSaver() {
-  const c = cp.spawn('luna-send', ['-i', P + 'registerScreenSaverRequest', JSON.stringify({ subscribe: true, clientName: SAVER_CLIENT })], { stdio: ['ignore', 'pipe', 'ignore'] });
+  const c = saverProc = cp.spawn('luna-send', ['-i', P + 'registerScreenSaverRequest', JSON.stringify({ subscribe: true, clientName: SAVER_CLIENT })], { stdio: ['ignore', 'pipe', 'ignore'] });
   let buf = '';
   // one JSON object per answer, however the tool lays it out (an object cut across reads waits for the rest)
   c.stdout.on('data', d => {
@@ -94,8 +102,11 @@ function guardSaver() {
     }
     buf = depth > 0 ? buf.slice(start) : '';
   });
-  c.on('close', () => setTimeout(guardSaver, 30000));
+  c.on('error', () => {});
+  c.on('close', () => { saverProc = null; setTimeout(guardSaver, 30000); });
 }
+// a subscription left behind by an earlier helper (its luna-send outlives it) would never answer
+try { cp.execSync('pkill -f "luna-send -i .*registerScreenSaverRequest"'); } catch (e) {}
 guardSaver();
 http.createServer((req, res) => {
   const q = url.parse(req.url, true);
@@ -105,7 +116,7 @@ http.createServer((req, res) => {
   if (q.pathname === '/news') return news(String(q.query.u || '')).then(xml => send({ xml }));
   if (q.pathname === '/icon') return icon(String(q.query.id || ''), res);
   if (q.pathname === '/bing') return bing().then(send);
-  if (q.pathname === '/saver') { const n = parseInt(q.query.min, 10); if (n >= 0) saverMin = n; return send({ returnValue: true, min: saverMin }); }
+  if (q.pathname === '/saver') { const n = parseInt(q.query.min, 10); if (n >= 0 && n !== saverMin) { saverMin = n; try { fs.writeFileSync(SAVER_FILE, String(n)); } catch (e) {} } return send({ returnValue: true, min: saverMin }); }
   if (q.pathname === '/target') { fs.writeFileSync(TARGET, String(q.query.id || '').replace(/[^\w.-]/g, '')); return send({ returnValue: true }); }
   res.writeHead(404);
   res.end();

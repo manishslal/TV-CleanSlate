@@ -10,7 +10,7 @@ body:
     validations: {required: true}
   - type: input
     id: device
-    attributes: {label: TV or box, and its OS version, placeholder: "onn 4K Streaming Box, Google TV 14"}
+    attributes: {label: "TV or box, and its OS version", placeholder: "onn 4K Streaming Box, Google TV 14"}
     validations: {required: true}
   - type: input
     id: build

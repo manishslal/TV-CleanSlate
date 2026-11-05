@@ -37,7 +37,7 @@ TV=<tv-ip> tizen/deploy.sh
 
 Every Samsung build starts on Efficient (still pictures, no focus glow), and a TV that had Home before switches to it once; Full can still be chosen in Control Center. `LEAN=1 python3 tizen/build.py` makes a smaller build for a TV short on memory and storage as well: still wallpaper from `python3 webos/bake_stills.py` and no frost.
 
-`deploy.sh` needs Tizen Studio's CLI, a `home` security profile, and Rosetta on Apple Silicon. A free author certificate was accepted on this 2017 TV, so no Samsung account was needed.
+`deploy.sh` needs Tizen Studio's CLI, a `home` security profile, and Rosetta on Apple Silicon. A free author certificate was accepted on the 2017 TV, so no Samsung account was needed there; see step 3 below for newer TVs.
 
 ## What the TV allows
 
@@ -78,25 +78,19 @@ TV=<tv-ip> python3 tizen/tvkey.py KEY_RIGHT KEY_ENTER
 
 The first run shows a prompt on the TV. Press Allow within 30 seconds, while the computer is connected; otherwise the TV closes the connection with `notack`. The token stays in `~/.cache/tv-cleanslate/`, one for each TV. Never commit it.
 
-## Plan
+## How it was set up on the two tested TVs
 
-1. **Check the TV.** Record the model, firmware and year, then run `preflight.sh`. It only reads.
-2. **Build the no-root version.** Add a Tizen adapter, package a `.wgt`, and install it through Developer Mode.
-3. **Set power-on.** Turn off Autorun Smart Hub, turn on Autorun Last App, and reboot to check.
-4. **Block ads at the router.** This needs no change on the TV and survives a reset.
-5. **Decide on the Home button.** The no-root reopen is built. An exploit-based route is optional and needs the owner's separate approval.
+A record of what was done, in order, not a list you have to follow. Nothing here roots the TV.
 
-Later: walk the owner through blocking AdSuite, Sponsored Video and Ad Player at the router or DNS.
+1. **Checked the TV.** Noted the model, firmware and year, and ran `preflight.sh`, which only reads.
+2. **Turned on Developer Mode.** Apps, App Settings, `12345`, Developer Mode on with the computer's IP address, then a reboot. Turning it off again takes the TV back.
+3. **Signed and installed Home.** Tizen Studio with its TV extension and Certificate Manager made the signing certificate. On the 2017 TV a free author certificate was enough. A newer TV may want a free Samsung account for it: sign in yourself, and never share the password.
+4. **Set power-on.** Autorun Smart Hub off and Autorun Last App on, checked with a reboot.
+5. **Left the Home button alone at the firmware level.** Home's own reopen over Smart Hub is all this project uses. Firmware exploits exist for some models; they weren't used, and this project doesn't recommend them.
 
-## Before the first run
+Ads are best blocked at the router or DNS, which changes nothing on the TV. That wasn't done here.
 
-The owner does these steps:
-
-1. Note the exact model from the label or Settings, and the software version.
-2. Open Apps, go to App Settings, and enter `12345`.
-3. Turn Developer Mode on, enter the computer's IP address, and reboot the TV.
-4. Create a free Samsung account for the signing certificate. Don't share the password; sign in yourself.
-5. Install Tizen Studio with its TV extension and Certificate Manager. The certificate is tied to this TV's device ID.
+To undo: uninstall Home from Apps, and turn Developer Mode off.
 
 ```bash
 TV=<tv-ip> tizen/preflight.sh

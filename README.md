@@ -5,7 +5,7 @@
 
 **A calm, ad-free Home for the TVs you already own, plus a safe way to clear out what came with them.**
 
-TV CleanSlate replaces the ad-filled home screen on Android TV, Google TV and Fire TV devices, brings the same look to a rooted LG webOS TV and to older Samsung Tizen TVs without root, and documents how to debloat each device one reversible step at a time. Everything here was tested on real hardware.
+TV CleanSlate replaces the ad-filled home screen on Android TV, Google TV and Fire TV devices, brings the same look to a rooted LG webOS TV and to older Samsung Tizen TVs without root, and documents how to debloat each device one reversible step at a time. Everything here was built and tried on real TVs, and each [device log](devices/README.md) says what was and wasn't checked.
 
 It stands on the work of other open source projects. The Android app is a fork of [**Aerial**](https://github.com/pengchujin/aerial-tv) by pengchujin and its contributors. See [Credits](#credits).
 
@@ -27,16 +27,16 @@ This is one person's project, tested on the TVs in one home. It is shared so oth
 
 | What you'd do | Risk | How to undo it |
 |---|---|---|
-| Install Android Home | Low. Your stock Home stays installed | Choose the stock Home again, or uninstall the app |
+| Install Android Home | Low to medium. Your stock Home stays installed, but the installer grants Home system permissions and may turn on an accessibility service (Home Guard) without asking again | `tools/restore.sh --uninstall` takes it all back ([details](guides/getting-started.md#3-build-and-install)) |
 | Make it the default Home on Google TV (`04-disable-stock-launcher.sh`) | Medium. Disables (never uninstalls) the stock launcher and setup wizard | `scripts/99-restore-stock.sh` |
 | Debloat over ADB | Medium. A wrong package can break inputs, the remote or Wi-Fi | Re-enable the package; each device log lists the undo |
 | Samsung web Home | Low to medium. Needs Developer Mode, no root | Uninstall the app and turn off Developer Mode |
-| LG web Home | **High.** Needs a root exploit (SlopBro) and replaces LG's Home | Undo steps in [webos/README](webos/README.md); a root cannot always be taken back |
+| LG web Home | **High.** Needs a root exploit (SlopBro) and replaces LG's Home | Home and its start-up hooks come out ([webos/README](webos/README.md#risks-and-undo)); the root itself can't be taken back |
 
 - **Who it's for:** people comfortable with ADB or a command line, who want to see and undo every change.
 - **Who it's not for:** anyone who needs the TV under warranty support, relies on the TV maker's own features (voice, ads-funded channels, account services), or can't take a TV out of use for an evening if something goes wrong.
 - **Device logs are records, not instructions.** [devices/](devices/README.md) says what one owner chose for one TV, such as blocking an LG's updates. Those were personal choices with trade-offs (no security fixes), not recommendations.
-- **Scripts ask before they change anything**, and say how to undo it. The restore script never asks, so it works in a hurry.
+- **The scripts in `scripts/` ask before they change anything**, and say how to undo it. The restore script never asks, so it works in a hurry. Android Home's installer (`android/tools/install.sh`) doesn't ask once started; the [getting started guide](guides/getting-started.md) lists what it does first.
 
 ## What's here
 
@@ -111,13 +111,13 @@ Measured on an onn 4K Streaming Box with 2 GB of RAM. Full method: [PERFORMANCE.
 | Fire TV Stick 4K (1st gen) | Fire OS 6.7 | Android Home with FireKeeper | 1.67-mh37 | Yes | [Log](devices/fire-tv-stick-4k-gen1/CHANGELOG.md) |
 | Fire TV Stick 4K (2nd gen) | Fire OS 8 | No | | Yes | [Log](devices/fire-tv-stick-4k-gen2/CHANGELOG.md) |
 
-Android Home's latest build is 1.67-mh37. The web Home has no version number; its date is the day it was last installed. The Samsungs have not had the web Home since 2026-11-01, so they lack this month's changes until it is installed again.
+Android Home's latest build is 1.67-mh37: Aerial 1.67, plus this fork's 37th build on top of it ("mh" counts the fork's builds). The web Home has no version number; its date is the day it was last installed. The Samsungs have not had the web Home since 2026-11-01, so they lack this month's changes until it is installed again.
 
 Details, limits and a machine-readable list: [docs/SUPPORTED_DEVICES.md](docs/SUPPORTED_DEVICES.md) and [devices/devices.json](devices/devices.json). The Android app also carries Aerial's notes for many other TVs in [android/docs/devices/](android/docs/devices/).
 
 ## Quick start
 
-You need ADB, JDK 17, the Android SDK, and network debugging turned on for the TV. No prebuilt APK is published yet, so you build your own.
+Read the [safety guide](guides/safety.md) and [Before you start](#before-you-start) first. You need ADB, JDK 17, the Android SDK, and network debugging turned on for the TV. No prebuilt APK is published yet, so you build your own.
 
 ```bash
 git clone https://github.com/manishslal/TV-CleanSlate.git
@@ -153,6 +153,18 @@ It doesn't contact Aerial's servers or check for app updates.
 Read the full [safety guide](guides/safety.md) first.
 
 Rooting an LG TV can void support and is at your own risk. This project comes with no warranty.
+
+## Terms used here
+
+| Term | Meaning |
+|---|---|
+| mh37 | This fork's build number on top of Aerial 1.67 |
+| Home Guard | An accessibility service that answers the Home key with Home, on TVs that keep sending Home back to their own launcher |
+| FireKeeper | Home Guard's stand-in on Fire OS 6, which never runs accessibility services: it brings Home to the front instead |
+| CleanYourTV | Another project's LG tool that lets a homebrew app replace LG's Home, and turns off LG's ads and tracking |
+| Home Mode | Full (every effect), Efficient (still pictures, fewer effects, less memory) or Auto (picks for the device) |
+| Liquid Glass | The bending, see-through glass Android 13 and later draw; older TVs and the web draw plain frosted glass |
+| Parity | Keeping the Android and web Homes alike. `docs/parity.json` lists every feature and where it works, and a check stops a change that forgets to update it |
 
 ## Repository layout
 

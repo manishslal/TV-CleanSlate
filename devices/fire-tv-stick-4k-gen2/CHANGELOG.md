@@ -1,5 +1,7 @@
 # Changelog — Fire TV Stick 4K (2nd Gen)
 
+*A record of one TV's changes, not a guide. Read [safety.md](../../guides/safety.md) and [Before you start](../../README.md#before-you-start) before changing your own.*
+
 **Device:** Fire TV Stick 4K (2nd Gen), model `AFTKM` (codename "karat")
 **Fire OS:** 8.1.8.2 (RS8182/3811) | Home: 7311000.1
 **IP:** <tv-ip> | BSSID: <mac> | MAC: <mac>
@@ -23,7 +25,7 @@
 - `com.amazon.vizzini` (Alexa media playback controller) — user relies on Echo devices to control this TV; no reliable public documentation separates "remote-only" vs. "Echo-device-targeting-TV" control paths for this package. **Left enabled** to avoid risking Echo→TV voice control.
 - MiniTV (`com.amazon.minitv.android.app`) — not present as a home screen item for this user; left untouched (present in package list but not requested for removal)
 - `com.amazon.gamehub`, `com.amazon.cloud9` — present on device but NOT confirmed to be Luna or anything else; left untouched (unconfirmed function, not in original ask)
-- Cross-referenced all preinstalled 3rd-party apps against user's actual-use list (TiviMate=`ar.tvplayer.tv`, YouTube, Netflix, Plex, Hulu, HBO Max, Windscribe, Prime Video, Peacock, Disney+, Apple TV, Paramount+=`com.cbs.ott`, Send Files to TV=`com.yablio.sendfilestotv`) — **100% match, nothing extra installed to remove**
+- Cross-referenced all preinstalled third-party apps against the owner's own apps (the list is left out here): **all in use, nothing extra installed to remove**
 - System TTS/input components (`com.ivona.*`, `com.svox.pico`, `com.mediatek.tvinput`, `com.fireos.arcus.proxy`, `com.fireos.usagestats.proxy`) identified but left untouched — core system plumbing, not user-facing bloat, too close to protected categories (HDMI input, Alexa voice) to risk
 
 ## Batch 1 — 2026-09-04

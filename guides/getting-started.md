@@ -1,6 +1,8 @@
 # Getting started
 
-This guide installs Android Home on an Android TV or Google TV device. For LG, see [webos/](../webos/README.md).
+This guide installs Android Home on an Android TV, Google TV or Fire TV device (Fire TV differs in places: see [Fire TV notes](#fire-tv-notes)). For LG, see [webos/](../webos/README.md); for Samsung, [tizen/](../tizen/README.md).
+
+Read [safety.md](safety.md) before you start. You can stop after any step, and [Undo](#undo) puts the TV back.
 
 ## What you need
 
@@ -39,7 +41,18 @@ adb -s <tv-ip>:5555 shell cmd package compile -m speed -f io.manish.home
 
 Firmware that refuses a launcher needs `tools/install.sh guard` instead.
 
-The installer grants the permissions Home needs and tries to make it the default. Where the firmware keeps sending Home to its own launcher, **Home Guard** takes over. Nothing is disabled or uninstalled by this step.
+The installer asks nothing once it starts. It grants Home these permissions over ADB, which the app can't ask for on screen:
+
+| Grant | Why |
+|---|---|
+| Location | Android shows the Wi-Fi name only to apps with it |
+| Write secure settings | Keeps Home Guard switched on |
+| Draw over other apps | Opens Home after the TV starts |
+| Write settings | The brightness slider |
+| Usage stats | Knows which app is in front, where a TV hides it |
+| Notification listener | Brings Home back if the TV stops it |
+
+It also tries to make Home the default. Where the firmware keeps sending Home to its own launcher, it turns on **Home Guard**, an accessibility service that answers the Home key with Home. On some TVs it makes Home the system screensaver. `KEEP_ADB=1` would also switch network debugging back on whenever the TV turns it off; leave it out unless you need it. No other app is disabled or uninstalled by this step, and `tools/restore.sh` (below) takes all of it back.
 
 ## 4. Check it
 
@@ -57,7 +70,23 @@ Move up to the Wi-Fi button at the top right and press OK to open Control Center
 
 ## 6. Optional: clean up the TV
 
-## Home on Fire TV
+Debloating is separate from Home. Follow the [Android and Google TV guide](debloat-android-google-tv.md), or the [Fire TV guide](debloat-fire-tv.md), one small batch at a time.
+
+## 7. Optional: disable the stock launcher on Google TV
+
+This is where most of the memory saving comes from. It's the one step that disables `launcherx`, which the debloat prompt's rule 5 says never to touch by hand: the script checks first and undoes itself if Android won't accept Home.
+
+```bash
+scripts/04-disable-stock-launcher.sh <tv-ip> io.manish.home/app.orchard.tv.MainActivity
+```
+
+The script stops if your Wi-Fi depends on the setup wizard, and undoes the change if Android won't accept your Home. Reboot afterwards, then check Home, Settings, Wi-Fi and the remote. On some devices the YouTube button on the remote may stop working.
+
+## 8. Turn off network debugging
+
+Do this in Developer options when you finish.
+
+## Fire TV notes
 
 Fire OS keeps the Home button for Amazon, and the HOME role has no effect. `tools/install.sh` detects Fire OS 6 and installs the guard build with `FireKeeper`. It needs `BUILD=1`.
 
@@ -71,27 +100,13 @@ Fire OS keeps the Home button for Amazon, and the HOME role has no effect. `tool
 
 Fire OS 7 and 8 use Home Guard, but this project hasn't tested Home on them.
 
-Debloating is separate from Home. Follow the [Android and Google TV guide](debloat-android-google-tv.md), or the [Fire TV guide](debloat-fire-tv.md), one small batch at a time.
-
-## 7. Optional: disable the stock launcher on Google TV
-
-This is where most of the memory saving comes from.
-
-```bash
-scripts/04-disable-stock-launcher.sh <tv-ip> io.manish.home/app.orchard.tv.MainActivity
-```
-
-The script stops if your Wi-Fi depends on the setup wizard, and undoes the change if Android won't accept your Home. Reboot afterwards, then check Home, Settings, Wi-Fi and the remote. On some devices the YouTube button on the remote may stop working.
-
-## 8. Turn off network debugging
-
-Do this in Developer options when you finish.
-
 ## Undo
 
 ```bash
 TV=<tv-ip> tools/restore.sh --uninstall
 ```
+
+This turns Home Guard off, takes back the grants above and removes Home. Leave out `--uninstall` to keep Home installed but stop it taking over.
 
 If you disabled the stock launcher, enable it first with `adb shell pm enable <package>`.
 

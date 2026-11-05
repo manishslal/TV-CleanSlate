@@ -1,5 +1,7 @@
 # LG 50UP8000PUA changelog
 
+*A record of one TV's changes, not a guide. Read [safety.md](../../guides/safety.md) and [Before you start](../../README.md#before-you-start) before changing your own.*
+
 ## Baseline (2026-10-30)
 - Model: 50UP8000PUA (UP8000PUA.ACC), webOS 6.5.3, machine lm21a, otaId HE_DTV_W21A_AFADATAA
 - Firmware: 03.53.45
@@ -20,7 +22,7 @@ Each entry gives what changed and how to undo it.
 
 ### 3. Remote access (done)
 - Telnet off: `/var/luna/preferences/webosbrew_telnet_disabled`. Port 23 confirmed closed after reboot.
-- SSH on, key only: private key `~/.ssh/lg_tv` on the Mac, public key in `/home/root/.ssh/authorized_keys`.
+- SSH on, key only: a private key kept on the computer, public key in `/home/root/.ssh/authorized_keys`.
 - Undo: SSH Server toggle in Homebrew Channel; delete `webosbrew_telnet_disabled` to bring telnet back (not recommended).
 
 ### 4. Home takeover with CleanYourTV 1.6.10 (done; survives reboot)
@@ -182,5 +184,5 @@ Each entry gives what changed and how to undo it.
 ### Dock glass as on the onn; LG's screensaver held off (2026-11-05)
 - LG's own screensaver (`com.webos.app.screensaver`, a clock on black) came on over Home's. It asks `com.webos.service.tvpower/power/registerScreenSaverRequest` subscribers first; the helper (`home-svc.js`) now subscribes and answers `responseScreenSaverRequest` with `ack: false` while Home is in front and Home's screensaver is on (the page tells it the delay at `/saver`). Over any other app, or with Home's set to Never, it answers yes. The last request is in `/tmp/home-saver.log`. In the first 18 minutes after deploying, the TV had not asked yet (Home's own screensaver was up, LG's was not), so the answer itself is still to be seen in that log. Undo: restore `backup/home-svc.before-saver-2026-11-05.js` and restart the helper. It is an LCD panel (UP8000), so holding the TV's screensaver off carries no burn-in risk.
 - The dock read blurrier than Android's. Measured: the frost is as soft as Android's (a quarter-size copy blurred 9 px and scaled up, about 36 px at 1080p, against Android's 320x180 frame boxed three times, about 45 px), but Android 13+ (the onn) lets 30% of the sharp picture through the middle and the sharp picture takes over at the rim, and every Android lays a film's frost at 55%. The page now does both, with Android's flat x0.8 + 30 tint. Checked by capture over a Bing picture. Previous page at `backup/index.before-lens-2026-11-05.html`.
-- Later the same day, at the owner's request, the dock was matched to the SHIELD's instead (Android 11, the plain frosted plate), measured side by side on the same Bing picture: full frost, x0.84 + 16 with the lift dimmed with the wallpaper, 64 px corners, a 2.4 px rim, no shadow. A model of Android's plate came within 2 of the SHIELD's dock colour (59, 49, 20); the onn-style dock had been (79, 64, 42). Previous page at `backup/index.before-shield-plate-2026-11-05.html`. Staged while the owner watched the SHIELD on HDMI 2; Home was reloaded only once it had sat on Home for three minutes.
+- Later the same day, at the owner's request, the dock was matched to the SHIELD's instead (Android 11, the plain frosted plate), measured side by side on the same Bing picture: full frost, x0.84 + 16 with the lift dimmed with the wallpaper, 64 px corners, a 2.4 px rim, no shadow. A model of Android's plate came within 2 of the SHIELD's dock colour (59, 49, 20); the onn-style dock had been (79, 64, 42). Previous page at `backup/index.before-shield-plate-2026-11-05.html`. Staged while the owner watched another input; Home was reloaded only once it had sat on Home for three minutes.
 

@@ -1,5 +1,7 @@
 # Changelog — Hisense SmartTV 4K (Android TV)
 
+*A record of one TV's changes, not a guide. Read [safety.md](../../guides/safety.md) and [Before you start](../../README.md#before-you-start) before changing your own.*
+
 **Device:** Hisense SmartTV 4K
 **Android TV:** 12 | Build: STT2.230929.001.092
 **IP:** <tv-ip> | MAC: <mac>
@@ -18,7 +20,7 @@
 
 ## Discovery findings (Rule 6)
 - This is a Hisense Android TV build with the VIDAA vendor layer present underneath (all `com.vt.*` packages are VIDAA components — "vt" = VIDAA), distinct from a "pure" Google Android TV reference build. This explains why the candidate list looked nothing like the Shield/Onn examples in the original ruleset.
-- User's confirmed streaming/utility apps present and untouched, 100% match: Netflix, Disney+, Hulu, Max (`com.wbd.stream`), Paramount+ (`com.cbs.ott`), Peacock, Plex, Prime Video (`com.amazon.amazonvideo.livingroom`), TiviMate (`ar.tvplayer.tv`), Apple TV (`com.apple.atve.androidtv.appletv`), Windscribe, Send Files to TV, YouTube, plus confirmed-in-use YouTube Music/VLC/File Manager+ tiles.
+- The owner's own apps were listed with them first and left untouched (the list itself is left out here).
 - Confirmed via `dumpsys package <pkg>` intent-filter triage (LEANBACK_LAUNCHER presence = real home tile vs. background-only service) before requiring any live on-device navigation — efficient for ~50 ambiguous packages without physically opening each one.
 - `com.vt.tv.videocolor` confirmed = core picture/video-color-processing service (`/system_ext/app/VideoColor`) — protected, not a debloat candidate despite ambiguous name.
 - `com.vt.tv.protector` confirmed = Hisense's own storage-cleaner/"Turbo Mode" optimizer utility (NetworkMenu, TurboMode, SpaceProtection, Storage activities), has its own home tile. Also holds `DELETE_PACKAGES`/`CLEAR_APP_USER_DATA`/`RESTART_PACKAGES`/`MASTER_CLEAR` permissions and a `BOOT_COMPLETED` receiver — investigated as a possible package-state watchdog (see Persistence Investigation below); theory disproven.

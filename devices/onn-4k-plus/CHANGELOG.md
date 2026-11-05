@@ -1,5 +1,7 @@
 # Changelog — onn. 4K Plus Streaming (Google TV)
 
+*A record of one TV's changes, not a guide. Read [safety.md](../../guides/safety.md) and [Before you start](../../README.md#before-you-start) before changing your own.*
+
 **Device:** onn. 4K Plus Streaming (device/product `coffey`), 2 GB RAM (MemTotal 1,971,788 kB), /data 11 GB (7.0 GB free at baseline)
 **OS:** Android TV 14 (SDK 34), build URO4.260304.011.B1, fingerprint `onn/coffey/coffey:14/URO4.260304.011.B1/15051976`, patch 2026-03-01, bootloader locked
 **IP:** <tv-ip> on Wi-Fi "<wifi-name>" (5 GHz).
@@ -14,7 +16,7 @@
 - **Lesson:** on the Mac, if adb says "No route to host" but `nc` reaches the port, restart the adb server before retrying pairing.
 
 ### Phase 1: backup + reboot test (read-only)
-- `scripts/01-preflight-backup.sh <tv-ip>:5555` → `backups//`. 0 packages disabled at baseline, so `packages-disabled.txt` is empty on purpose.
+- `scripts/01-preflight-backup.sh <tv-ip>:5555` → `backups/<device>/` (on the computer, not in the repository). 0 packages disabled at baseline, so `packages-disabled.txt` is empty on purpose.
 - Stock Home = `com.google.android.apps.tv.launcherx/.home.HomeActivity`. Home candidates: launcherx (priority 2), `setupwraith/.RecoveryActivity` (1), `tv.settings/.system.FallbackHome` (-1000). Same as the home box.
 - Baseline: accessibility services `null`, screensaver_components `null` (stock default), HOME role = launcherx. No Aerial, Free My TV or XMB installed (no upstream `app.orchard.tv`, so there's no Home Guard conflict).
 - No-change reboot (uptime was 14 days): back in ~57 s, ADB on 5555, Wi-Fi reconnected, Home = launcherx. PASS.
@@ -61,7 +63,7 @@ From `android`:
 PKG=io.manish.home TV=<tv-ip>:5555 tools/restore.sh
 ```
 This revokes grants, removes Home Guard and the listener, and puts back the stock screensaver and HOME role. Then optionally `adb -s <tv-ip>:5555 shell pm uninstall io.manish.home`.
-Baseline for comparison: `backups//` (screensaver_components and enabled_accessibility_services were `null`).
+Baseline for comparison: `backups/<device>/` (on the computer, not in the repository) (screensaver_components and enabled_accessibility_services were `null`).
 Last resort: `scripts/99-restore-stock.sh <tv-ip>:5555`.
 
 ## Notes

@@ -1438,7 +1438,7 @@ document.addEventListener('keyup', function (e) {
 /* a release lost while the app was away (relaunch, hidden) must not leave OK held */
 function dropHeld() { if (typeof held === 'number') clearTimeout(held); held = null; }
 document.addEventListener('visibilitychange', dropHeld);
-document.addEventListener('webOSRelaunch', function () { dropHeld(); saver(false); closeAll(); if (folderOpen) closeFolder(); lastKey = Date.now(); refresh(); if (!$('v0').src && !$('v1').src) next(); });
+document.addEventListener('webOSRelaunch', function () { tellSaver(); dropHeld(); saver(false); closeAll(); if (folderOpen) closeFolder(); lastKey = Date.now(); refresh(); if (!$('v0').src && !$('v1').src) next(); });
 
 /* ---- start ---- */
 tellSaver();
@@ -1457,7 +1457,8 @@ setTimeout(function () { document.body.classList.remove('first'); }, 1400);
 setInterval(function () {
   clock();
   if (S.appearance === 'auto') theme();
-  if (S.saverMin && Date.now() - lastKey > S.saverMin * 60000 && !document.hidden && !stack.length) saver(true);
+  /* a menu left open closes for the screensaver, as on Android, where the TV's own would otherwise be held off with nothing in its place */
+  if (S.saverMin && Date.now() - lastKey > S.saverMin * 60000 && !document.hidden) { if (stack.length) closeAll(); if (folderOpen) closeFolder(); saver(true); }
 }, 5000);
 setInterval(function () { loadWeather(); loadNews(); netPill(); theme(); }, 30 * 60 * 1000);
 api('/api/frontend-ok', { version: VERSION }).catch(function () {});

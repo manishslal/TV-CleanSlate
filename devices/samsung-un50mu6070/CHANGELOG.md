@@ -1,5 +1,7 @@
 # Changelog: Samsung UN50MU6070
 
+*A record of one TV's changes, not a guide. Read [safety.md](../../guides/safety.md) and [Before you start](../../README.md#before-you-start) before changing your own.*
+
 **Device:** Samsung 6 Series UN50MU6070 (2017, 4K), `17_KANTM_UHD_BASIC`, armv7, 1.36 GB RAM
 **OS:** Tizen 3.0, software T-KTMAKUC-1410.1
 **Access:** Developer Mode and `sdb`, with a free author certificate

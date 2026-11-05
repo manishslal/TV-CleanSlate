@@ -4,6 +4,8 @@
 
 # Fire TV Debloat — Master Prompt (v2, updated 2026-09-06 after Fire TV Stick)
 
+*Last reviewed 2026-11-05: the safety rules match [safety.md](safety.md); the batch notes date from the original sessions.*
+
 Goal: Remove Amazon's newer bloat (Luna, Fire TV Channels, Amazon Live
 shopping, and whatever "Music Videos / News / Sports / En Español" turn
 out to actually be), disable unused factory apps, and speed the stick up
@@ -14,7 +16,7 @@ For Home on Fire OS 6, see "Home on Fire TV" in
 [getting-started.md](getting-started.md). Fire OS 6 package lists were checked
 against dumbtv's tested AFTMM lists. Treat them as candidates, not proof.
 
-On a Fire TV Stick 4K (1st gen), `tools/fire-reapply.sh` applies that model's lists from
+On a Fire TV Stick 4K (1st gen), `android/tools/fire-reapply.sh` applies that model's lists from
 [its device folder](../devices/fire-tv-stick-4k-gen1/). Run it again after a Fire OS
 update. Don't use those lists on another model.
 

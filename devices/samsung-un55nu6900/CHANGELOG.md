@@ -1,5 +1,7 @@
 # Changelog: Samsung UN55NU6900
 
+*A record of one TV's changes, not a guide. Read [safety.md](../../guides/safety.md) and [Before you start](../../README.md#before-you-start) before changing your own.*
+
 **Device:** Samsung 6 Series UN55NU6900 (2018, 4K), `18_KANTSU_UHD_BASIC`, armv7, 1 GB RAM
 **OS:** Tizen 4.0
 **Access:** Developer Mode and `sdb`, with a free author certificate

@@ -1,5 +1,7 @@
 # Changelog — TCL Android TV
 
+*A record of one TV's changes, not a guide. Read [safety.md](../../guides/safety.md) and [Before you start](../../README.md#before-you-start) before changing your own.*
+
 **Device:** TCL `Smart TV`, product `C02_4K_US`, device `BeyondTV`, Realtek RTD2851 (`rtd285o`), 32-bit ARM (armeabi-v7a), 2 GB RAM (MemTotal 2,097,152 kB), 1920×1080 UI at 320 dpi, /data 10 GB (6.5 GB free)
 **OS:** Android TV 9 (SDK 28), build PPR1.180610.011 (TCL AP12), fingerprint `TCL/C02_4K_US/BeyondTV:9/PPR1.180610.011/AP12:user/release-keys`, security patch 2021-09-05, bootloader locked, TCL client type `TCL-NA-RT2851-S1`
 **IP:** <tv-ip> on Wi-Fi "<wifi-name>"
@@ -9,7 +11,7 @@
 ## 2026-10-29
 
 ### Baseline (read-only)
-- `scripts/01-preflight-backup.sh <tv-ip>:5555` → `backups//`.
+- `scripts/01-preflight-backup.sh <tv-ip>:5555` → `backups/<device>/` (on the computer, not in the repository).
 - Stock Home: **Google's `com.google.android.tvlauncher/.MainActivity`** (priority 2), TCL-customized through `com.tcl.partnercustomizer` (Search / Home / Live / Shop / Apps tabs). Other HOME candidates: `com.tcl.keycustomfunctionservice/.FallbackHome` (-999), `com.android.tv.settings/.system.FallbackHome` (-1000).
 - No TCL launcher guard: `persist.sys.launcher.component` is empty, and there's no `boot_app_componentname` or "boot to TV source" setting. `adb install` isn't blocked: `persist.tcl.installapk.enable=1`, and the verifier is Play's.
 - Already disabled at baseline: `com.tcl.bootadservice`, `com.google.android.youtube.tvmusic`, `com.google.android.videos`, `com.google.android.play.games`.

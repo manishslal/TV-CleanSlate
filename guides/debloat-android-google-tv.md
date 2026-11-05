@@ -4,6 +4,8 @@
 
 # Android TV / Google TV Debloat — Master Prompt (v2, updated 2026-09-06 after Hisense)
 
+*Last reviewed 2026-11-05: the safety rules match [safety.md](safety.md); the batch notes date from the original sessions.*
+
 I want you to debloat my Android TV / Google TV device via ADB.
 Goal: remove OEM/Google bloat, speed it up, without
 breaking the Home button, HDMI-CEC input switching, remote pairing, or
@@ -27,11 +29,10 @@ RULES (follow strictly):
      pm disable-user --user 0 <package>
    Everything must be reversible via:
      pm enable <package>
-   Do NOT use `pm uninstall` on system packages, even with -k or --user 0
-   — WITHOUT the user explicitly overriding this rule in the moment, in
-   writing, for that specific device. Even then, treat it as a genuine
-   exception, not a new default: re-confirm before every use, and log it
-   clearly as an override each time.
+   Do NOT use `pm uninstall` on system packages, even with -k or --user 0.
+   If the user insists on one for a specific package, explain first that
+   it is undone only with `cmd package install-existing <package>`, get a
+   written yes for that package alone, and log it as an exception.
    - **New finding (Hisense/VIDAA Android TV 12, this session):** on some
      OEM builds, NEITHER `pm disable-user --user 0` NOR `pm uninstall
      --user 0` survives a true reboot — both get silently reset back to
@@ -43,12 +44,10 @@ RULES (follow strictly):
 2. NO ROOT, NO CUSTOM ROMS. Shield TV is historically very rootable —
    don't. We only disable packages; this stays fully stock and reversible.
    - If persistence testing (Rule 3a) shows the device resets all
-     ADB-applied package changes on reboot, root is very likely the ONLY
-     way to make changes stick. This is a real, distinct decision from
-     "should we debloat at all" — surface it explicitly and get a clear
-     yes/no on accepting the DRM/Widevine trade-off before ever touching
-     it. Default to NOT rooting; most users should stop at "session-only
-     debloat" instead (see Rule 3a).
+     ADB-applied package changes on reboot, stop and tell the user the
+     changes won't last. Rooting is out of scope for this prompt: don't
+     suggest it or offer to do it. The user can choose session-only
+     debloating (see Rule 3a) or leave the device as it is.
 
 3. MEASURE BEFORE & AFTER, per device. Save to a file named after that
    device:
@@ -76,8 +75,8 @@ RULES (follow strictly):
    standby/"Quick Start" (which may not trigger the same reset — untested
    from ADB, no safe way to simulate it remotely), and let them decide
    whether session-only debloating is still worth doing. Do NOT run a
-   large batch under Rule 4 without this answered first — see the Living
-   Room TV incident in the Rule 4 changes below for why.
+   large batch under Rule 4 without this answered first — see the Hisense
+   incident in the Rule 4 changes below for why.
 
 4. BATCH SIZE. Shield TV: batches of 10, as usual. Onn 4K / 4K Plus, and
    any device with ~2GB total RAM (check via Rule 3/3a's meminfo output
@@ -249,9 +248,8 @@ RULES (follow strictly):
 
    Shield TV only (verify each via step 6 — NVIDIA package names have
    shifted across firmware years):
-     com.nvidia.ota            - OTA updater (protect unless you
-                                  deliberately want to freeze updates —
-                                  see rule 9-equivalent tradeoff)
+     com.nvidia.ota            - OTA updater. NEVER disable: it brings
+                                  NVIDIA's security fixes
      com.nvidia.ocs             - NVIDIA cloud/telemetry service
      com.nvidia.diagtools       - diagnostics, safe to disable
      com.nvidia.feedback        - feedback/crash reporting

@@ -89,4 +89,4 @@ Hard rules carried over from the earlier prompts: disable only, no uninstall, no
 - https://xdaforums.com/t/how-to-disable-google-tv-launcher-install-3rd-party-launcher.4601397/ (blocked, 403; recovery commands taken from search summary)
 - https://retrohandhelds.gg/wave-launcher-drops-v1-0/
 - https://www.instagram.com/reel/De7550oyBjx/
-- Local history: `GoogleTV-Debloat/Living-Room-TV/changelog-*.md`, `FireTV-Debloat/`
+- Local history: the per-TV changelogs kept outside the repository, `FireTV-Debloat/`
