@@ -30,6 +30,10 @@ body.huge.middle #shade { background-image: radial-gradient(68% 62% at 50% 24%, 
   clip-path: inset(calc(800 * var(--u)) calc(52 * var(--u)) calc(40 * var(--u)) calc(52 * var(--u)) round calc(36 * var(--u))); }
 body.frosted #fclip { opacity: 1; }
 body.down #fclip { clip-path: inset(0 round 0); }
+/* a still picture's frost, as Android's frosted wallpaper under the dock and the grid: the picture blurred
+   at a quarter of its size and scaled up (cheap on these TVs), colours lifted as glass saturates them */
+#fphoto { position: absolute; left: -1%; top: -1%; width: 25.5%; height: 25.5%; object-fit: cover; transform-origin: 0 0; transform: scale(4); filter: blur(calc(9 * var(--u))) saturate(1.5); opacity: 0; transition: opacity .6s; }
+#fphoto.on { opacity: 1; }
 .fl { position: absolute; left: 0; top: 0; width: 192px; height: 108px; transform-origin: 0 0; background-repeat: no-repeat; opacity: 0; transition: opacity 2.5s linear; }
 .fl.on { opacity: 1; }
 #sheet { opacity: 0; transition: opacity .2s; background: linear-gradient(180deg, var(--plain-a), var(--plain-b)); }
@@ -218,6 +222,8 @@ body.tintcool #tint { background: #0a84ff; opacity: .14; }
 body.noplate:not(.down) #dock, body.noplate:not(.down) #fclip { opacity: 0; }
 /* Behind Clear tiles the dock is fainter, so glass on glass still reads as two layers */
 body.cleartiles:not(.noplate):not(.down):not(.idle) #dock { opacity: .5; }
+/* Clear tiles sit on the dock at half strength, its frost too (Android: CLEAR_PLATE) */
+body.cleartiles.frosted:not(.noplate):not(.down):not(.idle) #fclip { opacity: .5; }
 body.idle #tint, body.idle #gridwrap, body.idle #pill, body.idle #dock, body.idle #hint, body.idle #sheet, body.idle #glow, body.idle #fclip { opacity: 0; }
 body.idle #shade { opacity: 1; background-color: rgba(0,0,0,.16); }
 body.idle #caption, body.idle.news #news { opacity: 1; }
@@ -234,7 +240,7 @@ body.idle #top { transform: translate(var(--driftx, 0), var(--drifty, 0)) scale(
 <div id="tint" class="fill"></div>
 <div id="glow"></div>
 <div id="shade" class="fill"></div>
-<div id="fclip"><div class="fl" id="f0"></div><div class="fl" id="f1"></div></div>
+<div id="fclip"><div class="fl" id="f0"></div><div class="fl" id="f1"></div><img id="fphoto" alt=""></div>
 <div id="sheet" class="fill"></div>
 <div id="dock"></div>
 <div id="hint">Down for all apps</div>
@@ -350,7 +356,14 @@ function pool() {
   return S.quality === 'uhd' ? p.map(function (v) { return v[4] ? [v[4], v[1], v[2], v[3]] : v; }) : p;
 }
 var FROST_STEP = 10, frostFrames = 0, frostAt = -1, frostTop = 0, frostTimer = 0, frostUrl = '';
-function frostOff() { clearInterval(frostTimer); frostAt = -1; document.body.classList.remove('frosted'); }
+function frostOff() { clearInterval(frostTimer); frostAt = -1; document.body.classList.remove('frosted'); $('fphoto').className = ''; }
+/* the shown still picture's frost (Android: Wallpapers.frosted): under the dock at rest, the whole screen in the grid */
+function photoFrost(el) {
+  var f = $('fphoto');
+  f.crossOrigin = el.crossOrigin;
+  f.onload = function () { f.className = 'on'; document.body.classList.add('frosted'); };
+  f.src = el.src;
+}
 function frostTick() {
   var k = Math.min(frostFrames - 1, Math.floor($('v' + active).currentTime / FROST_STEP));
   if (k === frostAt) return;
@@ -364,6 +377,7 @@ function frostTick() {
 }
 function frost(i) {
   frostOff();
+  /* a film has its own baked frost; a still picture's would show through it */
   if (!FROST[i]) return;
   var sheet = new Image();
   sheet.onload = function () {
@@ -390,7 +404,7 @@ function nextPhoto() {
   el.crossOrigin = null;
   el.onerror = null;
   /* the built-in stills are the page's own, so Auto can read them; Plex's come from its server and may not allow it */
-  el.onload = function () { el.className = 'on'; placeClock(el, list === STILLS); };
+  el.onload = function () { el.className = 'on'; placeClock(el, list === STILLS); photoFrost(el); };
   el.src = url;
   clearTimeout(photoTimer);
   photoTimer = setTimeout(nextPhoto, 30000);
@@ -499,6 +513,7 @@ function nextPic() {
       el.crossOrigin = item.x ? 'anonymous' : null;
       el.onload = function () {
         el.className = 'on';
+        photoFrost(el);
         $('caption').textContent = item.c;
         placeClock(el, item.x);
       };

@@ -625,6 +625,15 @@
       "tizen": "done",
       "lite": "not-applicable",
       "note": "Android's Auto already picks Lite on its weakest boxes (DeviceClass)."
+    },
+    {
+      "id": "still-frost",
+      "name": "A still wallpaper frosted under the dock and behind the app grid (half strength under Clear tiles)",
+      "android": "done",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen",
+      "note": "Web blurs a quarter-size copy of the picture and scales it up; films keep their baked frost sheets."
     }
   ]
 }

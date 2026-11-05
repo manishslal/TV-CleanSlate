@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Web: a still wallpaper (Bing, NASA, Wikimedia, Earth View, the built-in stills, Plex photos) is frosted under the dock and behind the app grid, as on Android; only the aerial films had frost, so the dock showed the sharp picture and the grid a near-solid grey sheet. Clear tiles keep the frost at half strength, as Android's dock
 - Web: the app grid behaves as Android's: the focused row rests second from the top with the row above in view, the clock leaves and the time joins the pill, and "More Apps" titles the first row under the shelf
 - Samsung: starts on Efficient (still pictures, no focus glow), and a TV that had Home before switches once; Full can still be chosen
 - LG: LG's voice app (the remote's mic button) is taken out by `17-lg-slim`, at the owner's request
