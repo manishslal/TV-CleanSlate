@@ -120,7 +120,7 @@ dependencies {
     // The phone page's server and its QR code. ZXing 3.3.0, the last before it used
     // StandardCharsets, which Android only has from 4.4.
     implementation("org.nanohttpd:nanohttpd:2.3.1")
-    implementation("com.google.zxing:core:3.3.0")
+    implementation("com.google.zxing:core:3.5.4")
     testImplementation("junit:junit:4.13.2")
 }
 
