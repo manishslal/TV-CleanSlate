@@ -214,10 +214,14 @@ sub("api('/api/frontend-ok', { version: VERSION }).catch(function () {});", """d
   else document.dispatchEvent(new Event('webOSRelaunch'));
 });""")
 
-# LEAN=1, for a TV short on memory and storage: starts on Efficient, with still wallpaper and no frost
+# Samsung TVs start on Efficient (the owner's choice, 2026-11-05): the 2017 and 2018 sets' browsers are
+# the slowest Home runs on. Efficient keeps still pictures and drops the focus glow; Full can still be
+# chosen in Control Center. A TV that had Home before this switches once (leanOnce) and keeps what is
+# chosen after.
+sub("effects: 'auto'", "effects: 'lite'")
+sub("if (S.wallTint) {", "if (!S.leanOnce) { S.effects = 'lite'; S.leanOnce = 1; save(); }\nif (S.wallTint) {")
+# LEAN=1, for a TV short on memory and storage as well: no frost sheets
 lean = os.environ.get('LEAN')
-if lean:
-    sub("effects: 'auto'", "effects: 'lite'")
 
 shutil.rmtree(out, ignore_errors=True)
 out.mkdir()

@@ -49,7 +49,13 @@ body.middle #clock { justify-content: center; }
 /* centred, the hours and minutes stand on the axis and AM/PM hangs to the right of it */
 body.middle.h12 #clock { padding-left: calc(106 * var(--u)); }
 body.huge #top { transform: scale(1.7); }
-body.down #top { transform: translateY(calc(-30 * var(--u))) scale(.5); }
+/* in the grid the clock goes and the time joins the pill, as on Android, so the screen never shows it twice */
+body.down #top { transform: translateY(calc(-30 * var(--u))) scale(.5); opacity: 0; }
+#ptime { display: none; margin-left: calc(14 * var(--u)); font-weight: 600; }
+body.down #ptime { display: inline; }
+/* "More Apps" over the first row under the shelf, as Android titles the grid */
+#more { position: absolute; top: 0; left: 0; font-size: calc(32 * var(--u)); font-weight: 600; color: var(--onsheet); text-shadow: 0 1px calc(8 * var(--u)) var(--onsheet-shadow); opacity: 0; transition: opacity .3s; white-space: nowrap; }
+body.down #more.on { opacity: 1; }
 body.down #line { opacity: 0; }
 #clock { display: flex; align-items: flex-end; font-family: Board, sans-serif; color: var(--ink); }
 body.right #clock { justify-content: flex-end; }
@@ -102,7 +108,7 @@ body.right #pill { right: auto; left: calc(90 * var(--u)); }
 #pill.f { background: linear-gradient(180deg, rgba(255,255,255,.3), rgba(255,255,255,.14)); box-shadow: inset 0 0 0 calc(2 * var(--u)) var(--rim), 0 calc(10 * var(--u)) calc(28 * var(--u)) var(--dockshadow); transform: scale(1.1); }
 
 #gridwrap { position: fixed; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; transition: opacity .8s; }
-#grid { display: grid; grid-template-columns: repeat(6, calc(252 * var(--u))); grid-auto-rows: calc(186 * var(--u)); column-gap: calc(46 * var(--u)); row-gap: calc(14 * var(--u)); padding: 0 calc(89 * var(--u)); transition: transform .22s ease-out; }
+#grid { position: relative; display: grid; grid-template-columns: repeat(6, calc(252 * var(--u))); grid-auto-rows: calc(186 * var(--u)); column-gap: calc(46 * var(--u)); row-gap: calc(14 * var(--u)); padding: 0 calc(89 * var(--u)); transition: transform .22s ease-out; }
 body:not(.down) #grid .tile.off { visibility: hidden; }
 .tile { position: relative; }
 .plate { position: relative; width: calc(252 * var(--u)); height: calc(142 * var(--u)); border-radius: calc(22 * var(--u)); background: var(--glass); display: flex; align-items: center; justify-content: center; overflow: hidden; transition: transform .1s ease-out; }
@@ -590,6 +596,11 @@ function card(slot, ch, small) {
     setTimeout(function () { turn(el, was, to, ms); }, at + i * ms);
   });
 }
+/* the time for the pill, shown there while the grid is up */
+function pillTime() {
+  var d = new Date(), h = S.h24 ? d.getHours() : d.getHours() % 12 || 12, m = d.getMinutes();
+  return (S.h24 && h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + (S.h24 ? '' : ' ' + (d.getHours() < 12 ? 'AM' : 'PM'));
+}
 function clock(force) {
   var d = new Date(), key = d.getHours() + ':' + d.getMinutes();
   if (key === stamp && !force) return;
@@ -606,6 +617,7 @@ function clock(force) {
     var r = document.createElement('div'); r.id = 'meridiem'; $('clock').appendChild(r);
     card('a0', 'A', true); card('a1', 'M', true);
   }
+  if ($('ptime')) $('ptime').textContent = pillTime();
   card('h0', hh.length > 1 ? hh[0] : ' ');
   $('h0').style.display = hh.length > 1 ? '' : 'none';
   card('h1', hh[hh.length - 1]);
@@ -870,6 +882,9 @@ function layout() {
   g.style.width = (COLS * 298 - 46 + 2 * side) * u + 'px';
   g.style.paddingLeft = g.style.paddingRight = side * u + 'px';
   g.style.transformOrigin = '0 0';
+  /* the grid title sits over the first row under the shelf, in the grid's own units */
+  var more = $('more');
+  if (more) { more.style.left = side * u + 'px'; more.style.top = (ROWS * 200 - 52) * u + 'px'; }
   $('dock').style.height = high * u + 'px';
   $('dock').style.bottom = (1080 - DOCK_END) * u + 'px';
   DOCK_TOP = DOCK_END - high;
@@ -879,9 +894,8 @@ function paint() {
   tiles.forEach(function (t, i) { t.el.className = 'tile' + (i >= COLS * (ROWS + (PEEK ? 1 : 0)) ? ' off' : '') + (zone === 'grid' && i === focus ? ' f' + (moving ? ' move' : '') : ''); });
   $('pill').className = zone === 'pill' ? 'f' : '';
   var r = Math.floor(focus / COLS), down = zone === 'grid' && r >= ROWS;
-  if (r > row + SHOWN - 1) row = r - SHOWN + 1;
-  if (r < row) row = r;
-  if (!down) row = 0;
+  /* as Android rests the grid: the focused row second from the top, the row above it still in view */
+  row = down ? Math.max(0, r - 1) : 0;
   document.body.classList.toggle('down', down);
   tiles.forEach(function (t, i) { t.el.style.transform = PEEK && !down && i >= COLS ? 'translateY(' + PEEK_SHIFT + 'px)' : ''; });
   $('grid').style.transform = 'translateY(' + (down ? 170 - row * PITCH : HOME_Y) * window.innerWidth / 1920 + 'px) scale(' + SCALE + ')';
@@ -920,6 +934,12 @@ function build() {
   var g = $('grid');
   g.textContent = '';
   list.forEach(function (t) { g.appendChild(tile(t)); });
+  /* the grid's title, when there are apps under the shelf and not every name is shown (Android: fk_more_apps) */
+  var more = document.createElement('div');
+  more.id = 'more'; more.textContent = 'More Apps';
+  more.className = list.length > COLS * ROWS && !S.showAllNames ? 'on' : '';
+  g.appendChild(more);
+  layout();
   focus = 0;
   for (var i = 0; i < list.length; i++) if (list[i].id === cur) focus = i;
   paint();
@@ -939,7 +959,7 @@ function netPill() {
   svc('/net').then(function (j) {
     var on = (j.wired && j.wired.state === 'connected'), wifi = j.wifi && j.wifi.state === 'connected';
     net = j;
-    $('pill').innerHTML = svg(on ? 'LAN' : wifi ? 'WIFI' : 'WIFI_OFF') + '<span>' + esc(on ? 'Ethernet' : wifi ? (j.wifi.ssid || 'Wi-Fi') : 'Not Connected') + '</span>' + svg('SETTINGS');
+    $('pill').innerHTML = svg(on ? 'LAN' : wifi ? 'WIFI' : 'WIFI_OFF') + '<span>' + esc(on ? 'Ethernet' : wifi ? (j.wifi.ssid || 'Wi-Fi') : 'Not Connected') + '</span><b id="ptime">' + pillTime() + '</b>' + svg('SETTINGS');
   }).catch(function () { $('pill').innerHTML = svg('SETTINGS') + '<span>Home</span>'; });
 }
 function refresh() {

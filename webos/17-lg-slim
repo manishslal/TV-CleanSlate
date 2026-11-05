@@ -18,4 +18,11 @@
     done
     pkill -9 -x $b
   done
+  # LG's voice app ("Search", the remote's mic button), taken out at the owner's request: about 14 MB
+  # held and 10 MB more in swap. Its name is longer than pkill -x reads, so it is matched by path.
+  v=/usr/bin/com.webos.app.voice
+  if [ -e "$v" ]; then
+    grep -q " $v " /proc/mounts || mount --bind /media/developer/cleanyourtv/stub-noop "$v"
+    pkill -9 -f "^$v"
+  fi
 ) </dev/null >/dev/null 2>&1 &

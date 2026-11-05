@@ -608,6 +608,23 @@
       "tizen": "missing",
       "lite": "frozen",
       "note": "Needs a cut-out service on the home network (server/cutout). The web builds can ask it (it allows their pages) but do not draw the subject yet."
+    },
+    {
+      "id": "grid-like-android",
+      "name": "App grid: focused row second with the row above in view, the clock leaves for the pill, a More Apps title",
+      "android": "done",
+      "webos": "done",
+      "tizen": "done",
+      "lite": "frozen"
+    },
+    {
+      "id": "samsung-efficient",
+      "name": "Home Mode default by device: Auto on Android and LG, Efficient on Samsung",
+      "android": "not-applicable",
+      "webos": "not-applicable",
+      "tizen": "done",
+      "lite": "not-applicable",
+      "note": "Android's Auto already picks Lite on its weakest boxes (DeviceClass)."
     }
   ]
 }

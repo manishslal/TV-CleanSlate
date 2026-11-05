@@ -35,7 +35,7 @@ python3 tizen/build.py
 TV=<tv-ip> tizen/deploy.sh
 ```
 
-`LEAN=1 python3 tizen/build.py` makes a smaller build for a TV short on memory and storage: it starts on Efficient, with still wallpaper from `python3 webos/bake_stills.py` and no frost.
+Every Samsung build starts on Efficient (still pictures, no focus glow), and a TV that had Home before switches to it once; Full can still be chosen in Control Center. `LEAN=1 python3 tizen/build.py` makes a smaller build for a TV short on memory and storage as well: still wallpaper from `python3 webos/bake_stills.py` and no frost.
 
 `deploy.sh` needs Tizen Studio's CLI, a `home` security profile, and Rosetta on Apple Silicon. A free author certificate was accepted on this 2017 TV, so no Samsung account was needed.
 
