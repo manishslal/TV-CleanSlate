@@ -26,14 +26,21 @@ body.huge.right #shade { background-image: radial-gradient(76% 70% at 100% 0, rg
 body.huge.middle #shade { background-image: radial-gradient(68% 62% at 50% 24%, rgba(0,0,0,.6), rgba(0,0,0,0) 74%), linear-gradient(180deg, rgba(0,0,0,.3) 0, rgba(0,0,0,.04) 40%, rgba(0,0,0,.34) 100%); }
 #glow { position: fixed; left: 0; top: 0; width: 96px; height: 54px; transform-origin: 0 0; opacity: var(--glowalpha); transition: opacity .2s; }
 /* This TV's video plane can't be blurred, so softly blurred frames baked from the clip play over it in step: inside the dock at rest, over the whole screen further down */
-#fclip { position: fixed; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; opacity: 0; transition: clip-path .22s ease-out, opacity .3s;
-  clip-path: inset(calc(800 * var(--u)) calc(52 * var(--u)) calc(40 * var(--u)) calc(52 * var(--u)) round calc(64 * var(--u))); }
+/* Two copies of the frost: #fclip, cut to the dock at rest, and #fgrid, the whole screen, fading in for the grid.
+   Measured on the LG (webOS 6): a live CSS blur, and a clip-path grown from the dock to the screen, are redrawn
+   on every frame and dropped the grid to 38-40 fps with quarter-second stalls. A clip that never animates, an
+   opacity fade and a frost blurred once into a canvas cost the grid nothing against no frost at all. */
+#fclip, #fgrid { position: fixed; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; opacity: 0; transition: opacity .3s; }
+#fclip { clip-path: inset(calc(800 * var(--u)) calc(52 * var(--u)) calc(40 * var(--u)) calc(52 * var(--u)) round calc(64 * var(--u))); }
 body.frosted #fclip { opacity: 1; }
-body.down #fclip { clip-path: inset(0 round 0); }
-/* a still picture's frost, as Android's frosted wallpaper under the dock and the grid: the picture blurred
-   at a quarter of its size and scaled up (cheap on these TVs), colours lifted as glass saturates them */
-#fphoto { position: absolute; left: -1%; top: -1%; width: 25.5%; height: 25.5%; object-fit: cover; transform-origin: 0 0; transform: scale(4); filter: blur(calc(9 * var(--u))) saturate(1.5); opacity: 0; transition: opacity .6s; }
-#fphoto.on { opacity: 1; }
+body.down #fclip { visibility: hidden; transition: opacity .3s, visibility 0s .3s; }
+body.down.frosted #fgrid { opacity: 1; }
+/* under the grid's frost the picture is covered: not drawn, which wins back what the frost layer costs */
+body.down.frosted #photo, body.down.frosted #shade { visibility: hidden; transition: opacity 1.4s, visibility 0s .3s; }
+/* a still picture's frost, as Android's frosted wallpaper under the dock and the grid: the picture blurred once,
+   at a quarter of its size, into a canvas scaled up (Android: a 320x180 frame, box-blurred, stretched) */
+.fp { position: absolute; left: 0; top: 0; width: 25%; height: 25%; transform-origin: 0 0; transform: scale(4); opacity: 0; transition: opacity .6s; }
+.fp.on { opacity: 1; }
 .fl { position: absolute; left: 0; top: 0; width: 192px; height: 108px; transform-origin: 0 0; background-repeat: no-repeat; opacity: 0; transition: opacity 2.5s linear; }
 .fl.on { opacity: 1; }
 #sheet { opacity: 0; transition: opacity .2s; background: linear-gradient(180deg, var(--plain-a), var(--plain-b)); }
@@ -234,7 +241,7 @@ body.frosted.filmfrost:not(.noplate):not(.down):not(.idle) #fclip { opacity: .55
 /* Clear tiles sit on the dock at half strength, its frost too (Android: CLEAR_PLATE) */
 body.cleartiles.frosted:not(.noplate):not(.down):not(.idle) #fclip { opacity: .5; }
 body.cleartiles.frosted.filmfrost:not(.noplate):not(.down):not(.idle) #fclip { opacity: .28; }
-body.idle #tint, body.idle #gridwrap, body.idle #pill, body.idle #dock, body.idle #hint, body.idle #sheet, body.idle #glow, body.idle #fclip { opacity: 0; }
+body.idle #tint, body.idle #gridwrap, body.idle #pill, body.idle #dock, body.idle #hint, body.idle #sheet, body.idle #glow, body.idle #fclip, body.idle #fgrid { opacity: 0; }
 body.idle #shade { opacity: 1; background-color: rgba(0,0,0,.16); }
 body.idle #caption, body.idle.news #news { opacity: 1; }
 body.idle.noclock #top { opacity: 0; }
@@ -248,7 +255,8 @@ body.idle #top { transform: translate(var(--driftx, 0), var(--drifty, 0)) scale(
 <video id="v1" muted playsinline></video>
 <img id="photo" alt="">
 <div id="shade" class="fill"></div>
-<div id="fclip"><div class="fl" id="f0"></div><div class="fl" id="f1"></div><img id="fphoto" alt=""></div>
+<div id="fclip"><div class="fl" id="f0"></div><div class="fl" id="f1"></div><canvas class="fp" id="fphoto" width="480" height="270"></canvas></div>
+<div id="fgrid"><div class="fl" id="g0"></div><div class="fl" id="g1"></div><canvas class="fp" id="gphoto" width="480" height="270"></canvas></div>
 <!-- the wallpaper's dim over its frost too, so the dock is as dim as the picture around it (Android lays its wash over the plate); the app's glow stays above it -->
 <div id="tint" class="fill"></div>
 <div id="glow"></div>
@@ -367,23 +375,48 @@ function pool() {
   return S.quality === 'uhd' ? p.map(function (v) { return v[4] ? [v[4], v[1], v[2], v[3]] : v; }) : p;
 }
 var FROST_STEP = 10, frostFrames = 0, frostAt = -1, frostTop = 0, frostTimer = 0, frostUrl = '';
-function frostOff() { clearInterval(frostTimer); frostAt = -1; document.body.classList.remove('frosted', 'filmfrost'); $('fphoto').className = ''; }
+function frostOff() { clearInterval(frostTimer); frostAt = -1; document.body.classList.remove('frosted', 'filmfrost'); $('fphoto').className = $('gphoto').className = 'fp'; }
 /* the shown still picture's frost (Android: Wallpapers.frosted): under the dock at rest, the whole screen in the grid */
 function photoFrost(el) {
-  var f = $('fphoto');
-  f.crossOrigin = el.crossOrigin;
-  f.onload = function () { f.className = 'on'; document.body.classList.add('frosted'); };
-  f.src = el.src;
+  var f = $('fphoto'), g = $('gphoto'), W = 480, H = 270, pad = 32;
+  var iw = el.naturalWidth, ih = el.naturalHeight;
+  if (!iw || !ih) return;
+  /* the part of the picture the screen shows (object-fit: cover) */
+  var sc = Math.max(W / iw, H / ih), sw = W / sc, sh = H / sc, sx = (iw - sw) / 2, sy = (ih - sh) / 2;
+  /* drawn with a margin, so the blur has picture to draw on at the edges rather than fading out */
+  var big = document.createElement('canvas'), bx = big.getContext('2d');
+  big.width = W + 2 * pad; big.height = H + 2 * pad;
+  bx.drawImage(el, sx - pad / sc, sy - pad / sc, sw + 2 * pad / sc, sh + 2 * pad / sc, 0, 0, big.width, big.height);
+  var x = f.getContext('2d');
+  x.clearRect(0, 0, W, H);
+  if ('filter' in x) {
+    x.filter = 'blur(9px) saturate(1.5)';
+    x.drawImage(big, -pad, -pad);
+    x.filter = 'none';
+  } else {
+    /* Chromium 47 (Samsung) has no canvas filter: shrink and grow back, which blurs as much */
+    var t = document.createElement('canvas');
+    t.width = 60; t.height = 34;
+    t.getContext('2d').drawImage(big, pad, pad, W, H, 0, 0, 60, 34);
+    x.drawImage(t, 0, 0, W, H);
+  }
+  var y = g.getContext('2d');
+  y.clearRect(0, 0, W, H);
+  y.drawImage(f, 0, 0);
+  f.className = g.className = 'fp on';
+  document.body.classList.add('frosted');
 }
 function frostTick() {
   var k = Math.min(frostFrames - 1, Math.floor($('v' + active).currentTime / FROST_STEP));
   if (k === frostAt) return;
   frostAt = k;
-  var a = $('f' + frostTop), b = $('f' + (1 - frostTop));
-  b.style.backgroundImage = 'url(' + frostUrl + ')';
-  b.style.backgroundPosition = -(k % 6) * 192 + 'px ' + -Math.floor(k / 6) * 108 + 'px';
-  b.className = 'fl on';
-  a.className = 'fl';
+  ['f', 'g'].forEach(function (n) {
+    var a = $(n + frostTop), b = $(n + (1 - frostTop));
+    b.style.backgroundImage = 'url(' + frostUrl + ')';
+    b.style.backgroundPosition = -(k % 6) * 192 + 'px ' + -Math.floor(k / 6) * 108 + 'px';
+    b.className = 'fl on';
+    a.className = 'fl';
+  });
   frostTop = 1 - frostTop;
 }
 function frost(i) {
@@ -918,6 +951,7 @@ function layout() {
   DOCK_TOP = DOCK_END - high;
   document.body.classList.toggle('peek', PEEK);
 }
+var dockClip = '';
 function paint() {
   tiles.forEach(function (t, i) { t.el.className = 'tile' + (i >= COLS * (ROWS + (PEEK ? 1 : 0)) ? ' off' : '') + (zone === 'grid' && i === focus ? ' f' + (moving ? ' move' : '') : ''); });
   $('pill').className = zone === 'pill' ? 'f' : '';
@@ -928,8 +962,9 @@ function paint() {
   tiles.forEach(function (t, i) { t.el.style.transform = PEEK && !down && i >= COLS ? 'translateY(' + PEEK_SHIFT + 'px)' : ''; });
   $('grid').style.transform = 'translateY(' + (down ? 170 - row * PITCH : HOME_Y) * window.innerWidth / 1920 + 'px) scale(' + SCALE + ')';
   var u = window.innerWidth / 1920;
-  var fc = $('fclip').style;
-  fc.clipPath = fc.webkitClipPath = down ? '' : 'inset(' + DOCK_TOP * u + 'px ' + 52 * u + 'px ' + (1080 - DOCK_END) * u + 'px ' + 52 * u + 'px round ' + 64 * u + 'px)';
+  /* the dock's frost keeps its clip in the grid too (it is hidden there): a clip that changes is redrawn, blur and all */
+  var clip = 'inset(' + DOCK_TOP * u + 'px ' + 52 * u + 'px ' + (1080 - DOCK_END) * u + 'px ' + 52 * u + 'px round ' + 64 * u + 'px)';
+  if (clip !== dockClip) { dockClip = clip; $('fclip').style.clipPath = $('fclip').style.webkitClipPath = clip; }
   var t = tiles[focus];
   document.getElementById('glow').style.display = down ? 'none' : '';
   if (t && zone === 'grid' && !down) $('glow').style.background = 'radial-gradient(75% 75% at 50% 105%, ' + tint(t.id) + ', transparent 72%)';
@@ -1443,7 +1478,7 @@ document.addEventListener('webOSRelaunch', function () { tellSaver(); dropHeld()
 /* ---- start ---- */
 tellSaver();
 $('glow').style.transform = 'scale(' + window.innerWidth / 96 + ')';
-$('f0').style.transform = $('f1').style.transform = 'scale(' + window.innerWidth / 192 + ')';
+$('f0').style.transform = $('f1').style.transform = $('g0').style.transform = $('g1').style.transform = 'scale(' + window.innerWidth / 192 + ')';
 theme();
 layout();
 clock(true);
