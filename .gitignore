@@ -43,3 +43,6 @@ tizen/homekey/build/
 # Python
 __pycache__/
 *.pyc
+
+# Agent worktrees
+.claude/

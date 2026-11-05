@@ -31,7 +31,7 @@ This is one person's project, tested on the TVs in one home. It is shared so oth
 
 | What you'd do | Risk | How to undo it |
 |---|---|---|
-| Install Android Home | Low to medium. Your stock Home stays installed, but the installer grants Home system permissions and may turn on an accessibility service (Home Guard) without asking again | `tools/restore.sh --uninstall` takes it all back ([details](guides/getting-started.md#3-build-and-install)) |
+| Install Android Home | Low to medium. Your stock Home stays installed, but the installer grants Home system permissions and may turn on an accessibility service (Home Guard) without asking again | `android/tools/restore.sh --uninstall` takes it all back ([details](guides/getting-started.md#3-build-and-install)) |
 | Make it the default Home on Google TV (`04-disable-stock-launcher.sh`) | Medium. Disables (never uninstalls) the stock launcher and setup wizard | `scripts/99-restore-stock.sh` |
 | Debloat over ADB | Medium. A wrong package can break inputs, the remote or Wi-Fi | Re-enable the package; each device log lists the undo |
 | Samsung web Home | Low to medium. Needs Developer Mode, no root | Uninstall the app and turn off Developer Mode |
@@ -166,7 +166,7 @@ Rooting an LG TV can void support and is at your own risk. This project comes wi
 
 **Will this void my warranty?** Possibly. Disabling packages or installing a Home doesn't remove anything, but a maker can still decline support for a changed TV, and rooting an LG can void it. Read [Before you start](#before-you-start) first.
 
-**Can I undo everything?** Almost. `tools/restore.sh --uninstall` and `scripts/99-restore-stock.sh` put an Android TV back to stock, and each [device log](devices/README.md) lists its undo steps. The LG root itself can't be taken back.
+**Can I undo everything?** Almost. `android/tools/restore.sh --uninstall` and `scripts/99-restore-stock.sh` put an Android TV back to stock, and each [device log](devices/README.md) lists its undo steps. The LG root itself can't be taken back.
 
 **Does it collect data?** No. There are no ads, accounts or analytics, and the [Privacy](#privacy) table lists every service Home contacts.
 
