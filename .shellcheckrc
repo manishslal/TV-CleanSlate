@@ -1,0 +1,3 @@
+# The scripts in scripts/ source common.sh by a computed path; follow it relative to each script.
+external-sources=true
+source-path=SCRIPTDIR

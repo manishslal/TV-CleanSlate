@@ -36,7 +36,7 @@ for key, section, query in re.findall(r'\w+\("(\w+)", R\.string\.fk_news_\w+, (?
         topics.append([key, labels[key], f'{base}search?q={quote_plus(q)}{tail}'])
 
 # the shared logo pack, exported small enough for this TV
-from PIL import Image
+from PIL import Image  # noqa: E402
 pack = here / '../logos'
 out = here / 'logo'
 out.mkdir(exist_ok=True)
@@ -57,8 +57,17 @@ for brand, m in json.loads((pack / 'manifest.json').read_text()).items():
     logos.update({i: name for i in m.get('webos', [])})
     plates.update({i: [readable(m.get('plate'), m.get('ink')), m.get('ink'), m.get('size'), m.get('glow')] for i in m.get('webos', []) if m.get('plate') or m.get('size') or m.get('glow')})
 
+# CI has neither the private logo art (logos/dark/ is gitignored) nor the baked frost and stills, which
+# need ffmpeg and the network. Those are skipped with a warning, so the page and its scripts still build.
+missing_logos = [b for b, m in json.loads((pack / 'manifest.json').read_text()).items() if not (pack / m['file']).exists()]
+if missing_logos:
+    print(f'warning: {len(missing_logos)} logo files not found (logos/dark/ is private), built without them', file=sys.stderr)
+frost_file = here / 'frost.json'
+if not frost_file.exists():
+    print('warning: webos/frost.json not found (run bake_frost.py), built without frost', file=sys.stderr)
+
 s = (here / 'index.src.html').read_text()
-for name, data in (('__VIDEOS__', videos), ('__ICONS__', icons), ('__TOPICS__', topics), ('__LOGOS__', logos), ('__PLATES__', plates), ('__STILLS__', [p.name for p in sorted((here / 'stills').glob('still-*.jpg'))]), ('__FROST__', json.loads((here / 'frost.json').read_text())), ('__EARTH__', json.loads((android / 'assets/earthview.json').read_text())['items'])):
+for name, data in (('__VIDEOS__', videos), ('__ICONS__', icons), ('__TOPICS__', topics), ('__LOGOS__', logos), ('__PLATES__', plates), ('__STILLS__', [p.name for p in sorted((here / 'stills').glob('still-*.jpg'))]), ('__FROST__', (json.loads(frost_file.read_text()) if frost_file.exists() else {})), ('__EARTH__', json.loads((android / 'assets/earthview.json').read_text())['items'])):
     s = s.replace(name, json.dumps(data, separators=(',', ':')))
 (here / 'index.html').write_text(s)
 

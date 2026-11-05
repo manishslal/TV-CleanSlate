@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Checks: a `checks.yml` workflow runs on every pull request and weekly: relative Markdown links (lychee), ShellCheck over every shell script, ruff and `py_compile` over the Python, the webOS and Tizen page builds (which now work without the private logos) with a check that their scripts parse and use no ES6, and a check that every repo path named in the docs exists. It fixed the findings: quoting and unused-variable notes in the ADB scripts and TV init scripts (behaviour unchanged), a chained exception in `tizen/tvkey.py`, and stale paths and one dead link in the docs. All third-party actions are pinned by commit SHA at their current majors
 - Sharing: the README opens with "Before you start" (what each path risks and how to undo it, who this is for and not for), device logs say they record one owner's choices rather than give instructions, and the agent debloat prompts say to watch the agent and approve the list first. The scripts that change a TV now say what they will do and wait for a yes (`YES=1` skips it); the restore script still never asks
 - GitHub: bug and idea forms, a pull request template, a code of conduct, Dependabot for the workflows and the Android build, secret scanning with push protection, and a rule that keeps `main` from being force-pushed or deleted. Aerial's copied READMEs link to the right files again (80 links), and a compiled Python file is no longer in the repository
 - Web: the dock is the SHIELD's frosted plate in Android's own numbers, measured side by side on the same Bing picture: the frost fully over a still picture and at 55% over a moving film (FILM_FROST), the frost x0.84 + 16 (PlateTint) with the lift dimmed along with the wallpaper, corners of 32 dp (64 px, were 36), glisse's 1.22 dp rim at 60% of its shine with its 0.5 dp edge, and no shadow under it (there was one). Before, the dock was lifted with a grey veil and let the sharp picture through, as the onn's lens does, and read paler and less warm than the SHIELD's. The frost itself was already as soft as Android's
@@ -76,7 +77,7 @@
 
 - Fire OS: Home opens before Amazon's launcher after a restart, and the Home button returns to it
 - Fire OS: Home's screensaver replaces Amazon's, and the menu no longer says "Not the default home screen"
-- `tools/fire-reapply.sh` restores the setup after a Fire OS update, and Home's menu reminds you to run it
+- `android/tools/fire-reapply.sh` restores the setup after a Fire OS update, and Home's menu reminds you to run it
 - New Downloader, Send Files and Appstore logos, and larger VLC, Disney+ and Paramount+ logos
 - Windscribe shows its W mark, and logos can set their own size in `logos/manifest.json`
 - The Wi-Fi icon and the menu's status line are larger, and "More Apps" clears the focus ring

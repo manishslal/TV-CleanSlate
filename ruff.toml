@@ -1,0 +1,6 @@
+# Minimal lint for the repo's Python (build scripts, tools, the cutout service).
+# Style rules (line length, import order) are left out on purpose: the code is dense by choice.
+target-version = "py39"
+
+[lint]
+select = ["E4", "E7", "E9", "F", "B", "W6"]
