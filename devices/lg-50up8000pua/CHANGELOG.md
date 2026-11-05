@@ -150,3 +150,11 @@ Each entry gives what changed and how to undo it.
 - Fixed `17-lg-slim`: `mqtt-client` runs from `/usr/sbin`, which the stub missed. It now stubs both paths.
 - Reviewed by compositor capture in Dark, Light, Clear, the full grid, Control Center and the screensaver, over black and over a near-white backdrop. Frost shows in the dock and grid. A later pass with `com.webos.service.capture` showed the real video behind Home, tiles, menus and frost in Dark, Light and Clear.
 - Matched Android's glow: it surrounds the focused tile, and the background glow shows on Dark and Clear only, at 32%.
+
+### Source changes deployed (2026-11-05)
+- Deployed the web Home from `2954e3a` (mh37 on Android): calm sounds, Huge and Top Center/Auto clock, the screensaver's credit and news, light menus with white rows, the pill in the dock's glass, and the Bing, NASA, Wikimedia and Earth View collections. Copied `index.html`, `ui_*.wav`, the clock font, the logos and the 12 built-in stills (the page falls back to them when a source is unreachable; none were on the TV before).
+- `home-svc.js` updated with `/bing`, Bing's photo list for the page. Restarted through `12-home-svc`; `/bing` answered with today's list.
+- Previous app kept at `/media/developer/cleanyourtv/backup/app.before-2026-11-05`, and the previous helper at `backup/home-svc.before-2026-11-05.js`.
+- Ran `stage-home.sh` and `reload-home.sh`. Checked with a `DISPLAY` capture: Home in front on the Aerial film, the pill now clear glass. Settings not changed.
+- `luna-send` from an SSH shell answered nothing this time, while the same calls from Node (`child_process`) worked; the capture was taken that way.
+- Undo: copy the backup over `app/` and the helper back, restart the helper, then run `stage-home.sh` and `reload-home.sh`.
