@@ -9,7 +9,7 @@
 
 TV CleanSlate replaces the ad-filled home screen on Android TV, Google TV and Fire TV devices, brings the same look to a rooted LG webOS TV and to older Samsung Tizen TVs without root, and documents how to debloat each device one reversible step at a time. Everything here was built and tried on real TVs, and each [device log](devices/README.md) says what was and wasn't checked.
 
-**Status (2026-11-05):** tested by hand on the ten TVs and boxes listed under [Supported devices](#supported-devices), not on any others. The workflow badges above only show that the Android app builds and the parity and repository checks pass; they don't test a TV. The latest release is [1.67-mh37](https://github.com/manishslal/TV-CleanSlate/releases/latest).
+**Status (2026-11-05):** tested by hand on the eleven TVs and boxes listed under [Supported devices](#supported-devices), not on any others. The workflow badges above only show that the Android app builds and the parity and repository checks pass; they don't test a TV. The latest release is [1.67-mh37](https://github.com/manishslal/TV-CleanSlate/releases/latest).
 
 It stands on the work of other open source projects. The Android app is a fork of [**Aerial**](https://github.com/pengchujin/aerial-tv) by pengchujin and its contributors. See [Credits](#credits).
 
@@ -114,6 +114,7 @@ Measured on an onn 4K Streaming Box with 2 GB of RAM. Full method: [PERFORMANCE.
 | Hisense SmartTV 4K | Android TV 12 | No | | **No**, changes don't last | [Log](devices/hisense-smarttv-4k/CHANGELOG.md) |
 | Fire TV Stick 4K (1st gen) | Fire OS 6.7 | Android Home with FireKeeper | 1.67-mh37 | Yes | [Log](devices/fire-tv-stick-4k-gen1/CHANGELOG.md) |
 | Fire TV Stick 4K (2nd gen) | Fire OS 8 | No | | Yes | [Log](devices/fire-tv-stick-4k-gen2/CHANGELOG.md) |
+| Fire TV Stick (2nd gen) | Fire OS 5.2 | Android Home with FireKeeper, Efficient | 1.67-mh37-guard | Partly: updates removed, no disabling | [Log](devices/fire-tv-stick-gen2/CHANGELOG.md) |
 
 Android Home's latest build is 1.67-mh37: Aerial 1.67, plus this fork's 37th build on top of it ("mh" counts the fork's builds). The web Home has no version number; its date is the day it was last installed. The Samsungs have not had the web Home since 2026-11-01, so they lack this month's changes until it is installed again.
 

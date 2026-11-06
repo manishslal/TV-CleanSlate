@@ -14,6 +14,7 @@ Only devices tested on real hardware are listed. The same data is in [devices.js
 | [Hisense SmartTV 4K](../devices/hisense-smarttv-4k/CHANGELOG.md) | | Android TV 12 | 1.8 GB | No | | No | |
 | [Fire TV Stick 4K, 1st gen](../devices/fire-tv-stick-4k-gen1/CHANGELOG.md) | `AFTMM` | Fire OS 6.7.1.1 | 1.3 GB | Android | 1.67-mh37-guard | Yes | No |
 | [Fire TV Stick 4K, 2nd gen](../devices/fire-tv-stick-4k-gen2/CHANGELOG.md) | `AFTKM` | Fire OS 8.1.8.2 | 1.7 GB | No | | Yes | |
+| [Fire TV Stick, 2nd gen](../devices/fire-tv-stick-gen2/CHANGELOG.md) | `AFTT` | Fire OS 5.2.9.5 | 874 MB | Android | 1.67-mh37-guard | Partly | No |
 
 ## Limits
 

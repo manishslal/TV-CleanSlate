@@ -94,6 +94,21 @@
       "ram_gb": 1.7
     },
     {
+      "id": "fire-tv-stick-gen2",
+      "name": "Fire TV Stick (2nd gen)",
+      "codename": "AFTT",
+      "platform": "fire-tv",
+      "os": "Fire OS 5.2.9.5",
+      "sdk": 22,
+      "ram_gb": 0.9,
+      "home": "android",
+      "debloat": "partial",
+      "liquid_glass": false,
+      "verified_on_hardware": true,
+      "latest_build_tested": "1.67-mh37-guard",
+      "note": "Fire OS 5 refuses disabling built-in apps; their downloaded updates are removed instead (android/tools/fire-reapply.sh keeps it so). Home runs in Efficient."
+    },
+    {
       "id": "fire-tv-stick-4k-gen1",
       "name": "Fire TV Stick 4K (1st gen)",
       "platform": "fire-os",

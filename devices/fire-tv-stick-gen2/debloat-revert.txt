@@ -1,0 +1,13 @@
+# Fire OS 5 refuses every disable and hide from ADB. Amazon's own apps here are stubs or old versions in
+# /system that download their real version as an update; removing that update frees its storage and
+# leaves the stub. fire-reapply.sh removes the update again if the Appstore brings it back.
+# Undo: reinstall the update from the Appstore, or adb install the APK saved before removal.
+com.amazon.cloud9
+com.amazon.shoptv.firetv.client
+com.amazon.shoptv.client
+com.amazon.bueller.photos
+com.amazon.hedwig
+com.amazon.tahoe
+com.amazon.gamehub
+com.amazon.kso.blackbird
+com.amazon.ceviche
