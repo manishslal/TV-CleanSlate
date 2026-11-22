@@ -100,7 +100,7 @@ See [Logos we still need](../logos/README.md#logos-we-still-need).
 
 ## Type size across devices
 
-- Google TV and SHIELD ship with the system text size (`settings get system font_scale`) at 0.85, while Fire OS ships at 1.0. Home's type was sized on the first two, so every sp size drew 18% larger on the Fire TV. Check `font_scale` on each device before judging text size from a screenshot; `canvasFontScale` in `Theme.kt` now evens it out.
+- Google TV and SHIELD ship with the system text size (`settings get system font_scale`) at 0.85, while Fire OS and the TCL C02_4K_US ship at 1.0. Home's type was sized on the first two, so every sp size drew 18% larger on the Fire TV and the TCL. Check `font_scale` on each device before judging text size from a screenshot; `canvasFontScale` in `Theme.kt` now evens it out, matching the manufacturer (Amazon, TCL); a TCL model that ships at 0.85 would come out too small.
 - Look at a new element on every device class it ships to, not only the one in front of you. The Wi-Fi name was checked on the onn only.
 
 ## Talking to a home server

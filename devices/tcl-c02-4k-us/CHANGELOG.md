@@ -69,6 +69,13 @@ Screenshots were taken with `adb exec-out screencap -p` (this session only).
 
 Not verified: the system screensaver starting on its own after the 15 min `screen_off_timeout` (Somnambulator starts the same dream), HDMI input switching from Control Center, voice search, and a firmware update re-enabling packages (re-run the check below after any TCL update).
 
+## Home mh40 and text size — 2026-11-21
+
+- Home `1.67-mh2` → **`1.67-mh40`** (versionCode 82 → 127), standard flavor, built from the checkout with `BUILD=1 TV=<tv-ip>:5555 tools/install.sh`. Home is still the active HOME activity.
+- Text size: this TV ships the system text size at 1.0 (`settings get system font_scale`), while the onn and SHIELD ship at 0.85, which is what Home's type was sized on. Every sp size drew about 18% larger here, most visibly the Wi-Fi name in the pill. `canvasFontScale` now reads TCL's text size against 1.0, as it does Fire OS's, so the default matches the others and a larger choice in TCL's settings still enlarges Home.
+- Checked: the date, clock, weather line and Wi-Fi name are smaller in a screenshot after the change. Not compared side by side with another TV.
+- Open: only this model is confirmed at 1.0. The rule matches the manufacturer, so another TCL that ships at 0.85 would draw too small; check its `font_scale` first.
+
 ## Undo
 Single items: see the table above. Everything, from `android`:
 ```bash

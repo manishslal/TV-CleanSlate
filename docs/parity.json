@@ -460,7 +460,7 @@
       "webos": "not-applicable",
       "tizen": "not-applicable",
       "lite": "frozen",
-      "note": "Fire OS ships its text size at 1.0, Google TV and SHIELD at 0.85; Home reads Fire OS against 1.0 from mh35."
+      "note": "Fire OS and the TCL C02_4K_US ship their text size at 1.0, Google TV and SHIELD at 0.85; Home reads Fire OS against 1.0 from mh35 and TCL against 1.0 since 076b323 (after mh40). Hisense and other TCL models not checked."
     },
     {
       "id": "hidden-apps",
