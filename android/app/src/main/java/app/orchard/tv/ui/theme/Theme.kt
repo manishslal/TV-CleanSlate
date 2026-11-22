@@ -27,12 +27,18 @@ fun canvasDensity(metrics: android.util.DisplayMetrics): Float =
 
 /**
  * Fork: Home's type is sized for Google TV and SHIELD, which ship with the system text size at
- * 0.85. Fire OS ships at 1.0, so the same type drew 18% larger there (the Wi-Fi name in the pill
- * crowded its icons). On Fire OS the system size is read against 1.0 instead, so its default looks
- * like the others' and a larger choice in Fire OS still enlarges Home's type.
+ * 0.85. Fire OS and the TCL C02_4K_US ship at 1.0, so the same type drew 18% larger there (the
+ * Wi-Fi name in the pill crowded its icons). On those the system size is read against 1.0 instead,
+ * so their default looks like the others' and a larger choice in their settings still enlarges
+ * Home's type.
  */
 fun canvasFontScale(system: Float): Float =
-    if (android.os.Build.MANUFACTURER.equals("Amazon", ignoreCase = true)) system * GOOGLE_TV_FONT_SCALE else system
+    if (shipsAtFullTextSize(android.os.Build.MANUFACTURER)) system * GOOGLE_TV_FONT_SCALE else system
+
+/** Makers whose firmware ships the system text size at 1.0 rather than 0.85: Fire OS and TCL (C02_4K_US). */
+internal fun shipsAtFullTextSize(manufacturer: String?): Boolean =
+    manufacturer.equals("Amazon", ignoreCase = true) || manufacturer.equals("TCL", ignoreCase = true)
+
 private const val GOOGLE_TV_FONT_SCALE = 0.85f
 
 /**
