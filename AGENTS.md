@@ -10,7 +10,7 @@ TV CleanSlate is a monorepo: a Home app for Android and Google TV, a web version
 | `webos/` | Web Home for rooted LG TVs. Read `webos/README.md`. |
 | `tizen/` | Web Home for Samsung TVs, built from `webos/`. Running on two TVs. |
 | `scripts/` | ADB scripts for backup, launcher switching and restore. |
-| `guides/` | Setup, safety, troubleshooting and debloat prompts. Follow `safety.md` on any real TV. |
+| `guides/` | Setup, safety, troubleshooting and debloat prompts. Follow `safety.md` on any real TV. To set up a TV, follow `guides/onboard-device.md`. |
 | `devices/` | One folder per tested device, plus `devices.json`. |
 | `logos/` | `manifest.json` only. Artwork stays private. |
 | `docs/` | `SUPPORTED_DEVICES.md`, `ARCHITECTURE.md`, `LESSONS.md`, `parity.json`, images and research. |
@@ -22,6 +22,7 @@ cd android
 export JAVA_HOME=/opt/homebrew/opt/openjdk@17   # any JDK 17
 ./gradlew assembleStandardRelease testStandardReleaseUnitTest
 BUILD=1 TV=<tv-ip>:5555 tools/install.sh        # install on a TV
+scripts/onboard.sh <tv-ip>                      # new TV: identify it and print the whole plan; --yes runs it
 python3 webos/build.py                          # from the repo root; needs Pillow and logos/dark/
 python3 tizen/build.py                          # LEAN=1 for a TV short on memory
 TV=<tv-ip> tizen/deploy.sh                      # install on a Samsung
@@ -31,6 +32,7 @@ TV=<tv-ip> python3 tizen/tvkey.py KEY_RIGHT     # first run needs Allow on the T
 
 ## Rules for real TVs
 
+- When asked to install on, set up or work on a TV, run `scripts/onboard.sh <tv-ip>` first and show the plan once. Don't wait to be asked for the backup, the debloat, the checks or the notes: they are in the plan. Don't send remote keys while someone may be using the TV.
 - Disable with `pm disable-user`. Don't uninstall system packages without the owner's approval.
 - Never touch input, remote, keyboard, Wi-Fi or update packages.
 - Never copy a disable list between models.

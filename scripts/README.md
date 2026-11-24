@@ -8,6 +8,9 @@ ADB scripts for Android TV and Google TV. All take the TV's address. Each script
 | `02-install-launchers.sh <tv-ip> [name]` | Installs launchers listed in `launchers.conf` | Yes |
 | `03-switch-launcher.sh <tv-ip> <name or stock>` | Switches the active launcher | Yes |
 | `04-disable-stock-launcher.sh <tv-ip> <home component>` | Disables Google TV's launcher and setup wizard, with safety checks | Yes |
+| `onboard.sh <tv-ip> [--yes]` | Whole path for a new TV: identify, plan, back up, install, debloat in batches, verify, list what to record. Without `--yes` it only prints the plan. See [onboard-device.md](../guides/onboard-device.md) | With `--yes` |
+| `verify-device.sh <tv-ip> [--keys] [--reboot]` | PASS or FAIL: Home installed, Home key answered, Settings stays open, nothing protected disabled | Flips the screen briefly |
+| `device-profile.py` | Picks a device's profile from `devices/profiles.json` for the two scripts above | No |
 | `99-restore-stock.sh <tv-ip>` | Puts the stock launcher back | Yes |
 
 `common.sh` holds shared helpers. `launchers.conf` lists launcher names, packages and APK paths. Put APKs in `apks/` at the repo root, which git ignores.

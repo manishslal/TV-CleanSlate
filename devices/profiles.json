@@ -1,0 +1,80 @@
+{
+  "_about": "Read by scripts/onboard.sh and scripts/verify-device.sh. The first profile whose match fits wins. Only what was tested on a real device says status tested. Add a profile, or a model under models, when a new device has been through the whole flow; docs/LESSONS.md says why each quirk is here.",
+  "profiles": [
+    {
+      "id": "fire-os-5-6",
+      "label": "Fire OS 5 or 6 (Android 5 to 7)",
+      "match": { "manufacturer": "Amazon", "sdk_max": 25 },
+      "flavor": "guard",
+      "mechanism": "FireKeeper (usage stats and the log); install.sh picks the guard build itself",
+      "debloat": { "mode": "fire-reapply", "why": "Fire OS 5 refuses disable-user; tools/fire-reapply.sh knows each model" },
+      "status": "tested",
+      "quirks": [
+        "Amazon's launcher stays enabled; FireKeeper sends Home to the front.",
+        "After a Fire OS update run android/tools/fire-reapply.sh."
+      ]
+    },
+    {
+      "id": "fire-os-7-8",
+      "label": "Fire OS 7 or 8 (Android 9 and newer)",
+      "match": { "manufacturer": "Amazon", "sdk_min": 26 },
+      "flavor": "guard",
+      "mechanism": "Home Guard (accessibility service); Amazon keeps the HOME role",
+      "debloat": { "mode": "list", "why": "disable-user works; lists are per model" },
+      "settings": { "component": "com.amazon.tv.launcher/.ui.MainSettingsActivity" },
+      "status": "tested on AFTKM, Fire OS 8.1.8.6; Fire OS 7 not tested",
+      "quirks": [
+        "ACTION_SETTINGS goes through Amazon's home activity, which Home Guard brings Home back from; Home opens MainSettingsActivity by component instead.",
+        "Home pressed while Amazon's own home is in front has no signal on Fire OS 8 (no homekey broadcast, no key filter): not solved. Check a reboot too.",
+        "Liquid glass needs Android 13; these are Android 9 to 11, so frost with a lit edge.",
+        "com.amazon.tv.csapp and com.amazon.ftvads.deeplinking refuse disable-user (protected)."
+      ]
+    },
+    {
+      "id": "tcl-android-tv",
+      "label": "TCL Android TV",
+      "match": { "manufacturer": "TCL" },
+      "flavor": "standard",
+      "mechanism": "HOME role; install.sh switches to the guard build if the firmware refuses a launcher",
+      "debloat": { "mode": "review", "why": "earlier TCL results are under review: read docs/CLEANYOURTV-REVIEW.md, then decide with the owner" },
+      "status": "tested on C02_4K_US (Android 9)",
+      "quirks": [
+        "System text size ships at 1.0, so canvasFontScale reads TCL against 1.0 (Home's type was sized at 0.85). Another TCL model that ships at 0.85 would come out too small: check font_scale.",
+        "TCL's package verifier can block ADB installs; install.sh falls back to TCL's own screen sharing, with one confirmation on the TV.",
+        "com.tcl.appstatecontroller re-enables apps from TCL's servers at boot."
+      ]
+    },
+    {
+      "id": "google-tv-android-tv",
+      "label": "Google TV or Android TV (onn, SHIELD and similar)",
+      "match": { "sdk_min": 28 },
+      "flavor": "standard",
+      "mechanism": "HOME role; Google TV can take it back after a reboot (see guides/debloat-android-google-tv.md)",
+      "debloat": { "mode": "review", "why": "onn and SHIELD results are under review: read docs/CLEANYOURTV-REVIEW.md first" },
+      "status": "tested on onn 4K Plus, onn 4K Streaming Box, SHIELD tube",
+      "quirks": [
+        "Liquid glass needs Android 13 or newer.",
+        "System text size ships at 0.85, which Home's type was sized on."
+      ]
+    },
+    {
+      "id": "unknown",
+      "label": "Not seen before",
+      "match": {},
+      "flavor": "standard",
+      "mechanism": "install.sh decides from what the firmware does",
+      "debloat": { "mode": "none", "why": "no tested list: use guides/debloat-*.md discovery, one batch at a time" },
+      "status": "untested",
+      "quirks": [
+        "Read the device's text size (font_scale) first: the type is sized at 0.85.",
+        "After the install, find out what Settings and Home do (verify-device.sh), then add a profile here."
+      ]
+    }
+  ],
+  "models": {
+    "AFTKM": { "dir": "fire-tv-stick-4k-gen2" },
+    "AFTMM": { "dir": "fire-tv-stick-4k-gen1" },
+    "AFTT": { "dir": "fire-tv-stick-gen2" },
+    "C02_4K_US": { "dir": "tcl-c02-4k-us" }
+  }
+}
