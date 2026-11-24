@@ -3,7 +3,9 @@
 # verify, and say what is left to record. One approval covers the plan; every step is a script
 # that already exists, so what it does is what its own header says.
 #
-# Usage: onboard.sh <tv-ip[:port]> [--yes] [--keys] [--reboot] [--skip-debloat] [--close-adb]
+# Usage: onboard.sh <tv-ip[:port]> [--yes] [--keys] [--reboot] [--skip-debloat] [--close-adb] [--platform=android|tizen|webos]
+#   Android TV, Google TV and Fire TV are handled here. A Samsung (Tizen) or LG (webOS) TV is found by its
+#   ports and handed to onboard-web.sh, which has its own options (--shot, --close-debug).
 #   (no --yes)      read the TV and print the plan. Changes nothing on the TV.
 #   --yes           run the plan. The plan was shown by the run before, or is printed first.
 #   --keys          verification also presses Home like the remote: only if nobody is using the TV.
@@ -17,9 +19,24 @@
 # What it never does: copy a list between models, touch input, remote, keyboard, Wi-Fi or update
 # packages (protected.sh), run more than five packages at a time, or decide a debloat the project
 # has not tested for the model (it says so and stops there). The profile is devices/profiles.json.
-# shellcheck source=common.sh
-. "$(dirname "$0")/common.sh"; need_tv "$1"; shift
 HERE=$(cd "$(dirname "$0")" && pwd); ROOT=$(dirname "$HERE")
+# Which kind of TV is at this address? Android answers ADB on 5555; a Samsung answers on 8001; an LG on 3000 or 3001.
+PLATFORM=auto; PASS=()
+for a in "${@:2}"; do case $a in --platform=*) PLATFORM=${a#--platform=} ;; *) PASS+=("$a") ;; esac; done
+if [ "$PLATFORM" = auto ]; then
+  H=${1:?usage: $(basename "$0") <tv-ip[:port]> [--yes]}; H=${H%%:*}
+  if nc -z -G 2 "$H" 5555 2>/dev/null; then PLATFORM=android
+  elif curl -s --max-time 4 "http://$H:8001/api/v2/" 2>/dev/null | grep -q '"device"'; then PLATFORM=tizen
+  elif nc -z -G 2 "$H" 3001 2>/dev/null || nc -z -G 2 "$H" 3000 2>/dev/null; then PLATFORM=webos
+  else PLATFORM=android; fi
+fi
+case $PLATFORM in
+  tizen|webos) exec bash "$HERE/onboard-web.sh" "$PLATFORM" "$1" "${PASS[@]+"${PASS[@]}"}" ;;
+  android) ;;
+  *) echo "--platform must be android, tizen or webos"; exit 2 ;;
+esac
+# shellcheck source=common.sh
+. "$HERE/common.sh"; need_tv "$1"; set -- "${PASS[@]+"${PASS[@]}"}"
 YES_RUN=${YES:-0} KEYS="" REBOOT="" SKIP_DEBLOAT=0 CLOSE=0
 for a in "$@"; do case $a in
   --yes) YES_RUN=1 ;; --keys) KEYS=--keys ;; --reboot) REBOOT=--reboot ;;
@@ -59,8 +76,13 @@ echo "Address $TV. Profile: $PROFILE_LABEL ($STATUS)."
 echo
 echo "Plan:"
 echo "  1. Back up (01-preflight-backup.sh, read-only): packages, settings, Home owner, a screenshot."
-echo "  2. Install the $FLAVOR build (android/tools/install.sh $FLAVOR). Mechanism: $MECHANISM."
-echo "  3. Verify (verify-device.sh ${KEYS:-without keys}${REBOOT:+ $REBOOT}): Home installed, Home key answered, Settings stays open, nothing protected disabled."
+if [ "$FLAVOR" = none ]; then
+  echo "  2. Install: none. $MECHANISM."
+  echo "  3. Verify: nothing to verify; Home is not installed."
+else
+  echo "  2. Install the $FLAVOR build (android/tools/install.sh $FLAVOR). Mechanism: $MECHANISM."
+  echo "  3. Verify (verify-device.sh ${KEYS:-without keys}${REBOOT:+ $REBOOT}): Home installed, Home key answered, Settings stays open, nothing protected disabled."
+fi
 case $DEBLOAT_MODE in
   list)
     if [ "$SKIP_DEBLOAT" = 1 ]; then echo "  4. Debloat: skipped (--skip-debloat)."
@@ -87,6 +109,11 @@ verify() { bash "$HERE/verify-device.sh" "$TV" "$@" 2>&1 | tee -a "$REPORT"; ret
 
 log "--- 1. backup"; bash "$HERE/01-preflight-backup.sh" "$TV" >>"$REPORT" 2>&1 || stop "the backup failed"
 log "backup written under backups/ (git ignores it)"
+if [ "$FLAVOR" = none ]; then
+  log "This profile installs nothing ($MECHANISM). The backup is the whole run."
+  log "Next: $DEBLOAT_WHY."
+  log "Report: $REPORT"; exit 0
+fi
 
 log "--- 2. install ($FLAVOR)"
 FLAVOR_ARG=""; [ "$FLAVOR" = standard ] || FLAVOR_ARG=$FLAVOR

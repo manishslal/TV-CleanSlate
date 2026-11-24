@@ -1,6 +1,13 @@
 # Onboard a TV
 
-Use this when someone points at a TV and says install Home on it, set it up, or get it ready. It is the whole path in one place, so nobody has to ask for each step. It covers Android TV, Google TV and Fire TV. Samsung and LG have their own scripts (`tizen/deploy.sh`, `webos/`).
+Use this when someone points at a TV and says install Home on it, set it up, or get it ready. It is the whole path in one place, so nobody has to ask for each step. One command covers every TV we support; it finds out which kind is at the address:
+
+| TV | Found by | What `--yes` does |
+|---|---|---|
+| Android TV, Google TV, Fire TV (onn, SHIELD, TCL, Fire sticks) | ADB on port 5555 | Back up, install, debloat the model's tested list, verify |
+| Samsung (Tizen) | `http://<tv-ip>:8001/api/v2/` answers | Build and install through `tizen/deploy.sh` once the requirements are met |
+| LG (webOS, rooted) | ports 3000 or 3001 | Nothing: it prints the plan and the owner's part. Rooting is not automated |
+| Hisense | ADB | Back up only. Home isn't installed there and its debloat didn't persist |
 
 Read [safety.md](safety.md) once. The rules in `AGENTS.md` apply to every step.
 
@@ -13,9 +20,11 @@ scripts/onboard.sh <tv-ip> --yes    # runs the plan
 
 The first command is the one approval: it shows what the TV is, which build goes on it, which packages will be disabled, and what is known to go wrong on that kind of TV. Read it, then run the second.
 
-Add `--keys` only when nobody is using the remote (keys from the script mix with theirs). Add `--reboot` to prove Home survives a restart. Add `--close-adb` when you are done. `EXPECT=<model>` stops the run if the address belongs to another device.
+Android options: add `--keys` only when nobody is using the remote (keys from the script mix with theirs). Add `--reboot` to prove Home survives a restart. Add `--close-adb` when you are done. `EXPECT=<model>` stops the run if the address belongs to another device. `--platform=android|tizen|webos` skips the detection.
 
-## What it does
+Samsung options: `--shot` takes a screenshot of Home afterwards (it opens a debug port until Home restarts), and `--close-debug` proves the sdb port is closed after the owner switches Developer Mode off.
+
+## What it does on Android, Google TV and Fire TV
 
 | Step | By | Changes the TV? |
 |---|---|---|
@@ -28,6 +37,14 @@ Add `--keys` only when nobody is using the remote (keys from the script mix with
 | Optionally switch ADB off and prove it | `scripts/adb-closed.py` | Yes |
 
 It stops at the first failure, says what to undo, and writes a report under `backups/`.
+
+## What it does on a Samsung
+
+`scripts/onboard-web.sh` reads the TV through `tizen/preflight.sh` (model, platform code, Developer Mode, sdb port), looks the model up in `devices/profiles.json` under `platforms` (a 1 GB model builds with `LEAN=1`; an unknown one starts lean), and checks the requirements: Tizen Studio's `sdb` and `tizen` CLI with a `home` security profile, Pillow, your own logos in `logos/dark/`, and Developer Mode on. Those need the owner: Developer Mode is switched on at the TV (Apps, 1 2 3 4 5, enter this computer's IP, restart). With everything met, `--yes` runs `tizen/build.py` and `tizen/deploy.sh`. The Home button always opens Smart Hub first. Finish by switching Developer Mode off and proving it with `--close-debug`.
+
+## What it does on an LG
+
+Nothing automatic. Home on LG needs a rooted TV, which cannot be undone, and this project does not root TVs. The plan points at `webos/README.md` ("Risks and undo") and the LG device log for the exact steps, then lists what to record.
 
 ## What it will not do for you
 

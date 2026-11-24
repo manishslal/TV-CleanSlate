@@ -9,6 +9,7 @@ ADB scripts for Android TV and Google TV. All take the TV's address. Each script
 | `03-switch-launcher.sh <tv-ip> <name or stock>` | Switches the active launcher | Yes |
 | `04-disable-stock-launcher.sh <tv-ip> <home component>` | Disables Google TV's launcher and setup wizard, with safety checks | Yes |
 | `onboard.sh <tv-ip> [--yes]` | Whole path for a new TV: identify, plan, back up, install, debloat in batches, verify, list what to record. Without `--yes` it only prints the plan. See [onboard-device.md](../guides/onboard-device.md) | With `--yes` |
+| `onboard-web.sh <tizen\|webos> <tv-ip>` | What `onboard.sh` hands a Samsung or LG to. Samsung: reads the TV, checks Tizen Studio and Developer Mode, then builds and installs with `tizen/deploy.sh`. LG: prints the plan only, since Home there needs a rooted TV | Samsung with `--yes` |
 | `verify-device.sh <tv-ip> [--keys] [--reboot]` | PASS or FAIL: Home installed, Home key answered, Settings stays open, nothing protected disabled | Flips the screen briefly |
 | `device-profile.py` | Picks a device's profile from `devices/profiles.json` for the two scripts above | No |
 | `99-restore-stock.sh <tv-ip>` | Puts the stock launcher back | Yes |

@@ -4,10 +4,16 @@
     {
       "id": "fire-os-5-6",
       "label": "Fire OS 5 or 6 (Android 5 to 7)",
-      "match": { "manufacturer": "Amazon", "sdk_max": 25 },
+      "match": {
+        "manufacturer": "Amazon",
+        "sdk_max": 25
+      },
       "flavor": "guard",
       "mechanism": "FireKeeper (usage stats and the log); install.sh picks the guard build itself",
-      "debloat": { "mode": "fire-reapply", "why": "Fire OS 5 refuses disable-user; tools/fire-reapply.sh knows each model" },
+      "debloat": {
+        "mode": "fire-reapply",
+        "why": "Fire OS 5 refuses disable-user; tools/fire-reapply.sh knows each model"
+      },
       "status": "tested",
       "quirks": [
         "Amazon's launcher stays enabled; FireKeeper sends Home to the front.",
@@ -17,11 +23,19 @@
     {
       "id": "fire-os-7-8",
       "label": "Fire OS 7 or 8 (Android 9 and newer)",
-      "match": { "manufacturer": "Amazon", "sdk_min": 26 },
+      "match": {
+        "manufacturer": "Amazon",
+        "sdk_min": 26
+      },
       "flavor": "guard",
       "mechanism": "Home Guard (accessibility service); Amazon keeps the HOME role",
-      "debloat": { "mode": "list", "why": "disable-user works; lists are per model" },
-      "settings": { "component": "com.amazon.tv.launcher/.ui.MainSettingsActivity" },
+      "debloat": {
+        "mode": "list",
+        "why": "disable-user works; lists are per model"
+      },
+      "settings": {
+        "component": "com.amazon.tv.launcher/.ui.MainSettingsActivity"
+      },
       "status": "tested on AFTKM, Fire OS 8.1.8.6; Fire OS 7 not tested",
       "quirks": [
         "ACTION_SETTINGS goes through Amazon's home activity, which Home Guard brings Home back from; Home opens MainSettingsActivity by component instead.",
@@ -33,10 +47,15 @@
     {
       "id": "tcl-android-tv",
       "label": "TCL Android TV",
-      "match": { "manufacturer": "TCL" },
+      "match": {
+        "manufacturer": "TCL"
+      },
       "flavor": "standard",
       "mechanism": "HOME role; install.sh switches to the guard build if the firmware refuses a launcher",
-      "debloat": { "mode": "review", "why": "earlier TCL results are under review: read docs/CLEANYOURTV-REVIEW.md, then decide with the owner" },
+      "debloat": {
+        "mode": "review",
+        "why": "earlier TCL results are under review: read docs/CLEANYOURTV-REVIEW.md, then decide with the owner"
+      },
       "status": "tested on C02_4K_US (Android 9)",
       "quirks": [
         "System text size ships at 1.0, so canvasFontScale reads TCL against 1.0 (Home's type was sized at 0.85). Another TCL model that ships at 0.85 would come out too small: check font_scale.",
@@ -45,12 +64,36 @@
       ]
     },
     {
+      "id": "hisense-android-tv",
+      "label": "Hisense Android TV",
+      "match": {
+        "manufacturer": "Hisense"
+      },
+      "flavor": "none",
+      "mechanism": "Home is not installed on this model",
+      "debloat": {
+        "mode": "none",
+        "why": "disable-user and uninstall did not survive a reboot on the tested model, and the first batch broke input switching; those results are under review (docs/CLEANYOURTV-REVIEW.md)"
+      },
+      "status": "tested on SmartTV 4K (Android TV 12): no lasting changes, nothing installed",
+      "quirks": [
+        "Do not install Home or disable packages here without the owner's decision after reading docs/CLEANYOURTV-REVIEW.md.",
+        "com.hisense.tv.smartsense, com.vt.tv.smartsense(.ui) and the aiot packages are never disabled: that sent a related set to Android Recovery.",
+        "VIDAA firmware handles volume itself; an accessibility key filter silences it."
+      ]
+    },
+    {
       "id": "google-tv-android-tv",
       "label": "Google TV or Android TV (onn, SHIELD and similar)",
-      "match": { "sdk_min": 28 },
+      "match": {
+        "sdk_min": 28
+      },
       "flavor": "standard",
       "mechanism": "HOME role; Google TV can take it back after a reboot (see guides/debloat-android-google-tv.md)",
-      "debloat": { "mode": "review", "why": "onn and SHIELD results are under review: read docs/CLEANYOURTV-REVIEW.md first" },
+      "debloat": {
+        "mode": "review",
+        "why": "onn and SHIELD results are under review: read docs/CLEANYOURTV-REVIEW.md first"
+      },
       "status": "tested on onn 4K Plus, onn 4K Streaming Box, SHIELD tube",
       "quirks": [
         "Liquid glass needs Android 13 or newer.",
@@ -63,7 +106,10 @@
       "match": {},
       "flavor": "standard",
       "mechanism": "install.sh decides from what the firmware does",
-      "debloat": { "mode": "none", "why": "no tested list: use guides/debloat-*.md discovery, one batch at a time" },
+      "debloat": {
+        "mode": "none",
+        "why": "no tested list: use guides/debloat-*.md discovery, one batch at a time"
+      },
       "status": "untested",
       "quirks": [
         "Read the device's text size (font_scale) first: the type is sized at 0.85.",
@@ -72,9 +118,59 @@
     }
   ],
   "models": {
-    "AFTKM": { "dir": "fire-tv-stick-4k-gen2" },
-    "AFTMM": { "dir": "fire-tv-stick-4k-gen1" },
-    "AFTT": { "dir": "fire-tv-stick-gen2" },
-    "C02_4K_US": { "dir": "tcl-c02-4k-us" }
+    "AFTKM": {
+      "dir": "fire-tv-stick-4k-gen2"
+    },
+    "AFTMM": {
+      "dir": "fire-tv-stick-4k-gen1"
+    },
+    "AFTT": {
+      "dir": "fire-tv-stick-gen2"
+    },
+    "C02_4K_US": {
+      "dir": "tcl-c02-4k-us"
+    }
+  },
+  "platforms": {
+    "tizen": {
+      "label": "Samsung Tizen",
+      "install": "tizen/build.py then tizen/deploy.sh (Tizen Studio CLI, a 'home' security profile, Rosetta on Apple Silicon, Pillow and your own logos in logos/dark/)",
+      "owner_steps": "On the TV: Apps, press 1 2 3 4 5, switch Developer Mode on, enter this computer's IP, restart the TV. Nothing here roots it.",
+      "models": {
+        "17_KANTM_UHD_BASIC": {
+          "dir": "samsung-un50mu6070",
+          "lean": false
+        },
+        "18_KANTSU_UHD_BASIC": {
+          "dir": "samsung-un55nu6900",
+          "lean": true
+        }
+      },
+      "unknown_lean": true,
+      "status": "tested on UN50MU6070 (Tizen 3.0) and UN55NU6900 (Tizen 4.0)",
+      "quirks": [
+        "An app cannot register the Home button on Tizen: Smart Hub opens first, then Home.",
+        "A TV with 1 GB RAM gets LEAN=1 (still wallpaper, no frost); an unknown model starts lean, and Full can be chosen in Control Center.",
+        "The 2017 engine is Chromium M47: no CSS variables, grid or unprefixed filter; build.py compiles them away.",
+        "Developer Mode leaves an unprotected port open on the network: turn it off when done and prove it with scripts/adb-closed.py <tv-ip> 26101.",
+        "tvshot.py opens Home in debug mode, which leaves a port open until Home restarts."
+      ]
+    },
+    "webos": {
+      "label": "LG webOS",
+      "install": "not automated: a rooted TV, then CleanYourTV as Home plus the files in webos/ (webos/README.md)",
+      "owner_steps": "Rooting is the owner's decision and cannot be taken back (SlopBro, Homebrew Channel). This project does not root TVs.",
+      "models": {
+        "lm21a": {
+          "dir": "lg-50up8000pua"
+        }
+      },
+      "status": "tested on LG 50UP8000PUA (webOS 6.5.3), rooted",
+      "quirks": [
+        "webOS does not let apps replace Home: it runs on CleanYourTV's Home takeover.",
+        "Installing LG's own Developer Mode app on a rooted TV breaks the root.",
+        "Blocking LG updates keeps the root and stops LG's security fixes."
+      ]
+    }
   }
 }
