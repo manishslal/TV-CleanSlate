@@ -1,0 +1,27 @@
+# Packages Home's setup disables on this stick (Fire TV Stick 4K 2nd gen, AFTKM, Fire OS 8.1.8.6), one a line. Never Wi-Fi, input, remote, keyboard or update packages.
+# com.amazon.tv.csapp refuses to be disabled (protected); com.amazon.ftvads.deeplinking too, on the first stick.
+com.amazon.bueller.music
+com.amazon.bueller.photos
+com.amazon.dummy.alarmclock
+com.amazon.dummy.calendar
+com.amazon.dummy.contacts
+com.amazon.dummy.gallery
+com.amazon.dummy.music
+com.amazon.dummy.settings
+com.amazon.dummy.soundpicker
+com.amazon.gamehub
+com.amazon.hedwig
+com.amazon.hybridadidservice
+com.amazon.media.recommendations
+com.amazon.minitv.android.app
+com.amazon.shoptv.client
+com.amazon.shoptv.firetv.client
+com.amazon.spiderpork
+com.amazon.spotify.mediabrowserservice
+com.amazon.storm.lightning.tutorial
+com.amazon.tahoe
+com.amazon.tmm.tutorial
+com.amazon.tv.earlyaccess
+com.amazon.tv.easyupgrade
+com.amazon.tv.ftvambient
+com.amazon.tv.releasenotes

@@ -19,6 +19,7 @@ sh() { adb shell "$@" | tr -d '\r'; }
 case "$(sh getprop ro.product.model)" in
   AFTMM) LISTS=../devices/fire-tv-stick-4k-gen1 ;;
   AFTT) LISTS=../devices/fire-tv-stick-gen2 ;;
+  AFTKM) LISTS=../devices/fire-tv-stick-4k-gen2 ;;
   *) LISTS= ; echo "No tested debloat lists for $(sh getprop ro.product.model): Home's settings only." ;;
 esac
 sh pm path "$PKG" | grep -q package: || { echo "Home is not installed: run tools/install.sh first." >&2; exit 1; }
