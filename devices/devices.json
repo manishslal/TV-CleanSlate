@@ -86,12 +86,14 @@
       "id": "fire-tv-stick-4k-gen2",
       "name": "Fire TV Stick 4K (2nd gen)",
       "platform": "fire-os",
-      "home": null,
+      "home": "android",
       "debloat": true,
       "verified_on_hardware": true,
       "codename": "AFTKM",
       "os": "Fire OS 8.1.8.2",
-      "ram_gb": 1.7
+      "ram_gb": 1.7,
+      "latest_build_tested": "1.67-mh40-guard",
+      "note": "Home runs through Home Guard (guard build); Amazon's launcher stays enabled. Home was installed on a second stick, Fire OS 8.1.8.6, that has no debloat; the debloat above is from the first. Reboot not tested."
     },
     {
       "id": "fire-tv-stick-gen2",

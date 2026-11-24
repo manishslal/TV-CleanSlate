@@ -113,7 +113,7 @@ Measured on an onn 4K Streaming Box with 2 GB of RAM. Full method: [PERFORMANCE.
 | Samsung UN55NU6900 | Tizen 4.0 | Web Home, on Smart Hub | 2026-11-01 | Partly, no root | [Log](devices/samsung-un55nu6900/CHANGELOG.md) |
 | Hisense SmartTV 4K | Android TV 12 | No | | **No**, changes don't last | [Log](devices/hisense-smarttv-4k/CHANGELOG.md) |
 | Fire TV Stick 4K (1st gen) | Fire OS 6.7 | Android Home with FireKeeper | 1.67-mh37 | Yes | [Log](devices/fire-tv-stick-4k-gen1/CHANGELOG.md) |
-| Fire TV Stick 4K (2nd gen) | Fire OS 8 | No | | Yes | [Log](devices/fire-tv-stick-4k-gen2/CHANGELOG.md) |
+| Fire TV Stick 4K (2nd gen) | Fire OS 8 | Android Home with Home Guard | 1.67-mh40-guard | Yes | [Log](devices/fire-tv-stick-4k-gen2/CHANGELOG.md) |
 | Fire TV Stick (2nd gen) | Fire OS 5.2 | Android Home with FireKeeper, Efficient | 1.67-mh37-guard | Partly: updates removed, no disabling | [Log](devices/fire-tv-stick-gen2/CHANGELOG.md) |
 
 Android Home's latest build is 1.67-mh37: Aerial 1.67, plus this fork's 37th build on top of it ("mh" counts the fork's builds). The web Home has no version number; its date is the day it was last installed. The Samsungs have not had the web Home since 2026-11-01, so they lack this month's changes until it is installed again.

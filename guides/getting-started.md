@@ -100,7 +100,7 @@ Fire OS keeps the Home button for Amazon, and the HOME role has no effect. `andr
 - After a Fire OS update, run `TV=<tv-ip> tools/fire-reapply.sh`. It restores the debloat, privacy settings, permissions and screensaver. Home's menu shows a reminder until you run it. Add `check` to report without changing anything.
 - Before installing, run `TV=<tv-ip> tools/logo-audit.sh`. It lists apps with no logo, usually because the platform uses a different package ID.
 
-Fire OS 7 and 8 use Home Guard, but this project hasn't tested Home on them.
+Fire OS 8 uses Home Guard with the guard build (`tools/install.sh guard`), and the Home button brings Home forward. Tested on a Fire TV Stick 4K (2nd gen, Fire OS 8.1.8.6) with the remote; a reboot was not tested. Fire OS 7 hasn't been tested.
 
 ## Undo
 

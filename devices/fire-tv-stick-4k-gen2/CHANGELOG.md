@@ -124,3 +124,17 @@ adb shell "pm enable com.amazon.shoptv.firetv.client; pm enable com.amazon.shopt
 - All Rule 4 physical tests (Home button, HDMI-CEC, Alexa remote, Prime Video, Netflix/DRM, on-screen keyboard, casting) passed across all 3 batches
 
 **Status: Fire TV Stick 4K (2nd Gen) — COMPLETE.** Moving to next device family (Google TV / Android TV) per user request; Rule 9 OTA-freeze question was never answered/actioned (left enabled, no action taken).
+
+---
+
+## Home mh40 (guard) — 2026-11-24
+
+A second Fire TV Stick 4K (2nd gen), model `AFTKM`, **Fire OS 8.1.8.6** (RS8186/3977), Android 11 (SDK 30), 1920×1080 at 320 dpi, 1.7 GB RAM, 32-bit ARM. Not the unit above: nothing was disabled on it, and no debloat was applied.
+
+- Baseline: Amazon's `com.amazon.tv.launcher/.ui.HomeActivity_vNext` is the HOME activity (a second candidate, `com.amazon.firehomestarter`), no accessibility service, no notification listener, Amazon's screensaver, `font_scale` 1.0.
+- Install: `BUILD=1 TV=<tv-ip>:5555 tools/install.sh guard` from `android/`. `versionName` `1.67-mh40-guard`. The script uses FireKeeper only below SDK 26, so this stick took the Home Guard path.
+- Result: Home Guard is bound (`enabled_accessibility_services` lists `HomeGuardService`), Home is the screensaver, and the Home button from YouTube brings Home forward, both from an `adb` key event and from the remote. Fire OS 8 therefore does start a third-party accessibility service, which Fire OS 6 does not.
+- Text size: Fire OS 8 ships at 1.0, which `canvasFontScale` already reads against 1.0 for Amazon devices.
+- Not tested: a reboot (Amazon's launcher may show before Home Guard starts), holding Home for Amazon's quick menu, and a Fire OS update. `fire-reapply.sh` has no list for `AFTKM`, so it can't be used here.
+- Undo: `TV=<tv-ip> tools/restore.sh --uninstall`.
+
