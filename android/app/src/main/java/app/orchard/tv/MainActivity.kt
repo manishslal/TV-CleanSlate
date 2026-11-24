@@ -819,6 +819,13 @@ class MainActivity : ComponentActivity() {
         // through the system Home action where it can; see HomeGuardService.openStockLauncher.
         if (HomeGuardService.isStockHome(app.packageName) &&
             HomeGuardService.openStockLauncher(app.packageName) { runCatching { startActivity(app.launchIntent()) }.isSuccess }
+        // Fork: Fire OS 7 and 8 have no FireKeeper; Amazon's launcher tile is the gear there too,
+        // and opens Amazon's settings screen by component (see SystemState.amazonSettingsIntent).
+        if (FireKeeper.opensSettingsByComponent && FireKeeper.isAmazonSettingsTile(app.packageName)) {
+            runCatching { startActivity(SystemProbe.settingsIntent(this)) }
+                .onFailure { runCatching { startActivity(Intent(android.provider.Settings.ACTION_SETTINGS)) } }
+            return
+        }
         ) return
         val options = bounds?.asFocusedTile()?.let {
             ActivityOptions.makeScaleUpAnimation(

@@ -220,6 +220,7 @@ object SystemProbe {
             // Konka V563 (Hi3751V563, Android 9) answers no ACTION_SETTINGS; the reporter opened its
             // settings panel here by component (issue #771).
             Intent(Intent.ACTION_MAIN).setComponent(ComponentName("com.konka.tvsettings", "com.konka.settingcenter.settings.view.MainSettingsActivity")),
+            amazonSettingsIntent(),
             Intent(Settings.ACTION_SETTINGS),
             // TCL MT5879 (China): nothing answers ACTION_SETTINGS; MAIN opens TCL's full settings panel.
             Intent(Intent.ACTION_MAIN).setComponent(ComponentName("com.tcl.settings", "com.tcl.settings.ui.MainActivity")),
@@ -229,6 +230,21 @@ object SystemProbe {
             Intent(Intent.ACTION_VIEW, Uri.parse("Settings://com.xgimi.misckey.main/mainPage")),
             WHALEY_SETTINGS,
         )
+
+    /**
+     * Fork: Fire OS 7 and 8 (Fire TV Stick 4K 2nd gen, 8.1.8.6) answer ACTION_SETTINGS with
+     * com.amazon.tv.launcher's SettingsActivity, which goes through Amazon's home activity on its
+     * way to the settings screen. Home Guard takes that for the stock launcher coming to the front
+     * and brings Home back, so the Settings tile and Control Center's gear did nothing. The screen
+     * itself opens, and Home from it returns to Home, when started by component. Anything that is
+     * not Amazon above Android 8 gets an intent that resolves to nothing, and is skipped.
+     */
+    private fun amazonSettingsIntent(): Intent =
+        if (Build.MANUFACTURER.equals("Amazon", ignoreCase = true) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Intent(Intent.ACTION_MAIN).setComponent(ComponentName("com.amazon.tv.launcher", "com.amazon.tv.launcher.ui.MainSettingsActivity"))
+        } else {
+            Intent("app.orchard.tv.NO_AMAZON_SETTINGS")
+        }
 
     // TCL MT5879 answers ACTION_WIFI_SETTINGS with its Wi-Fi side panel.
     /**

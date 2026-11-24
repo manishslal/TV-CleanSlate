@@ -196,6 +196,9 @@ class FireKeeper : Service() {
             if (!applies) return false
             val checked = Settings.Global.getString(context.contentResolver, CHECKED_BUILD) ?: return false
             return checked != Build.FINGERPRINT
+        /** Fire OS 7 and 8: Home Guard runs, and Amazon's settings screen opens by component. */
+        val opensSettingsByComponent: Boolean get() = Build.MANUFACTURER == "Amazon" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+
         }
 
         /** Amazon's home stays in front, from Home's tile, until another app opens. */
